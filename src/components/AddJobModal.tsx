@@ -32,12 +32,13 @@ import {
   validateHttpsUrl,
 } from '../utils/sanitize';
 
+
 // ============================================================================
 // LIVE CONFIGURATION — PlanetAI Employer Portal
 // ============================================================================
 const EMPLOYER_INBOX_EMAIL = 'workatlas.team@gmail.com';
-const WEB3FORMS_ACCESS_KEY = '3b9ef417-e803-4adb-8e5a-a0dbd9ffb631';
-const WEB3FORMS_ENDPOINT = 'https://web3forms.com';
+const WEB3FORMS_ACCESS_KEY: string = '3b9ef417-e803-4adb-8e5a-a0dbd9ffb631';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
 const PAYPAL_LINKS = {
   featured: 'https://www.paypal.com/ncp/payment/W5G33ADWVLC9U',
