@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "app.netlify.planetai_global.twa",
+        "sha256_cert_fingerprints": ["2B:5E:E3:6F:8B:07:8C:29:04:8A:5F:5C:8A:8B:5B:40:13:38:37:C8:A3:42:98:A5:07:9E:C9:50:D8:4D:1A:1C"]
+      }
+    }]
