@@ -35,7 +35,7 @@ import {
 // ============================================================================
 // LIVE CONFIGURATION — PlanetAI Employer Portal
 // ============================================================================
-const WEB3FORMS_ENDPOINT = 'https://web3forms.com';
+const EMPLOYER_INBOX_EMAIL = 'workatlas.team@gmail.com';
 const WEB3FORMS_ACCESS_KEY = '3b9ef417-e803-4adb-8e5a-a0dbd9ffb631';
 const WEB3FORMS_ENDPOINT = 'https://web3forms.com';
 
