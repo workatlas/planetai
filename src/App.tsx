@@ -1,0 +1,1232 @@
+import React, {useEffect, useMemo, useState} from 'react';
+import {
+  ArrowUpRight,
+  Bookmark,
+  CheckCircle2,
+  DollarSign,
+  Download,
+  Globe2,
+  Plus,
+  RefreshCw,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  SlidersHorizontal,
+  X,
+  Zap,
+} from 'lucide-react';
+import {AdBanner} from './components/AdBanner';
+import {AddJobModal} from './components/AddJobModal';
+import {
+  AIToolsView,
+  RequestedAITool,
+  TailoredResumeDraft,
+} from './components/AIToolsView';
+import {AppReadinessView} from './components/AppReadinessView';
+import {AppTab, Header} from './components/Header';
+import {AlertPreferences, JobAlertModal} from './components/JobAlertModal';
+import {
+  ApplicationStatus,
+  AppliedRecord,
+  JobCard,
+} from './components/JobCard';
+import {JobDetailModal} from './components/JobDetailModal';
+import {MarqueeTicker} from './components/MarqueeTicker';
+import {MobileBottomNav} from './components/MobileBottomNav';
+import {NewsDevToolsView} from './components/NewsDevToolsView';
+import {OfflineIndicator} from './components/OfflineIndicator';
+import {PlatformsView} from './components/PlatformsView';
+import {PrivacyTermsModal} from './components/PrivacyTermsModal';
+import {
+  CompanyTier,
+  formatPayRate,
+  INITIAL_JOBS,
+  JOB_CATEGORIES,
+  JobCategory,
+  JobListing,
+  resolveApplyUrl,
+} from './data/jobs';
+import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
+
+type SortOption = 'newest' | 'highest-pay' | 'urgent';
+type TierFilter = 'All' | CompanyTier;
+type PayTierFilter = 'all' | '25plus' | '50plus' | 'annual';
+type SavedSubTab = 'saved' | 'applied';
+
+const STORAGE_KEYS = {
+  SAVED: 'planetai_saved_jobs_v1',
+  APPLIED: 'planetai_applied_jobs_v1',
+  CUSTOM_JOBS: 'planetai_custom_jobs_v1',
+  ALERTS: 'planetai_alerts_v1',
+};
+
+const DEFAULT_ALERTS: AlertPreferences = {
+  email: '',
+  emailEnabled: true,
+  pushEnabled: false,
+  categories: ['AI Training', 'Coding', 'Audio/Voice', 'Data Annotation', 'Remote'],
+  updatedAt: '',
+};
+
+const PARTNER_SPOTLIGHT_COMPANIES = [
+  'micro1',
+  'Mercor',
+  'Babel Audio',
+  'Visora',
+  'Spout',
+];
+
+function readStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = window.localStorage.getItem(key);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+function hydrateCustomJobs(): JobListing[] {
+  const stored = readStorage<JobListing[]>(STORAGE_KEYS.CUSTOM_JOBS, []);
+  if (!Array.isArray(stored)) return [];
+  return stored
+    .filter(
+      (item) =>
+        item &&
+        typeof item.title === 'string' &&
+        typeof item.company === 'string' &&
+        Boolean(validateHttpsUrl(item.applyUrl))
+    )
+    .map((item) => {
+      const validTier: CompanyTier =
+        item.companyTier === 'Established Leader' ||
+        item.companyTier === 'Emerging AI Startup' ||
+        item.companyTier === 'Custom Partner'
+          ? item.companyTier
+          : 'Custom Partner';
+      const validWebsite = item.companyWebsite
+        ? validateHttpsUrl(item.companyWebsite) || undefined
+        : undefined;
+      const validLogo = item.companyLogoUrl
+        ? validateHttpsUrl(item.companyLogoUrl) || undefined
+        : undefined;
+
+      return {
+        ...item,
+        title: sanitizeText(item.title, 120),
+        company: sanitizeText(item.company, 80),
+        companyTier: validTier,
+        companyWebsite: validWebsite,
+        companyLogoUrl: validLogo,
+        isCustomEmployerPost: true,
+        featured: Boolean(item.featured),
+        verified: Boolean(item.verified),
+        marqueeSpotlight: Boolean(item.marqueeSpotlight),
+        description: sanitizeText(item.description || '', 400),
+        location: sanitizeText(item.location || 'Worldwide Remote', 80),
+        applyUrl: validateHttpsUrl(item.applyUrl) as string,
+      };
+    });
+}
+
+export default function App() {
+  const [activeTab, setActiveTab] = useState<AppTab>('jobs');
+  const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>('saved');
+  const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
+  const [savedIds, setSavedIds] = useState<string[]>(() =>
+    readStorage<string[]>(STORAGE_KEYS.SAVED, [])
+  );
+  const [appliedRecords, setAppliedRecords] = useState<
+    Record<string, AppliedRecord>
+  >(() => readStorage<Record<string, AppliedRecord>>(STORAGE_KEYS.APPLIED, {}));
+  const [alertPrefs, setAlertPrefs] = useState<AlertPreferences>(() =>
+    readStorage<AlertPreferences>(STORAGE_KEYS.ALERTS, DEFAULT_ALERTS)
+  );
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<JobCategory>('All');
+  const [selectedTier, setSelectedTier] = useState<TierFilter>('All');
+  const [selectedPayTier, setSelectedPayTier] = useState<PayTierFilter>('all');
+  const [selectedPlatform, setSelectedPlatform] = useState<string>('');
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+
+  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
+  const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+  const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+  const [inspectedJob, setInspectedJob] = useState<JobListing | null>(null);
+  const [tailoredDraft, setTailoredDraft] =
+    useState<TailoredResumeDraft | null>(null);
+  const [requestedAITool, setRequestedAITool] =
+    useState<RequestedAITool | null>(null);
+
+  const [copied, setCopied] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEYS.CUSTOM_JOBS,
+        JSON.stringify(customJobs)
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [customJobs]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_KEYS.SAVED, JSON.stringify(savedIds));
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [savedIds]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEYS.APPLIED,
+        JSON.stringify(appliedRecords)
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [appliedRecords]);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEYS.ALERTS,
+        JSON.stringify(alertPrefs)
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [alertPrefs]);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    window.setTimeout(() => {
+      setToastMessage((prev) => (prev === msg ? null : prev));
+    }, 2800);
+  };
+
+  const allJobs = useMemo(
+    () => [...customJobs, ...INITIAL_JOBS],
+    [customJobs]
+  );
+
+  const spotlightJobs = useMemo(() => {
+    return PARTNER_SPOTLIGHT_COMPANIES.map((partner) =>
+      allJobs.find(
+        (j) =>
+          j.company.toLowerCase() === partner.toLowerCase() && Boolean(j.urgent)
+      )
+    ).filter((j): j is JobListing => Boolean(j));
+  }, [allJobs]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<JobCategory, number> = {
+      All: allJobs.length,
+      'AI Training': 0,
+      'Audio/Voice': 0,
+      Coding: 0,
+      'Data Annotation': 0,
+      Remote: 0,
+    };
+    for (const job of allJobs) {
+      counts[job.category] += 1;
+    }
+    return counts;
+  }, [allJobs]);
+
+  const tierCounts = useMemo(() => {
+    let established = 0;
+    let emerging = 0;
+    let customPartner = 0;
+    for (const job of allJobs) {
+      if (job.companyTier === 'Established Leader') {
+        established += 1;
+      } else if (job.companyTier === 'Custom Partner') {
+        customPartner += 1;
+      } else {
+        emerging += 1;
+      }
+    }
+    return {established, emerging, customPartner};
+  }, [allJobs]);
+
+  const filteredJobs = useMemo(() => {
+    const q = sanitizeText(searchQuery, 120).toLowerCase();
+    const list = allJobs.filter((job) => {
+      if (selectedCategory !== 'All' && job.category !== selectedCategory) {
+        return false;
+      }
+      if (selectedTier !== 'All' && job.companyTier !== selectedTier) {
+        return false;
+      }
+      if (selectedPayTier === '25plus') {
+        if (job.payUnit === 'yr' || job.payMaxUsd < 25) return false;
+      } else if (selectedPayTier === '50plus') {
+        if (job.payUnit === 'yr' || job.payMaxUsd < 50) return false;
+      } else if (selectedPayTier === 'annual') {
+        if (job.payUnit !== 'yr') return false;
+      }
+      if (
+        selectedPlatform &&
+        !job.company.toLowerCase().includes(selectedPlatform.toLowerCase())
+      ) {
+        return false;
+      }
+      if (!q) return true;
+      return (
+        job.title.toLowerCase().includes(q) ||
+        job.company.toLowerCase().includes(q) ||
+        job.companyTier.toLowerCase().includes(q) ||
+        job.category.toLowerCase().includes(q) ||
+        job.location.toLowerCase().includes(q) ||
+        job.description.toLowerCase().includes(q) ||
+        job.tags.some((tag) => tag.toLowerCase().includes(q))
+      );
+    });
+
+    if (sortBy === 'highest-pay') {
+      return [...list].sort((a, b) => {
+        const aHourly = a.payUnit === 'yr' ? a.payMaxUsd / 2000 : a.payMaxUsd;
+        const bHourly = b.payUnit === 'yr' ? b.payMaxUsd / 2000 : b.payMaxUsd;
+        return bHourly - aHourly;
+      });
+    }
+    if (sortBy === 'urgent') {
+      return [...list].sort(
+        (a, b) =>
+          Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
+          Number(Boolean(b.urgent)) - Number(Boolean(a.urgent))
+      );
+    }
+    return [...list].sort(
+      (a, b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured))
+    );
+  }, [
+    allJobs,
+    searchQuery,
+    selectedCategory,
+    selectedTier,
+    selectedPayTier,
+    selectedPlatform,
+    sortBy,
+  ]);
+
+  const savedJobs = useMemo(
+    () => allJobs.filter((job) => savedIds.includes(job.id)),
+    [allJobs, savedIds]
+  );
+
+  const appliedJobsList = useMemo(
+    () =>
+      allJobs
+        .filter((job) => Boolean(appliedRecords[job.id]))
+        .map((job) => ({job, record: appliedRecords[job.id]})),
+    [allJobs, appliedRecords]
+  );
+
+  const toggleSaveJob = (id: string) => {
+    setSavedIds((prev) => {
+      const exists = prev.includes(id);
+      showToast(
+        exists ? 'Removed from Saved jobs.' : 'Saved to your Saved tab.'
+      );
+      return exists ? prev.filter((item) => item !== id) : [...prev, id];
+    });
+  };
+
+  const handleUpsertApplied = (
+    jobId: string,
+    status: ApplicationStatus,
+    note: string
+  ) => {
+    setAppliedRecords((prev) => ({
+      ...prev,
+      [jobId]: {
+        jobId,
+        status,
+        note: sanitizeText(note, 200),
+        updatedAt: new Date().toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        }),
+      },
+    }));
+    showToast(`Tracker updated: ${status}`);
+  };
+
+  const handleRemoveApplied = (jobId: string) => {
+    setAppliedRecords((prev) => {
+      const next = {...prev};
+      delete next[jobId];
+      return next;
+    });
+    showToast('Removed from Applied Tracker.');
+  };
+
+  const handleExportTracker = () => {
+    const payload = {
+      exportedAt: new Date().toISOString(),
+      savedJobs: savedJobs.map((j) => ({
+        id: j.id,
+        title: j.title,
+        company: j.company,
+        pay: formatPayRate(j.payMinUsd, j.payMaxUsd, j.payUnit),
+        applyUrl: resolveApplyUrl(j.company, j.applyUrl),
+      })),
+      appliedTracker: appliedJobsList.map(({job, record}) => ({
+        title: job.title,
+        company: job.company,
+        status: record.status,
+        note: record.note,
+        updatedAt: record.updatedAt,
+        applyUrl: resolveApplyUrl(job.company, job.applyUrl),
+      })),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'planetai-job-tracker.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Exported Saved & Applied tracker JSON.');
+  };
+
+  const handleTailorResumeForJob = (job: JobListing) => {
+    setTailoredDraft({
+      role: job.title,
+      company: job.company,
+      skills: job.tags.join(', '),
+      description: job.description,
+      nonce: Date.now(),
+    });
+    setInspectedJob(null);
+    setActiveTab('ai-tools');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    showToast(`Loaded "${job.title}" into Resume Builder.`);
+  };
+
+  const handleLaunchPrepTool = (tool: 'voice' | 'learning') => {
+    setRequestedAITool({tool, nonce: Date.now()});
+    setInspectedJob(null);
+    setActiveTab('ai-tools');
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  };
+
+  const handleRefreshFeed = () => {
+    setIsRefreshing(true);
+    window.setTimeout(() => {
+      setIsRefreshing(false);
+      showToast(`Feed synced — ${allJobs.length} live roles ready.`);
+    }, 450);
+  };
+
+  const handleShareApp = async () => {
+    const url = window.location.href;
+    let didCopy = false;
+
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(url);
+        didCopy = true;
+      } catch {
+        didCopy = false;
+      }
+    }
+
+    if (!didCopy) {
+      try {
+        const textarea = document.createElement('textarea');
+        textarea.value = url;
+        textarea.setAttribute('readonly', '');
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        didCopy = document.execCommand('copy');
+        document.body.removeChild(textarea);
+      } catch {
+        didCopy = false;
+      }
+    }
+
+    setCopied(true);
+    showToast('Copied! PlanetAI app link copied to clipboard.');
+    window.setTimeout(() => setCopied(false), 2200);
+  };
+
+  const handleSelectPlatformFromTicker = (platform: string) => {
+    setActiveTab('jobs');
+    setSelectedPlatform(platform);
+    setSelectedCategory('All');
+    setSelectedTier('All');
+    setSelectedPayTier('all');
+    setSearchQuery('');
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedCategory('All');
+    setSelectedTier('All');
+    setSelectedPayTier('all');
+    setSelectedPlatform('');
+    setSortBy('newest');
+  };
+
+  const handlePreviewLocalJob = (newJob: JobListing) => {
+    setCustomJobs((prev) => [
+      newJob,
+      ...prev.filter((existing) => existing.id !== newJob.id),
+    ]);
+    setActiveTab('jobs');
+    setSelectedCategory('All');
+    setSelectedTier('All');
+    setSelectedPayTier('all');
+    setSelectedPlatform('');
+    showToast(
+      `Temporary local preview loaded for "${newJob.title}". Global posting goes live after review.`
+    );
+  };
+
+  const handleDeleteCustomJob = (jobId: string) => {
+    setCustomJobs((prev) => prev.filter((job) => job.id !== jobId));
+    showToast('Removed temporary local preview.');
+  };
+
+  const handleSaveAlerts = (prefs: AlertPreferences) => {
+    setAlertPrefs(prefs);
+    showToast('Instant job alerts updated.');
+  };
+
+  const activeAlertsCount =
+    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
+      ? alertPrefs.categories.length
+      : 1;
+
+  const hasActiveAlerts = Boolean(
+    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
+  );
+
+  const isDefaultUnfiltered =
+    !searchQuery.trim() &&
+    selectedCategory === 'All' &&
+    selectedTier === 'All' &&
+    selectedPayTier === 'all' &&
+    !selectedPlatform;
+
+  return (
+    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
+      {/* Top Header */}
+      <Header
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        liveJobCount={
+          activeTab === 'saved' ? savedJobs.length : filteredJobs.length
+        }
+        totalJobCount={allJobs.length}
+        savedCount={savedJobs.length}
+        alertCount={activeAlertsCount}
+        onOpenAlerts={() => setIsAlertsOpen(true)}
+        onShareApp={handleShareApp}
+        copied={copied}
+      />
+
+      {/* Live Marquee Ticker (Global USD) */}
+      <MarqueeTicker
+        onSelectPlatform={handleSelectPlatformFromTicker}
+        spotlightJobs={allJobs}
+      />
+
+      {/* Non-Intrusive Top Banner Ad Below Marquee */}
+      <div className="pt-4">
+        <AdBanner placement="top-feed" />
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+        {activeTab === 'jobs' && (
+          <div className="space-y-6">
+            {/* Hero / Workspace Controls Header */}
+            <section aria-labelledby="feed-heading" className="space-y-5">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <h1
+                      id="feed-heading"
+                      className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-50 text-balance"
+                    >
+                      Remote AI & Tech Opportunities
+                    </h1>
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                      No Signup Required
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
+                    Live curated roles across established AI leaders and emerging startups—covering model training, coding benchmarks, voice synthesis, and annotation.
+                  </p>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  {/* Global USD Status Badge */}
+                  <div className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2 text-xs font-medium text-slate-200">
+                    <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span>
+                      Global Remote Rates (USD) • 100% Free — No Signup Required
+                    </span>
+                  </div>
+
+                  {/* Refresh Feed Button (WebView-friendly) */}
+                  <button
+                    type="button"
+                    onClick={handleRefreshFeed}
+                    aria-label="Refresh job feed"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl border border-slate-800 bg-[#111827] text-xs font-medium text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors shrink-0"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 text-cyan-400 ${
+                        isRefreshing ? 'animate-spin' : ''
+                      }`}
+                    />
+                    <span className="hidden sm:inline">Refresh</span>
+                  </button>
+
+                  {/* Add / Post Job Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => setIsAddJobOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <span>Post Role</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Search, Pay-Tier Filter & Sort Bar */}
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                  />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search 50+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
+                    aria-label="Search AI and remote jobs"
+                    className="w-full min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-10 pr-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      aria-label="Clear search query"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-100"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+                  {/* Pay Tier Filter */}
+                  <div className="relative flex items-center flex-1 sm:flex-initial">
+                    <DollarSign
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-3 w-4 h-4 text-cyan-400"
+                    />
+                    <select
+                      aria-label="Filter by USD pay tier"
+                      value={selectedPayTier}
+                      onChange={(e) =>
+                        setSelectedPayTier(e.target.value as PayTierFilter)
+                      }
+                      className="w-full sm:w-auto min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 pr-7 py-2.5 text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                    >
+                      <option value="all">Rate: All USD</option>
+                      <option value="25plus">Rate: $25+/hr</option>
+                      <option value="50plus">Rate: $50+/hr</option>
+                      <option value="annual">Full-Time Annual</option>
+                    </select>
+                  </div>
+
+                  {/* Sort Selector */}
+                  <div className="relative flex items-center flex-1 sm:flex-initial">
+                    <SlidersHorizontal
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-3.5 w-4 h-4 text-slate-400"
+                    />
+                    <select
+                      id="sort-select"
+                      aria-label="Sort job listings"
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value as SortOption)}
+                      className="w-full sm:w-auto min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-10 pr-8 py-2.5 text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                    >
+                      <option value="newest">Sort: Newest</option>
+                      <option value="highest-pay">Sort: Highest Pay</option>
+                      <option value="urgent">Sort: Urgent First</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Category Filter Pills & Company Tier Filter */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div
+                  role="tablist"
+                  aria-label="Filter jobs by category"
+                  className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"
+                >
+                  {JOB_CATEGORIES.map((category) => {
+                    const isActive = selectedCategory === category;
+                    const count = categoryCounts[category];
+                    return (
+                      <button
+                        key={category}
+                        role="tab"
+                        aria-selected={isActive}
+                        type="button"
+                        onClick={() => setSelectedCategory(category)}
+                        className={`inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                          isActive
+                            ? 'border-cyan-400 bg-cyan-500 text-slate-950 font-semibold'
+                            : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
+                        }`}
+                      >
+                        <span>{category}</span>
+                        <span
+                          className={`font-mono text-xs tabular-nums ${
+                            isActive ? 'text-slate-900' : 'text-slate-500'
+                          }`}
+                        >
+                          {count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Company Tier Segmented Filter */}
+                <div
+                  role="group"
+                  aria-label="Filter by company tier"
+                  className="inline-flex items-center gap-1 rounded-xl border border-slate-800 bg-[#111827] p-1 self-start shrink-0 overflow-x-auto max-w-full"
+                >
+                  {(
+                    [
+                      {id: 'All', label: 'All Companies'},
+                      {
+                        id: 'Established Leader',
+                        label: `Established (${tierCounts.established})`,
+                      },
+                      {
+                        id: 'Emerging AI Startup',
+                        label: `Emerging (${tierCounts.emerging})`,
+                      },
+                      ...(tierCounts.customPartner > 0
+                        ? [
+                            {
+                              id: 'Custom Partner' as const,
+                              label: `Custom Partner (${tierCounts.customPartner})`,
+                            },
+                          ]
+                        : []),
+                    ] as const
+                  ).map((tier) => (
+                    <button
+                      key={tier.id}
+                      type="button"
+                      onClick={() => setSelectedTier(tier.id)}
+                      className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                        selectedTier === tier.id
+                          ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                          : 'text-slate-400 hover:text-slate-100'
+                      }`}
+                    >
+                      {tier.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Active Platform Filter Notice & Feed Count */}
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span>
+                    Showing{' '}
+                    <strong className="font-mono tabular-nums text-slate-100">
+                      {filteredJobs.length}
+                    </strong>{' '}
+                    {filteredJobs.length === 1 ? 'role' : 'roles'} in standard USD ($)
+                  </span>
+                  {selectedPlatform && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPlatform('')}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 px-2.5 py-1 text-xs font-medium text-cyan-200 hover:bg-cyan-900/50 transition-colors"
+                    >
+                      <span>Platform: {selectedPlatform}</span>
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+                {Object.keys(appliedRecords).length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('saved');
+                      setSavedSubTab('applied');
+                    }}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>
+                      {Object.keys(appliedRecords).length} tracked in Applied
+                    </span>
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* Urgent Partner Spotlight Strip (shown on unfiltered default view) */}
+            {isDefaultUnfiltered && spotlightJobs.length > 0 && (
+              <section
+                aria-label="Urgent hiring partner spotlight"
+                className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-4"
+              >
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
+                    <Zap className="w-4 h-4 shrink-0" />
+                    <span>Urgent Partner Hiring Spotlight</span>
+                  </div>
+                  <span className="text-[11px] text-slate-400">
+                    Direct Partner Roles
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  {spotlightJobs.map((job) => (
+                    <div
+                      key={`spot-${job.id}`}
+                      onClick={() => setInspectedJob(job)}
+                      className="cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-2"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="font-bold text-slate-100 truncate">
+                            {job.company}
+                          </span>
+                          <span className="font-mono tabular-nums text-cyan-300 font-semibold shrink-0">
+                            {formatPayRate(
+                              job.payMinUsd,
+                              job.payMaxUsd,
+                              job.payUnit
+                            )}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-xs text-slate-300 line-clamp-1">
+                          {job.title}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between pt-1">
+                        <span className="text-[11px] text-slate-500">
+                          {job.category}
+                        </span>
+                        <a
+                          href={resolveApplyUrl(job.company, job.applyUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
+                        >
+                          <span>Apply</span>
+                          <ArrowUpRight className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Job Cards Grid with Inline AdBanner after every 8th job card */}
+            {filteredJobs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                {filteredJobs.map((job, index) => (
+                  <React.Fragment key={job.id}>
+                    <JobCard
+                      job={job}
+                      isSaved={savedIds.includes(job.id)}
+                      appliedStatus={appliedRecords[job.id]?.status}
+                      onToggleSave={toggleSaveJob}
+                      onOpenDetails={setInspectedJob}
+                    />
+                    {(index + 1) % 8 === 0 && (
+                      <div className="col-span-full py-1">
+                        <AdBanner placement="inline-feed" fullBleed />
+                      </div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
+                <p className="font-display text-lg font-bold text-slate-100">
+                  No matching jobs found
+                </p>
+                <p className="mt-1.5 text-sm text-slate-400 max-w-md mx-auto">
+                  Try clearing your search term or switching back to all categories.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  className="mt-5 inline-flex items-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  <span>Reset Filters</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'ai-tools' && (
+          <AIToolsView
+            tailoredDraft={tailoredDraft}
+            requestedTool={requestedAITool}
+          />
+        )}
+
+        {activeTab === 'news' && <NewsDevToolsView />}
+
+        {activeTab === 'saved' && (
+          <section aria-labelledby="saved-heading" className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div>
+                <h1
+                  id="saved-heading"
+                  className="font-display text-2xl sm:text-3xl font-bold text-slate-50 tracking-tight"
+                >
+                  Saved & Applied Tracker
+                </h1>
+                <p className="mt-1.5 text-sm text-slate-400">
+                  Manage bookmarked roles and application progress locally on your device—zero account required.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div
+                  role="tablist"
+                  aria-label="Saved and applied views"
+                  className="inline-flex rounded-xl border border-slate-800 bg-[#111827] p-1"
+                >
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={savedSubTab === 'saved'}
+                    onClick={() => setSavedSubTab('saved')}
+                    className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      savedSubTab === 'saved'
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'text-slate-400 hover:text-slate-100'
+                    }`}
+                  >
+                    Saved ({savedJobs.length})
+                  </button>
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={savedSubTab === 'applied'}
+                    onClick={() => setSavedSubTab('applied')}
+                    className={`min-h-[38px] px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                      savedSubTab === 'applied'
+                        ? 'bg-cyan-500 text-slate-950'
+                        : 'text-slate-400 hover:text-slate-100'
+                    }`}
+                  >
+                    Applied ({appliedJobsList.length})
+                  </button>
+                </div>
+
+                {(savedJobs.length > 0 || appliedJobsList.length > 0) && (
+                  <button
+                    type="button"
+                    onClick={handleExportTracker}
+                    className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-100 hover:bg-slate-800 transition-colors"
+                  >
+                    <Download className="w-3.5 h-3.5 text-cyan-400" />
+                    <span>Export .JSON</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {savedSubTab === 'saved' &&
+              (savedJobs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {savedJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isSaved={true}
+                      appliedStatus={appliedRecords[job.id]?.status}
+                      onToggleSave={toggleSaveJob}
+                      onOpenDetails={setInspectedJob}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-400">
+                    <Bookmark className="w-5 h-5" />
+                  </div>
+                  <p className="mt-4 font-display text-lg font-bold text-slate-100">
+                    No saved jobs yet
+                  </p>
+                  <p className="mt-1.5 text-sm text-slate-400 max-w-md mx-auto">
+                    Tap the bookmark icon on any listing to keep track of roles you want to apply to later.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('jobs')}
+                    className="mt-5 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
+                  >
+                    Browse Live Jobs
+                  </button>
+                </div>
+              ))}
+
+            {savedSubTab === 'applied' &&
+              (appliedJobsList.length > 0 ? (
+                <div className="space-y-3">
+                  {appliedJobsList.map(({job, record}) => (
+                    <div
+                      key={job.id}
+                      onClick={() => setInspectedJob(job)}
+                      className="cursor-pointer rounded-2xl border border-slate-800/90 bg-[#111827] p-5 hover:border-cyan-500/40 transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                    >
+                      <div className="space-y-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="font-bold text-cyan-300">
+                            {job.company}
+                          </span>
+                          <span className="text-slate-600" aria-hidden="true">
+                            ·
+                          </span>
+                          <span className="font-mono text-slate-300">
+                            {formatPayRate(
+                              job.payMinUsd,
+                              job.payMaxUsd,
+                              job.payUnit
+                            )}
+                          </span>
+                          <span className="text-slate-600" aria-hidden="true">
+                            ·
+                          </span>
+                          <span className="text-slate-400">
+                            Updated {record.updatedAt}
+                          </span>
+                        </div>
+                        <h2 className="font-display text-base sm:text-lg font-bold text-slate-50 truncate">
+                          {job.title}
+                        </h2>
+                        {record.note && (
+                          <p className="text-xs sm:text-sm text-slate-300">
+                            Note: {record.note}
+                          </p>
+                        )}
+                      </div>
+
+                      <div
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex flex-wrap items-center gap-2.5 shrink-0"
+                      >
+                        <select
+                          aria-label={`Update status for ${job.title}`}
+                          value={record.status}
+                          onChange={(e) =>
+                            handleUpsertApplied(
+                              job.id,
+                              e.target.value as ApplicationStatus,
+                              record.note
+                            )
+                          }
+                          className="min-h-[40px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-emerald-300 focus:border-cyan-400 focus:outline-none"
+                        >
+                          <option value="Applied">Applied</option>
+                          <option value="Assessment Pending">
+                            Assessment Pending
+                          </option>
+                          <option value="Interviewing">Interviewing</option>
+                          <option value="Offer">Offer</option>
+                        </select>
+
+                        <a
+                          href={resolveApplyUrl(job.company, job.applyUrl)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 transition-colors"
+                        >
+                          <span>Portal</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-900 border border-slate-800 text-slate-400">
+                    <CheckCircle2 className="w-5 h-5" />
+                  </div>
+                  <p className="mt-4 font-display text-lg font-bold text-slate-100">
+                    No tracked applications yet
+                  </p>
+                  <p className="mt-1.5 text-sm text-slate-400 max-w-md mx-auto">
+                    Open any job card and tap &ldquo;Mark as Applied&rdquo; to track assessments, interviews, and personal notes locally.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('jobs')}
+                    className="mt-5 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
+                  >
+                    Browse Live Jobs
+                  </button>
+                </div>
+              ))}
+          </section>
+        )}
+
+        {activeTab === 'platforms' && (
+          <PlatformsView
+            jobs={allJobs}
+            onFilterByPlatform={handleSelectPlatformFromTicker}
+            onOpenAddJob={() => setIsAddJobOpen(true)}
+          />
+        )}
+
+        {activeTab === 'app' && (
+          <AppReadinessView
+            onOpenAlerts={() => setIsAlertsOpen(true)}
+            onShareApp={handleShareApp}
+            alertsActive={hasActiveAlerts}
+          />
+        )}
+      </main>
+
+      {/* Quiet Editorial Footer with Privacy Policy & Terms */}
+      <footer className="border-t border-slate-800/80 bg-[#090D16] py-6 px-4 sm:px-6">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>
+            PlanetAI — Global Remote AI & Tech Job Aggregator (USD) · 100% Free, No Registration Required
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-5">
+            <button
+              type="button"
+              onClick={() => setActiveTab('platforms')}
+              className="hover:text-slate-300 transition-colors"
+            >
+              Platforms
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('ai-tools')}
+              className="hover:text-slate-300 transition-colors"
+            >
+              AI Tools
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsAlertsOpen(true)}
+              className="hover:text-slate-300 transition-colors"
+            >
+              Job Alerts
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('app')}
+              className="hover:text-slate-300 transition-colors"
+            >
+              PWA & APK
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsPrivacyOpen(true)}
+              className="font-medium text-slate-300 hover:text-cyan-300 transition-colors underline underline-offset-4"
+            >
+              Privacy Policy & Terms
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      {/* Mobile Thumb-Zone Navigation */}
+      <MobileBottomNav
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        savedCount={savedJobs.length}
+      />
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
+
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-20 lg:bottom-6 right-4 z-50 flex items-center gap-2.5 rounded-xl border border-emerald-500/40 bg-[#0D1A18]/95 backdrop-blur-md px-4 py-3 text-xs sm:text-sm font-medium text-emerald-200 shadow-2xl"
+        >
+          <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
+      {/* Modals */}
+      <JobAlertModal
+        isOpen={isAlertsOpen}
+        onClose={() => setIsAlertsOpen(false)}
+        preferences={alertPrefs}
+        onSavePreferences={handleSaveAlerts}
+      />
+
+      <JobDetailModal
+        job={inspectedJob}
+        isSaved={inspectedJob ? savedIds.includes(inspectedJob.id) : false}
+        appliedRecord={
+          inspectedJob ? appliedRecords[inspectedJob.id] : undefined
+        }
+        onToggleSave={toggleSaveJob}
+        onUpsertApplied={handleUpsertApplied}
+        onRemoveApplied={handleRemoveApplied}
+        onTailorResume={handleTailorResumeForJob}
+        onLaunchPrepTool={handleLaunchPrepTool}
+        onClose={() => setInspectedJob(null)}
+      />
+
+      <AddJobModal
+        isOpen={isAddJobOpen}
+        onClose={() => setIsAddJobOpen(false)}
+        onPreviewLocalJob={handlePreviewLocalJob}
+        localPreviewJobs={customJobs}
+        onDeleteLocalPreview={handleDeleteCustomJob}
+      />
+
+      <PrivacyTermsModal
+        isOpen={isPrivacyOpen}
+        onClose={() => setIsPrivacyOpen(false)}
+      />
+    </div>
+  );
+}

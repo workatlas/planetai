@@ -1,0 +1,8 @@
+{
+  "name": "PlanetAI",
+  "description": "AI & remote job aggregator featuring 50+ live opportunities across AI training, coding, audio/voice, and data annotation in global USD rates with PWA offline readiness.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
