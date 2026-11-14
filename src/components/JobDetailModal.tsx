@@ -3,16 +3,21 @@ import {
   ArrowUpRight,
   BookOpen,
   Bookmark,
+  Calculator,
   Check,
   CheckCircle2,
+  ClipboardCheck,
   Clock,
   FileText,
   Globe2,
   Lightbulb,
   Mic,
+  Share2,
   ShieldCheck,
+  Sparkles,
   Star,
   Trash2,
+  Wallet,
   X,
   Zap,
 } from 'lucide-react';
@@ -21,6 +26,10 @@ import {
   JobListing,
   resolveApplyUrl,
 } from '../data/jobs';
+import {
+  computeSkillMatch,
+  getAssessmentAndPayoutInfo,
+} from '../utils/careerIntel';
 import {sanitizeText, validateHttpsUrl} from '../utils/sanitize';
 import {ApplicationStatus, AppliedRecord} from './JobCard';
 
@@ -28,6 +37,7 @@ interface JobDetailModalProps {
   job: JobListing | null;
   isSaved: boolean;
   appliedRecord?: AppliedRecord;
+  userSkills?: string;
   onToggleSave: (id: string) => void;
   onUpsertApplied: (
     jobId: string,
@@ -51,6 +61,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   job,
   isSaved,
   appliedRecord,
+  userSkills = '',
   onToggleSave,
   onUpsertApplied,
   onRemoveApplied,
@@ -61,9 +72,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
   const [note, setNote] = useState('');
   const [logoFailed, setLogoFailed] = useState(false);
+  const [weeklyHours, setWeeklyHours] = useState(25);
+  const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
     setLogoFailed(false);
+    setShareCopied(false);
     if (appliedRecord) {
       setStatus(appliedRecord.status);
       setNote(appliedRecord.note);
@@ -109,6 +123,61 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         ];
 
   const isAudioRole = job.category === 'Audio/Voice';
+  const intel = getAssessmentAndPayoutInfo(job);
+  const skillMatch = computeSkillMatch(job, userSkills);
+
+  const weeklyMinUsd = Math.round(job.payMinUsd * weeklyHours);
+  const weeklyMaxUsd = Math.round(job.payMaxUsd * weeklyHours);
+  const monthlyMinUsd = Math.round(weeklyMinUsd * 4.33);
+  const monthlyMaxUsd = Math.round(weeklyMaxUsd * 4.33);
+
+  const handleShareRole = async () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?job=${encodeURIComponent(
+      job.id
+    )}`;
+
+    if (typeof navigator !== 'undefined' && navigator.share) {
+      try {
+        await navigator.share({
+          title: `${job.title} at ${job.company} — PlanetAI`,
+          text: `Check out this remote role (${formattedPay}) on PlanetAI:`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // User cancelled or share unsupported; fall back to clipboard copy
+      }
+    }
+
+    let ok = false;
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(shareUrl);
+        ok = true;
+      } catch {
+        ok = false;
+      }
+    }
+    if (!ok) {
+      try {
+        const ta = document.createElement('textarea');
+        ta.value = shareUrl;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+      } catch {
+        ok = false;
+      }
+    }
+    if (ok) {
+      setShareCopied(true);
+      window.setTimeout(() => setShareCopied(false), 2200);
+    }
+  };
 
   return (
     <div
@@ -236,6 +305,95 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             <span>{job.location}</span>
           </div>
         </div>
+
+        {/* Skill Match Breakdown (when user saved skills locally) */}
+        {skillMatch && (
+          <div className="mt-3 rounded-xl border border-cyan-500/25 bg-cyan-950/20 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-xs text-cyan-200">
+              <Sparkles className="w-4 h-4 text-cyan-300 shrink-0" />
+              <span>
+                <strong className="font-mono text-cyan-300">
+                  {skillMatch.score}% Skill Match
+                </strong>{' '}
+                {skillMatch.matchedSkills.length > 0
+                  ? `— Matched: ${skillMatch.matchedSkills.join(', ')}`
+                  : '— No direct overlap with your saved skills yet'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Assessment & Payout Transparency */}
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-3.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+              <ClipboardCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+              <span>Screening Format</span>
+            </div>
+            <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-100">
+              {intel.screeningFormat}
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              Est. assessment length: {intel.screeningDuration}
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-3.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-400">
+              <Wallet className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>Payout Cadence &amp; Methods</span>
+            </div>
+            <p className="mt-1 text-xs sm:text-sm font-semibold text-slate-100">
+              {intel.payoutSchedule}
+            </p>
+            <p className="mt-0.5 text-[11px] text-slate-400">
+              Paid in standard USD
+            </p>
+          </div>
+        </div>
+
+        {/* Weekly Remote Income Estimator (Hourly Roles) */}
+        {job.payUnit === 'hr' && (
+          <div className="mt-3 rounded-xl border border-slate-800 bg-[#0B111E] p-4 space-y-2.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-200">
+                <Calculator className="w-4 h-4 text-cyan-400 shrink-0" />
+                <span>Weekly &amp; Monthly Income Estimator</span>
+              </div>
+              <span className="font-mono text-xs font-semibold text-cyan-300 tabular-nums">
+                {weeklyHours} hrs/week
+              </span>
+            </div>
+
+            <input
+              type="range"
+              min={5}
+              max={45}
+              step={5}
+              aria-label="Estimated hours per week"
+              value={weeklyHours}
+              onChange={(e) => setWeeklyHours(Number(e.target.value))}
+              className="w-full accent-cyan-400 cursor-pointer"
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+              <span className="text-slate-400">
+                Weekly:{' '}
+                <strong className="font-mono text-slate-100 tabular-nums">
+                  ${weeklyMinUsd.toLocaleString()}–$
+                  {weeklyMaxUsd.toLocaleString()}
+                </strong>
+              </span>
+              <span className="text-slate-400">
+                Monthly Est.:{' '}
+                <strong className="font-mono text-emerald-300 tabular-nums">
+                  ${monthlyMinUsd.toLocaleString()}–$
+                  {monthlyMaxUsd.toLocaleString()}/mo
+                </strong>
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Description, Requirements & Quick Prep Tips */}
         <div className="mt-5 space-y-4">
@@ -380,23 +538,44 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Footer Actions: Save, Tailor Resume Shortcut, Apply Now ↗ */}
+        {/* Footer Actions: Save, Share Role, Tailor Resume, Apply Now ↗ */}
         <div className="mt-6 pt-4 border-t border-slate-800 flex flex-wrap items-center justify-between gap-2.5">
-          <button
-            type="button"
-            onClick={() => onToggleSave(job.id)}
-            className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-medium transition-colors ${
-              isSaved
-                ? 'border-cyan-500/50 bg-cyan-950/50 text-cyan-300'
-                : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
-            }`}
-          >
-            <Bookmark
-              className="w-4 h-4"
-              fill={isSaved ? 'currentColor' : 'none'}
-            />
-            <span>{isSaved ? 'Saved' : 'Save'}</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => onToggleSave(job.id)}
+              className={`inline-flex items-center justify-center gap-2 min-h-[44px] px-3.5 py-2 rounded-xl border text-xs sm:text-sm font-medium transition-colors ${
+                isSaved
+                  ? 'border-cyan-500/50 bg-cyan-950/50 text-cyan-300'
+                  : 'border-slate-700 bg-slate-900 text-slate-200 hover:bg-slate-800'
+              }`}
+            >
+              <Bookmark
+                className="w-4 h-4"
+                fill={isSaved ? 'currentColor' : 'none'}
+              />
+              <span>{isSaved ? 'Saved' : 'Save'}</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleShareRole}
+              aria-label="Share direct link to this role"
+              className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+            >
+              {shareCopied ? (
+                <>
+                  <Check className="w-4 h-4 text-emerald-400" />
+                  <span className="text-emerald-300">Link Copied</span>
+                </>
+              ) : (
+                <>
+                  <Share2 className="w-4 h-4 text-slate-400" />
+                  <span>Share</span>
+                </>
+              )}
+            </button>
+          </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
             <button
@@ -405,7 +584,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-semibold text-slate-100 hover:border-cyan-500/50 hover:text-cyan-200 transition-colors whitespace-nowrap"
             >
               <FileText className="w-4 h-4 text-cyan-400 shrink-0" />
-              <span>Tailor Resume for This Role</span>
+              <span>Tailor Resume</span>
             </button>
 
             <a
