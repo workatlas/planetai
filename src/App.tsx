@@ -12,6 +12,7 @@ import {
   Search,
   ShieldCheck,
   SlidersHorizontal,
+  Sparkles,
   X,
   Zap,
 } from 'lucide-react';
@@ -46,7 +47,13 @@ import {
   JobListing,
   resolveApplyUrl,
 } from './data/jobs';
+import {
+  computeSkillMatch,
+  parseUserSkills,
+  QUICK_SKILL_SUGGESTIONS,
+} from './utils/careerIntel';
 import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
+import {syncSeoMetadata} from './utils/seo';
 
 type SortOption = 'newest' | 'highest-pay' | 'urgent';
 type TierFilter = 'All' | CompanyTier;
@@ -58,6 +65,7 @@ const STORAGE_KEYS = {
   APPLIED: 'planetai_applied_jobs_v1',
   CUSTOM_JOBS: 'planetai_custom_jobs_v1',
   ALERTS: 'planetai_alerts_v1',
+  SKILLS: 'planetai_user_skills_v1',
 };
 
 const DEFAULT_ALERTS: AlertPreferences = {
@@ -141,6 +149,10 @@ export default function App() {
   const [alertPrefs, setAlertPrefs] = useState<AlertPreferences>(() =>
     readStorage<AlertPreferences>(STORAGE_KEYS.ALERTS, DEFAULT_ALERTS)
   );
+  const [userSkills, setUserSkills] = useState<string>(() =>
+    readStorage<string>(STORAGE_KEYS.SKILLS, '')
+  );
+  const [isSkillsEditorOpen, setIsSkillsEditorOpen] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<JobCategory>('All');
@@ -203,6 +215,17 @@ export default function App() {
     }
   }, [alertPrefs]);
 
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        STORAGE_KEYS.SKILLS,
+        JSON.stringify(userSkills)
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [userSkills]);
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     window.setTimeout(() => {
@@ -214,6 +237,35 @@ export default function App() {
     () => [...customJobs, ...INITIAL_JOBS],
     [customJobs]
   );
+
+  // Open deep-linked role on initial load if ?job=<id> is present
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const jobId = params.get('job');
+    if (jobId) {
+      const target = allJobs.find((j) => j.id === jobId);
+      if (target) {
+        setInspectedJob(target);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync Schema.org JobPosting JSON-LD, canonical URL & ?job= query state
+  useEffect(() => {
+    syncSeoMetadata(allJobs, inspectedJob);
+    try {
+      const url = new URL(window.location.href);
+      if (inspectedJob) {
+        url.searchParams.set('job', inspectedJob.id);
+      } else {
+        url.searchParams.delete('job');
+      }
+      window.history.replaceState({}, '', url.pathname + url.search);
+    } catch {
+      // Ignore history API restrictions
+    }
+  }, [allJobs, inspectedJob]);
 
   const spotlightJobs = useMemo(() => {
     return PARTNER_SPOTLIGHT_COMPANIES.map((partner) =>
@@ -798,6 +850,108 @@ export default function App() {
                   </button>
                 )}
               </div>
+
+              {/* Zero-Login Local Skill Match % Bar */}
+              <div className="rounded-xl border border-slate-800/90 bg-[#0D1320] px-3.5 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
+                    <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                    {parseUserSkills(userSkills).length > 0 ? (
+                      <span className="truncate">
+                        <strong className="text-cyan-300">
+                          Skill Match % Active:
+                        </strong>{' '}
+                        {parseUserSkills(userSkills).join(', ')}
+                      </span>
+                    ) : (
+                      <span>
+                        <strong className="text-slate-100">
+                          Instant Skill Match %:
+                        </strong>{' '}
+                        Add your skills locally (zero signup) to score every role.
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    {parseUserSkills(userSkills).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setUserSkills('')}
+                        className="text-xs text-slate-400 hover:text-rose-300 transition-colors"
+                      >
+                        Clear
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setIsSkillsEditorOpen((prev) => !prev)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-cyan-300 hover:border-cyan-500/50 transition-colors"
+                    >
+                      <span>
+                        {isSkillsEditorOpen
+                          ? 'Done'
+                          : parseUserSkills(userSkills).length > 0
+                            ? 'Edit Skills'
+                            : 'Match My Skills'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+
+                {isSkillsEditorOpen && (
+                  <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2.5">
+                    <input
+                      type="text"
+                      value={userSkills}
+                      onChange={(e) =>
+                        setUserSkills(sanitizeText(e.target.value, 200))
+                      }
+                      aria-label="Enter your skills separated by commas"
+                      placeholder="e.g., Python, TypeScript, RLHF, Voiceover, Data Annotation"
+                      className="w-full min-h-[40px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                    />
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      {QUICK_SKILL_SUGGESTIONS.map((skill) => {
+                        const activeSkills = parseUserSkills(userSkills).map(
+                          (s) => s.toLowerCase()
+                        );
+                        const isAdded = activeSkills.includes(
+                          skill.toLowerCase()
+                        );
+                        return (
+                          <button
+                            key={skill}
+                            type="button"
+                            onClick={() => {
+                              const current = parseUserSkills(userSkills);
+                              if (isAdded) {
+                                setUserSkills(
+                                  current
+                                    .filter(
+                                      (s) =>
+                                        s.toLowerCase() !== skill.toLowerCase()
+                                    )
+                                    .join(', ')
+                                );
+                              } else {
+                                setUserSkills([...current, skill].join(', '));
+                              }
+                            }}
+                            className={`min-h-[30px] rounded-md border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+                              isAdded
+                                ? 'border-cyan-400/60 bg-cyan-950/60 text-cyan-200'
+                                : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600'
+                            }`}
+                          >
+                            {isAdded ? `✓ ${skill}` : `+ ${skill}`}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
             </section>
 
             {/* Urgent Partner Spotlight Strip (shown on unfiltered default view) */}
@@ -869,6 +1023,7 @@ export default function App() {
                       job={job}
                       isSaved={savedIds.includes(job.id)}
                       appliedStatus={appliedRecords[job.id]?.status}
+                      skillMatch={computeSkillMatch(job, userSkills)}
                       onToggleSave={toggleSaveJob}
                       onOpenDetails={setInspectedJob}
                     />
@@ -1207,6 +1362,7 @@ export default function App() {
         appliedRecord={
           inspectedJob ? appliedRecords[inspectedJob.id] : undefined
         }
+        userSkills={userSkills}
         onToggleSave={toggleSaveJob}
         onUpsertApplied={handleUpsertApplied}
         onRemoveApplied={handleRemoveApplied}
