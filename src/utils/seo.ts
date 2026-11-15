@@ -1,5 +1,4 @@
-import {JobListing} from '../data/jobs';
-import {getCompanyLogoUrl} from './companyLogos';
+import {getCompanyLogoUrl, JobListing} from '../data/jobs';
 
 const DEFAULT_TITLE = 'PlanetAI — AI & Remote Job Aggregator';
 const DEFAULT_DESC =
