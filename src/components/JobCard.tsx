@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {
   ArrowUpRight,
   Bookmark,
@@ -23,6 +23,8 @@ interface CompanyLogoProps {
   explicitLogoUrl?: string;
   websiteOrApplyUrl?: string;
   size?: 'sm' | 'md' | 'lg';
+  lazy?: boolean;
+  shouldLoad?: boolean;
 }
 
 const LOGO_SIZE_CLASSES: Record<
@@ -40,23 +42,57 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
   explicitLogoUrl,
   websiteOrApplyUrl,
   size = 'md',
+  lazy = true,
+  shouldLoad,
 }) => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [observedVisible, setObservedVisible] = useState(!lazy);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const resolvedLogoUrl = getCompanyLogoUrl(
     company,
     explicitLogoUrl,
     websiteOrApplyUrl
   );
-  const [logoFailed, setLogoFailed] = useState(false);
 
   useEffect(() => {
     setLogoFailed(false);
+    setIsLoaded(false);
   }, [resolvedLogoUrl]);
 
+  useEffect(() => {
+    if (shouldLoad !== undefined || !lazy || observedVisible) return;
+    const node = containerRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      setObservedVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setObservedVisible(true);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      {rootMargin: '160px 0px', threshold: 0.01}
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [shouldLoad, lazy, observedVisible]);
+
+  const canLoadImage = shouldLoad ?? observedVisible;
   const {box, text} = LOGO_SIZE_CLASSES[size];
 
-  if (resolvedLogoUrl && !logoFailed) {
+  if (resolvedLogoUrl && !logoFailed && canLoadImage) {
     return (
       <div
+        ref={containerRef}
         className={`${box} shrink-0 overflow-hidden border border-slate-700/70 bg-white p-1 flex items-center justify-center shadow-sm`}
       >
         <img
@@ -64,14 +100,19 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
           alt={`${company} logo`}
           loading="lazy"
           decoding="async"
+          fetchPriority="low"
           referrerPolicy="no-referrer"
           onError={() => setLogoFailed(true)}
           onLoad={(e) => {
             if (!explicitLogoUrl && e.currentTarget.naturalWidth <= 16) {
               setLogoFailed(true);
+              return;
             }
+            setIsLoaded(true);
           }}
-          className="h-full w-full object-contain"
+          className={`h-full w-full object-contain transition-opacity duration-200 ${
+            isLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
         />
       </div>
     );
@@ -79,6 +120,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
 
   return (
     <div
+      ref={containerRef}
       aria-hidden="true"
       className={`flex ${box} shrink-0 items-center justify-center border border-slate-700/80 bg-gradient-to-br from-slate-800 to-slate-900 font-display ${text} font-bold tracking-tight text-cyan-300`}
     >
@@ -117,6 +159,34 @@ export const JobCard: React.FC<JobCardProps> = ({
   onToggleSave,
   onOpenDetails,
 }) => {
+  const cardRef = useRef<HTMLElement | null>(null);
+  const [isInViewport, setIsInViewport] = useState(false);
+
+  useEffect(() => {
+    if (isInViewport) return;
+    const node = cardRef.current;
+    if (!node || typeof IntersectionObserver === 'undefined') {
+      setIsInViewport(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setIsInViewport(true);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      {rootMargin: '160px 0px', threshold: 0.01}
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [isInViewport]);
+
   const formattedPay = formatPayRate(
     job.payMinUsd,
     job.payMaxUsd,
@@ -136,6 +206,7 @@ export const JobCard: React.FC<JobCardProps> = ({
 
   return (
     <article
+      ref={cardRef}
       onClick={() => onOpenDetails(job)}
       className={`group cursor-pointer flex flex-col justify-between rounded-2xl border p-5 transition-all duration-150 ${
         isFeatured
@@ -171,6 +242,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               explicitLogoUrl={job.companyLogoUrl}
               websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
               size="md"
+              shouldLoad={isInViewport}
             />
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-100 truncate">
