@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   ArrowUpRight,
   Bookmark,
@@ -14,7 +14,8 @@ import {
   JobListing,
   resolveApplyUrl,
 } from '../data/jobs';
-import {validateHttpsUrl} from '../utils/sanitize';
+import {SkillMatchResult} from '../utils/careerIntel';
+import {CompanyLogo} from './CompanyLogo';
 
 export type ApplicationStatus =
   | 'Applied'
@@ -33,6 +34,7 @@ interface JobCardProps {
   job: JobListing;
   isSaved: boolean;
   appliedStatus?: ApplicationStatus;
+  skillMatch?: SkillMatchResult | null;
   onToggleSave: (id: string) => void;
   onOpenDetails: (job: JobListing) => void;
 }
@@ -41,6 +43,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   job,
   isSaved,
   appliedStatus,
+  skillMatch,
   onToggleSave,
   onOpenDetails,
 }) => {
@@ -49,17 +52,6 @@ export const JobCard: React.FC<JobCardProps> = ({
     job.payMaxUsd,
     job.payUnit
   );
-
-  const [logoFailed, setLogoFailed] = useState(false);
-
-  useEffect(() => {
-    setLogoFailed(false);
-  }, [job.companyLogoUrl]);
-
-  const safeLogoUrl = job.companyLogoUrl
-    ? validateHttpsUrl(job.companyLogoUrl)
-    : null;
-  const showLogo = Boolean(safeLogoUrl && !logoFailed);
 
   const isCustomPost = Boolean(
     job.isCustomEmployerPost || job.id.startsWith('custom-')
@@ -103,22 +95,13 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Top Metadata Row: Company Logo/Monogram + Company + Urgent + Save */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
-            {showLogo && safeLogoUrl ? (
-              <img
-                src={safeLogoUrl}
-                alt={`${job.company} logo`}
-                loading="lazy"
-                onError={() => setLogoFailed(true)}
-                className="h-10 w-10 shrink-0 rounded-xl border border-slate-700/80 bg-slate-900 object-contain p-1"
-              />
-            ) : (
-              <div
-                aria-hidden="true"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-700/80 bg-slate-900 font-display text-xs font-bold tracking-tight text-cyan-300"
-              >
-                {job.companyShort}
-              </div>
-            )}
+            <CompanyLogo
+              company={job.company}
+              short={job.companyShort}
+              explicitLogoUrl={job.companyLogoUrl}
+              websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
+              size="md"
+            />
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-100 truncate">
                 <span className="truncate">{job.company}</span>
@@ -181,6 +164,11 @@ export const JobCard: React.FC<JobCardProps> = ({
           {isCustomPost && (
             <span className="inline-flex items-center rounded-md border border-amber-500/35 bg-amber-950/40 px-2 py-0.5 text-[11px] font-medium text-amber-300">
               Custom Employer Post
+            </span>
+          )}
+          {skillMatch && skillMatch.score > 0 && (
+            <span className="inline-flex items-center rounded-md border border-cyan-500/35 bg-cyan-950/45 px-2 py-0.5 font-mono text-[11px] font-semibold text-cyan-200 tabular-nums">
+              {skillMatch.score}% Match
             </span>
           )}
           {appliedStatus ? (
