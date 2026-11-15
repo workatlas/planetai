@@ -629,42 +629,40 @@ export default function App() {
       />
 
       {/* Non-Intrusive Top Banner Ad Below Marquee */}
-      <div className="pt-4">
+      <div className="pt-2 sm:pt-4">
         <AdBanner placement="top-feed" />
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-3.5 sm:px-6 py-2.5 sm:py-8">
         {activeTab === 'jobs' && (
-          <div className="space-y-6">
+          <div className="space-y-2.5 sm:space-y-6">
             {/* Hero / Workspace Controls Header */}
-            <section aria-labelledby="feed-heading" className="space-y-5">
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <section aria-labelledby="feed-heading" className="space-y-2 sm:space-y-5">
+              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 sm:gap-4">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
                     <h1
                       id="feed-heading"
-                      className="font-display text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-50 text-balance"
+                      className="font-display text-lg sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-50 text-balance leading-tight"
                     >
-                      Remote AI & Tech Opportunities
+                      Remote AI &amp; Tech Opportunities
                     </h1>
-                    <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1 text-xs font-semibold text-emerald-300">
-                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                    <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-emerald-300">
+                      <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
                       No Signup Required
                     </span>
                   </div>
-                  <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
+                  <p className="hidden sm:block mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
                     Live curated roles across established AI leaders and emerging startups—covering model training, coding benchmarks, voice synthesis, and annotation.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2.5 shrink-0">
                   {/* Global USD Status Badge */}
-                  <div className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2 text-xs font-medium text-slate-200">
-                    <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>
-                      Global Remote Rates (USD) • 100% Free — No Signup Required
-                    </span>
+                  <div className="inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-2.5 sm:px-3.5 py-1 sm:py-2 text-[11px] sm:text-xs font-medium text-slate-200">
+                    <Globe2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
+                    <span>Global Remote Rates (USD) • 100% Free</span>
                   </div>
 
                   {/* Refresh Feed Button (WebView-friendly) */}
@@ -672,10 +670,10 @@ export default function App() {
                     type="button"
                     onClick={handleRefreshFeed}
                     aria-label="Refresh job feed"
-                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl border border-slate-800 bg-[#111827] text-xs font-medium text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors shrink-0"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[34px] sm:min-h-[44px] px-2.5 sm:px-3 py-1 sm:py-2 rounded-xl border border-slate-800 bg-[#111827] text-xs font-medium text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors shrink-0"
                   >
                     <RefreshCw
-                      className={`w-4 h-4 text-cyan-400 ${
+                      className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 ${
                         isRefreshing ? 'animate-spin' : ''
                       }`}
                     />
@@ -686,20 +684,20 @@ export default function App() {
                   <button
                     type="button"
                     onClick={() => setIsAddJobOpen(true)}
-                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                    className="inline-flex items-center justify-center gap-1 sm:gap-1.5 min-h-[34px] sm:min-h-[44px] px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl border border-slate-700 bg-slate-900 text-[11px] sm:text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
                   >
-                    <Plus className="w-4 h-4 text-cyan-400 shrink-0" />
+                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
                     <span>Post Role</span>
                   </button>
                 </div>
               </div>
 
               {/* Search, Pay-Tier Filter & Sort Bar */}
-              <div className="flex flex-col md:flex-row gap-3">
+              <div className="flex flex-col md:flex-row gap-2 sm:gap-3">
                 <div className="relative flex-1">
                   <Search
                     aria-hidden="true"
-                    className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                    className="pointer-events-none absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
                   />
                   <input
                     type="search"
@@ -707,26 +705,26 @@ export default function App() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search 200+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
                     aria-label="Search AI and remote jobs"
-                    className="w-full min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-10 pr-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                    className="w-full min-h-[40px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 sm:pl-10 pr-9 sm:pr-10 py-1.5 sm:py-2.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
                   />
                   {searchQuery && (
                     <button
                       type="button"
                       onClick={() => setSearchQuery('')}
                       aria-label="Clear search query"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[36px] min-w-[36px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-100"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-100"
                     >
                       <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
 
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+                <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0">
                   {/* Pay Tier Filter */}
-                  <div className="relative flex items-center flex-1 sm:flex-initial">
+                  <div className="relative flex items-center">
                     <DollarSign
                       aria-hidden="true"
-                      className="pointer-events-none absolute left-3 w-4 h-4 text-cyan-400"
+                      className="pointer-events-none absolute left-2.5 sm:left-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"
                     />
                     <select
                       aria-label="Filter by USD pay tier"
@@ -734,7 +732,7 @@ export default function App() {
                       onChange={(e) =>
                         setSelectedPayTier(e.target.value as PayTierFilter)
                       }
-                      className="w-full sm:w-auto min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 pr-7 py-2.5 text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                      className="w-full sm:w-auto min-h-[38px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-9 pr-6 sm:pr-7 py-1.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
                     >
                       <option value="all">Rate: All USD</option>
                       <option value="25plus">Rate: $25+/hr</option>
@@ -744,17 +742,17 @@ export default function App() {
                   </div>
 
                   {/* Sort Selector */}
-                  <div className="relative flex items-center flex-1 sm:flex-initial">
+                  <div className="relative flex items-center">
                     <SlidersHorizontal
                       aria-hidden="true"
-                      className="pointer-events-none absolute left-3.5 w-4 h-4 text-slate-400"
+                      className="pointer-events-none absolute left-2.5 sm:left-3.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400"
                     />
                     <select
                       id="sort-select"
                       aria-label="Sort job listings"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value as SortOption)}
-                      className="w-full sm:w-auto min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-10 pr-8 py-2.5 text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                      className="w-full sm:w-auto min-h-[38px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-10 pr-6 sm:pr-8 py-1.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
                     >
                       <option value="newest">Sort: Newest</option>
                       <option value="highest-pay">Sort: Highest Pay</option>
@@ -766,11 +764,11 @@ export default function App() {
               </div>
 
               {/* Category Filter Pills & Company Tier Filter */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-3">
                 <div
                   role="tablist"
                   aria-label="Filter jobs by category"
-                  className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5"
+                  className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5"
                 >
                   {JOB_CATEGORIES.map((category) => {
                     const isActive = selectedCategory === category;
@@ -782,7 +780,7 @@ export default function App() {
                         aria-selected={isActive}
                         type="button"
                         onClick={() => setSelectedCategory(category)}
-                        className={`inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                        className={`inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[44px] px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                           isActive
                             ? 'border-cyan-400 bg-cyan-500 text-slate-950 font-semibold'
                             : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
@@ -790,7 +788,7 @@ export default function App() {
                       >
                         <span>{category}</span>
                         <span
-                          className={`font-mono text-xs tabular-nums ${
+                          className={`font-mono text-[11px] sm:text-xs tabular-nums ${
                             isActive ? 'text-slate-900' : 'text-slate-500'
                           }`}
                         >
@@ -832,7 +830,7 @@ export default function App() {
                       key={tier.id}
                       type="button"
                       onClick={() => setSelectedTier(tier.id)}
-                      className={`min-h-[36px] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                      className={`min-h-[30px] sm:min-h-[36px] px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                         selectedTier === tier.id
                           ? 'bg-slate-800 text-cyan-300 border border-slate-700'
                           : 'text-slate-400 hover:text-slate-100'
@@ -892,9 +890,9 @@ export default function App() {
               </div>
 
               {/* Zero-Login Local Skill Match % Bar */}
-              <div className="rounded-xl border border-slate-800/90 bg-[#0D1320] px-3.5 py-2.5">
+              <div className="rounded-xl border border-slate-800/90 bg-[#0D1320] px-3 sm:px-3.5 py-1.5 sm:py-2.5">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-300 min-w-0">
                     <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
                     {parseUserSkills(userSkills).length > 0 ? (
                       <span className="truncate">
@@ -904,11 +902,16 @@ export default function App() {
                         {parseUserSkills(userSkills).join(', ')}
                       </span>
                     ) : (
-                      <span>
+                      <span className="truncate">
                         <strong className="text-slate-100">
                           Instant Skill Match %:
                         </strong>{' '}
-                        Add your skills locally (zero signup) to score every role.
+                        <span className="hidden sm:inline">
+                          Add your skills locally (zero signup) to score every role.
+                        </span>
+                        <span className="sm:hidden text-slate-400">
+                          Score roles locally
+                        </span>
                       </span>
                     )}
                   </div>
@@ -998,23 +1001,23 @@ export default function App() {
             {isDefaultUnfiltered && spotlightJobs.length > 0 && (
               <section
                 aria-label="Urgent hiring partner spotlight"
-                className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-4"
+                className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-2.5 sm:p-4"
               >
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-amber-300">
-                    <Zap className="w-4 h-4 shrink-0" />
+                <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3">
+                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-amber-300">
+                    <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     <span>Urgent Partner Hiring Spotlight</span>
                   </div>
                   <span className="text-[11px] text-slate-400">
                     Direct Partner Roles
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                <div className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-3">
                   {spotlightJobs.map((job) => (
                     <div
                       key={`spot-${job.id}`}
                       onClick={() => setInspectedJob(job)}
-                      className="cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-2"
+                      className="w-[215px] shrink-0 snap-start sm:w-auto cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-2.5 sm:p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-1.5 sm:gap-2"
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2 text-xs">
@@ -1040,11 +1043,11 @@ export default function App() {
                             )}
                           </span>
                         </div>
-                        <p className="mt-2 text-xs text-slate-300 line-clamp-1">
+                        <p className="mt-1.5 sm:mt-2 text-xs text-slate-300 line-clamp-1">
                           {job.title}
                         </p>
                       </div>
-                      <div className="flex items-center justify-between pt-1">
+                      <div className="flex items-center justify-between pt-0.5 sm:pt-1">
                         <span className="text-[11px] text-slate-500">
                           {job.category}
                         </span>
