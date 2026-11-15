@@ -51,13 +51,127 @@ export const JOB_CATEGORIES: JobCategory[] = [
 ];
 
 export const PLATFORM_REFERRAL_URLS: Record<string, string> = {
-  micro1: 'https://micro1.ai',
+  micro1:
+    'https://company.micro1.ai/register/?referralCode=6b7ac363-af71-444b-97b2-ecc6dcc25f19&utm_source=referral&utm_medium=share&utm_campaign=job_referral',
   babel: 'https://babel.audio',
   'babel audio': 'https://babel.audio',
   mercor: 'https://mercor.com',
   visora: 'https://visora.com',
   spout: 'https://withspout.com',
 };
+
+const COMPANY_DOMAINS: Record<string, string> = {
+  micro1: 'micro1.ai',
+  mercor: 'mercor.com',
+  outlier: 'outlier.ai',
+  alignerr: 'alignerr.com',
+  'appen crowdgen': 'appen.com',
+  appen: 'appen.com',
+  dataannotation: 'dataannotation.tech',
+  'scale ai': 'scale.com',
+  'invisible technologies': 'invisible.co',
+  labelbox: 'labelbox.com',
+  toloka: 'toloka.ai',
+  'telus digital ai': 'telusdigital.com',
+  'telus international': 'telusdigital.com',
+  'rws trainai': 'rws.com',
+  rws: 'rws.com',
+  welocalize: 'welocalize.com',
+  oneforma: 'oneforma.com',
+  lxt: 'lxt.ai',
+  imerit: 'imerit.net',
+  cloudfactory: 'cloudfactory.com',
+  sama: 'sama.com',
+  braintrust: 'usebraintrust.com',
+  turing: 'turing.com',
+  toptal: 'toptal.com',
+  'hugging face': 'huggingface.co',
+  runway: 'runwayml.com',
+  'babel audio': 'babel.audio',
+  visora: 'visora.com',
+  spout: 'withspout.com',
+  'productive playhouse': 'productiveplayhouse.com',
+  mindrift: 'mindrift.ai',
+  prolific: 'prolific.com',
+  parency: 'parency.ai',
+  'surge ai': 'surgehq.ai',
+  'snorkel ai': 'snorkel.ai',
+  cohere: 'cohere.com',
+  'anthropic (contract evaluator)': 'anthropic.com',
+  anthropic: 'anthropic.com',
+  'perplexity ai': 'perplexity.ai',
+  perplexity: 'perplexity.ai',
+  'mistral ai': 'mistral.ai',
+  mistral: 'mistral.ai',
+  elevenlabs: 'elevenlabs.io',
+  synthesia: 'synthesia.io',
+  heygen: 'heygen.com',
+  pika: 'pika.art',
+  suno: 'suno.com',
+  udio: 'udio.com',
+  'harvey ai': 'harvey.ai',
+  glean: 'glean.com',
+  'character.ai': 'character.ai',
+  remotasks: 'remotasks.com',
+  lionbridge: 'lionbridge.com',
+  clickworker: 'clickworker.com',
+  andela: 'andela.com',
+  bairesdev: 'bairesdev.com',
+  deel: 'deel.com',
+  gitlab: 'gitlab.com',
+  automattic: 'automattic.com',
+  zapier: 'zapier.com',
+  openai: 'openai.com',
+  assemblyai: 'assemblyai.com',
+};
+
+function sanitizeHttpsLogoUrl(raw?: string): string | null {
+  if (!raw) return null;
+  try {
+    const parsed = new URL(raw.trim());
+    if (parsed.protocol !== 'https:') return null;
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
+export function getCompanyDomain(
+  company: string,
+  websiteOrApplyUrl?: string
+): string | null {
+  const key = company.trim().toLowerCase();
+  if (COMPANY_DOMAINS[key]) {
+    return COMPANY_DOMAINS[key];
+  }
+  const safe = sanitizeHttpsLogoUrl(websiteOrApplyUrl);
+  if (!safe) return null;
+  try {
+    const hostname = new URL(safe).hostname.replace(/^www\./i, '').toLowerCase();
+    if (hostname === 'company.micro1.ai') return 'micro1.ai';
+    return hostname || null;
+  } catch {
+    return null;
+  }
+}
+
+export function getCompanyLogoUrl(
+  company: string,
+  explicitLogoUrl?: string,
+  websiteOrApplyUrl?: string
+): string | null {
+  const safeExplicit = sanitizeHttpsLogoUrl(explicitLogoUrl);
+  if (safeExplicit) {
+    return safeExplicit;
+  }
+
+  const domain = getCompanyDomain(company, websiteOrApplyUrl);
+  if (!domain) return null;
+
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(
+    domain
+  )}&sz=128`;
+}
 
 export function resolveApplyUrl(company: string, fallbackUrl: string): string {
   const key = company.trim().toLowerCase();
@@ -1699,7 +1813,7 @@ export const TOP_PLATFORMS: PlatformSummary[] = [
     typicalMinUsd: 55,
     typicalMaxUsd: 95,
     payoutSchedule: 'Bi-weekly · Wise / Bank',
-    url: 'https://micro1.ai',
+    url: 'https://company.micro1.ai/register/?referralCode=6b7ac363-af71-444b-97b2-ecc6dcc25f19&utm_source=referral&utm_medium=share&utm_campaign=job_referral',
   },
   {
     name: 'Mercor',
