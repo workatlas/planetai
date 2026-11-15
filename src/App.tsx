@@ -3,6 +3,8 @@ import {
   ArrowUpRight,
   Bookmark,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   DollarSign,
   Download,
   Globe2,
@@ -165,6 +167,7 @@ export default function App() {
   const [selectedPlatform, setSelectedPlatform] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [visibleCount, setVisibleCount] = useState<number>(JOBS_PER_PAGE);
+  const [isFiltersBarOpen, setIsFiltersBarOpen] = useState(false);
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
@@ -605,6 +608,13 @@ export default function App() {
     selectedPayTier === 'all' &&
     !selectedPlatform;
 
+  const firstThreeJobs = visibleJobs.slice(0, 3);
+  const remainingJobs = visibleJobs.slice(3);
+  const activeFilterCount =
+    (selectedPayTier !== 'all' ? 1 : 0) +
+    (selectedTier !== 'All' ? 1 : 0) +
+    (sortBy !== 'newest' ? 1 : 0);
+
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
       {/* Top Header */}
@@ -637,231 +647,245 @@ export default function App() {
       <main className="flex-1 mx-auto w-full max-w-7xl px-3.5 sm:px-6 py-2.5 sm:py-8">
         {activeTab === 'jobs' && (
           <div className="space-y-2.5 sm:space-y-6">
-            {/* Hero / Workspace Controls Header */}
-            <section aria-labelledby="feed-heading" className="space-y-2 sm:space-y-5">
-              <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-2 sm:gap-4">
+            {/* Compact Top Controls: Search Bar, Collapsible Filters & Post, and Horizontal Category Pills */}
+            <section aria-labelledby="feed-heading" className="space-y-2 sm:space-y-4">
+              {/* Desktop Hero Header (Hidden on <640px mobile so job cards appear above the fold) */}
+              <div className="hidden sm:flex flex-col lg:flex-row lg:items-end justify-between gap-4">
                 <div>
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5">
+                  <div className="flex flex-wrap items-center gap-2.5">
                     <h1
                       id="feed-heading"
-                      className="font-display text-lg sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-50 text-balance leading-tight"
+                      className="font-display text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-50 text-balance"
                     >
                       Remote AI &amp; Tech Opportunities
                     </h1>
-                    <span className="inline-flex items-center gap-1 sm:gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2 sm:px-2.5 py-0.5 sm:py-1 text-[11px] sm:text-xs font-semibold text-emerald-300">
-                      <ShieldCheck className="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0" />
+                    <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
                       No Signup Required
                     </span>
                   </div>
-                  <p className="hidden sm:block mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
+                  <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
                     Live curated roles across established AI leaders and emerging startups—covering model training, coding benchmarks, voice synthesis, and annotation.
                   </p>
                 </div>
 
-                <div className="flex flex-wrap sm:flex-nowrap items-center gap-1.5 sm:gap-2.5 shrink-0">
-                  {/* Global USD Status Badge */}
-                  <div className="inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-2.5 sm:px-3.5 py-1 sm:py-2 text-[11px] sm:text-xs font-medium text-slate-200">
-                    <Globe2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <div className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2 text-xs font-medium text-slate-200">
+                    <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
                     <span>Global Remote Rates (USD) • 100% Free</span>
                   </div>
-
-                  {/* Refresh Feed Button (WebView-friendly) */}
                   <button
                     type="button"
                     onClick={handleRefreshFeed}
                     aria-label="Refresh job feed"
-                    className="inline-flex items-center justify-center gap-1.5 min-h-[34px] sm:min-h-[44px] px-2.5 sm:px-3 py-1 sm:py-2 rounded-xl border border-slate-800 bg-[#111827] text-xs font-medium text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors shrink-0"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3 py-2 rounded-xl border border-slate-800 bg-[#111827] text-xs font-medium text-slate-300 hover:text-slate-100 hover:border-slate-700 transition-colors shrink-0"
                   >
                     <RefreshCw
-                      className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 ${
+                      className={`w-4 h-4 text-cyan-400 ${
                         isRefreshing ? 'animate-spin' : ''
                       }`}
                     />
-                    <span className="hidden sm:inline">Refresh</span>
+                    <span>Refresh</span>
                   </button>
+                </div>
+              </div>
 
-                  {/* Add / Post Job Trigger */}
+              {/* Search Input */}
+              <div className="relative">
+                <Search
+                  aria-hidden="true"
+                  className="pointer-events-none absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
+                />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search 200+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
+                  aria-label="Search AI and remote jobs"
+                  className="w-full min-h-[42px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
+                />
+                {searchQuery && (
                   <button
                     type="button"
-                    onClick={() => setIsAddJobOpen(true)}
-                    className="inline-flex items-center justify-center gap-1 sm:gap-1.5 min-h-[34px] sm:min-h-[44px] px-2.5 sm:px-3.5 py-1 sm:py-2 rounded-xl border border-slate-700 bg-slate-900 text-[11px] sm:text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Clear search query"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-100"
                   >
-                    <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
-                    <span>Post Role</span>
+                    <X className="w-4 h-4" />
                   </button>
-                </div>
+                )}
               </div>
 
-              {/* Search, Pay-Tier Filter & Sort Bar */}
-              <div className="flex flex-col md:flex-row gap-2 sm:gap-3">
-                <div className="relative flex-1">
-                  <Search
-                    aria-hidden="true"
-                    className="pointer-events-none absolute left-3 sm:left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400"
-                  />
-                  <input
-                    type="search"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search 200+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
-                    aria-label="Search AI and remote jobs"
-                    className="w-full min-h-[40px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 sm:pl-10 pr-9 sm:pr-10 py-1.5 sm:py-2.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
-                  />
-                  {searchQuery && (
+              {/* Compact Collapsible "Filters & Post" Bar (Collapsed by default on mobile) */}
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => setIsFiltersBarOpen((prev) => !prev)}
+                  aria-expanded={isFiltersBarOpen}
+                  className="sm:hidden flex w-full items-center justify-between gap-2 min-h-[36px] rounded-xl border border-slate-800/90 bg-[#0D1320] px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-700 transition-colors"
+                >
+                  <span className="inline-flex items-center gap-2">
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                    <span>Filters &amp; Post</span>
+                    {activeFilterCount > 0 && (
+                      <span className="inline-flex items-center justify-center rounded-full bg-cyan-500/20 border border-cyan-500/40 px-1.5 py-0.2 font-mono text-[10px] font-bold text-cyan-300">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
+                    <span>Rate · Sort · Companies · + Post</span>
+                    {isFiltersBarOpen ? (
+                      <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </span>
+                </button>
+
+                <div
+                  className={`${
+                    isFiltersBarOpen ? 'flex' : 'hidden sm:flex'
+                  } flex-col lg:flex-row lg:items-center justify-between gap-2.5 rounded-xl border border-slate-800/80 sm:border-0 bg-[#0D1320] sm:bg-transparent p-2.5 sm:p-0`}
+                >
+                  {/* Rate, Sort & + Post Role */}
+                  <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5">
+                    <div className="relative flex items-center">
+                      <DollarSign
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-2.5 sm:left-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"
+                      />
+                      <select
+                        aria-label="Filter by USD pay tier"
+                        value={selectedPayTier}
+                        onChange={(e) =>
+                          setSelectedPayTier(e.target.value as PayTierFilter)
+                        }
+                        className="w-full sm:w-auto min-h-[38px] sm:min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-9 pr-6 sm:pr-7 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                      >
+                        <option value="all">Rate: All USD</option>
+                        <option value="25plus">Rate: $25+/hr</option>
+                        <option value="50plus">Rate: $50+/hr</option>
+                        <option value="annual">Full-Time Annual</option>
+                      </select>
+                    </div>
+
+                    <div className="relative flex items-center">
+                      <SlidersHorizontal
+                        aria-hidden="true"
+                        className="pointer-events-none absolute left-2.5 sm:left-3.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400"
+                      />
+                      <select
+                        id="sort-select"
+                        aria-label="Sort job listings"
+                        value={sortBy}
+                        onChange={(e) =>
+                          setSortBy(e.target.value as SortOption)
+                        }
+                        className="w-full sm:w-auto min-h-[38px] sm:min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-10 pr-6 sm:pr-8 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
+                      >
+                        <option value="newest">Sort: Newest</option>
+                        <option value="highest-pay">Sort: Highest Pay</option>
+                        <option value="urgent">Sort: Urgent First</option>
+                        <option value="alphabetical">
+                          Sort: Alphabetical (A–Z)
+                        </option>
+                      </select>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setSearchQuery('')}
-                      aria-label="Clear search query"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 min-h-[34px] min-w-[34px] flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-100"
+                      onClick={() => setIsAddJobOpen(true)}
+                      className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-1.5 min-h-[38px] sm:min-h-[44px] px-3.5 py-1.5 sm:py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-semibold text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap shrink-0"
                     >
-                      <X className="w-4 h-4" />
+                      <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400 shrink-0" />
+                      <span>Post Role</span>
                     </button>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 sm:flex items-center gap-2 sm:gap-2.5 shrink-0">
-                  {/* Pay Tier Filter */}
-                  <div className="relative flex items-center">
-                    <DollarSign
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-2.5 sm:left-3 w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-400"
-                    />
-                    <select
-                      aria-label="Filter by USD pay tier"
-                      value={selectedPayTier}
-                      onChange={(e) =>
-                        setSelectedPayTier(e.target.value as PayTierFilter)
-                      }
-                      className="w-full sm:w-auto min-h-[38px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-9 pr-6 sm:pr-7 py-1.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="all">Rate: All USD</option>
-                      <option value="25plus">Rate: $25+/hr</option>
-                      <option value="50plus">Rate: $50+/hr</option>
-                      <option value="annual">Full-Time Annual</option>
-                    </select>
                   </div>
 
-                  {/* Sort Selector */}
-                  <div className="relative flex items-center">
-                    <SlidersHorizontal
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-2.5 sm:left-3.5 w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400"
-                    />
-                    <select
-                      id="sort-select"
-                      aria-label="Sort job listings"
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value as SortOption)}
-                      className="w-full sm:w-auto min-h-[38px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-8 sm:pl-10 pr-6 sm:pr-8 py-1.5 sm:py-2.5 text-xs sm:text-sm font-medium text-slate-200 focus:border-cyan-500 focus:outline-none"
-                    >
-                      <option value="newest">Sort: Newest</option>
-                      <option value="highest-pay">Sort: Highest Pay</option>
-                      <option value="urgent">Sort: Urgent First</option>
-                      <option value="alphabetical">Sort: Alphabetical (A–Z)</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Filter Pills & Company Tier Filter */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2 sm:gap-3">
-                <div
-                  role="tablist"
-                  aria-label="Filter jobs by category"
-                  className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5"
-                >
-                  {JOB_CATEGORIES.map((category) => {
-                    const isActive = selectedCategory === category;
-                    const count = categoryCounts[category];
-                    return (
+                  {/* All Companies / Established / Emerging Segmented Filter */}
+                  <div
+                    role="group"
+                    aria-label="Filter by company tier"
+                    className="inline-flex items-center gap-1 rounded-xl border border-slate-800 bg-[#111827] p-1 self-start shrink-0 overflow-x-auto max-w-full"
+                  >
+                    {(
+                      [
+                        {id: 'All', label: 'All Companies'},
+                        {
+                          id: 'Established Leader',
+                          label: `Established (${tierCounts.established})`,
+                        },
+                        {
+                          id: 'Emerging AI Startup',
+                          label: `Emerging (${tierCounts.emerging})`,
+                        },
+                        ...(tierCounts.customPartner > 0
+                          ? [
+                              {
+                                id: 'Custom Partner' as const,
+                                label: `Custom Partner (${tierCounts.customPartner})`,
+                              },
+                            ]
+                          : []),
+                      ] as const
+                    ).map((tier) => (
                       <button
-                        key={category}
-                        role="tab"
-                        aria-selected={isActive}
+                        key={tier.id}
                         type="button"
-                        onClick={() => setSelectedCategory(category)}
-                        className={`inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[44px] px-3 sm:px-4 py-1 sm:py-2 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
-                          isActive
-                            ? 'border-cyan-400 bg-cyan-500 text-slate-950 font-semibold'
-                            : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
+                        onClick={() => setSelectedTier(tier.id)}
+                        className={`min-h-[32px] sm:min-h-[36px] px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                          selectedTier === tier.id
+                            ? 'bg-slate-800 text-cyan-300 border border-slate-700'
+                            : 'text-slate-400 hover:text-slate-100'
                         }`}
                       >
-                        <span>{category}</span>
-                        <span
-                          className={`font-mono text-[11px] sm:text-xs tabular-nums ${
-                            isActive ? 'text-slate-900' : 'text-slate-500'
-                          }`}
-                        >
-                          {count}
-                        </span>
+                        {tier.label}
                       </button>
-                    );
-                  })}
-                </div>
-
-                {/* Company Tier Segmented Filter */}
-                <div
-                  role="group"
-                  aria-label="Filter by company tier"
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-800 bg-[#111827] p-1 self-start shrink-0 overflow-x-auto max-w-full"
-                >
-                  {(
-                    [
-                      {id: 'All', label: 'All Companies'},
-                      {
-                        id: 'Established Leader',
-                        label: `Established (${tierCounts.established})`,
-                      },
-                      {
-                        id: 'Emerging AI Startup',
-                        label: `Emerging (${tierCounts.emerging})`,
-                      },
-                      ...(tierCounts.customPartner > 0
-                        ? [
-                            {
-                              id: 'Custom Partner' as const,
-                              label: `Custom Partner (${tierCounts.customPartner})`,
-                            },
-                          ]
-                        : []),
-                    ] as const
-                  ).map((tier) => (
-                    <button
-                      key={tier.id}
-                      type="button"
-                      onClick={() => setSelectedTier(tier.id)}
-                      className={`min-h-[30px] sm:min-h-[36px] px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
-                        selectedTier === tier.id
-                          ? 'bg-slate-800 text-cyan-300 border border-slate-700'
-                          : 'text-slate-400 hover:text-slate-100'
-                      }`}
-                    >
-                      {tier.label}
-                    </button>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Active Platform Filter Notice & Feed Count */}
-              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span>
-                    Showing{' '}
-                    <strong className="font-mono tabular-nums text-slate-100">
-                      {visibleJobs.length}
-                    </strong>
-                    {visibleJobs.length < filteredJobs.length && (
-                      <>
-                        {' '}
-                        of{' '}
-                        <strong className="font-mono tabular-nums text-slate-100">
-                          {filteredJobs.length}
-                        </strong>
-                      </>
-                    )}{' '}
-                    {filteredJobs.length === 1 ? 'role' : 'roles'} in standard USD ($)
-                  </span>
-                  {selectedPlatform && (
+              {/* Horizontal Category Filter Pills */}
+              <div
+                role="tablist"
+                aria-label="Filter jobs by category"
+                className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5"
+              >
+                {JOB_CATEGORIES.map((category) => {
+                  const isActive = selectedCategory === category;
+                  const count = categoryCounts[category];
+                  return (
+                    <button
+                      key={category}
+                      role="tab"
+                      aria-selected={isActive}
+                      type="button"
+                      onClick={() => setSelectedCategory(category)}
+                      className={`inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[42px] px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                        isActive
+                          ? 'border-cyan-400 bg-cyan-500 text-slate-950 font-semibold'
+                          : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
+                      }`}
+                    >
+                      <span>{category}</span>
+                      <span
+                        className={`font-mono text-[11px] sm:text-xs tabular-nums ${
+                          isActive ? 'text-slate-900' : 'text-slate-500'
+                        }`}
+                      >
+                        {count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Active Platform Filter Chip & Applied Link (only shown when active) */}
+              {(selectedPlatform || Object.keys(appliedRecords).length > 0) && (
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
+                  {selectedPlatform ? (
                     <button
                       type="button"
                       onClick={() => setSelectedPlatform('')}
@@ -870,233 +894,249 @@ export default function App() {
                       <span>Platform: {selectedPlatform}</span>
                       <X className="w-3.5 h-3.5" />
                     </button>
+                  ) : (
+                    <span />
                   )}
-                </div>
-                {Object.keys(appliedRecords).length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('saved');
-                      setSavedSubTab('applied');
-                    }}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>
-                      {Object.keys(appliedRecords).length} tracked in Applied
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {/* Zero-Login Local Skill Match % Bar */}
-              <div className="rounded-xl border border-slate-800/90 bg-[#0D1320] px-3 sm:px-3.5 py-1.5 sm:py-2.5">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs text-slate-300 min-w-0">
-                    <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
-                    {parseUserSkills(userSkills).length > 0 ? (
-                      <span className="truncate">
-                        <strong className="text-cyan-300">
-                          Skill Match % Active:
-                        </strong>{' '}
-                        {parseUserSkills(userSkills).join(', ')}
-                      </span>
-                    ) : (
-                      <span className="truncate">
-                        <strong className="text-slate-100">
-                          Instant Skill Match %:
-                        </strong>{' '}
-                        <span className="hidden sm:inline">
-                          Add your skills locally (zero signup) to score every role.
-                        </span>
-                        <span className="sm:hidden text-slate-400">
-                          Score roles locally
-                        </span>
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {parseUserSkills(userSkills).length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setUserSkills('')}
-                        className="text-xs text-slate-400 hover:text-rose-300 transition-colors"
-                      >
-                        Clear
-                      </button>
-                    )}
+                  {Object.keys(appliedRecords).length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setIsSkillsEditorOpen((prev) => !prev)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-cyan-300 hover:border-cyan-500/50 transition-colors"
+                      onClick={() => {
+                        setActiveTab('saved');
+                        setSavedSubTab('applied');
+                      }}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200 transition-colors"
                     >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>
-                        {isSkillsEditorOpen
-                          ? 'Done'
-                          : parseUserSkills(userSkills).length > 0
-                            ? 'Edit Skills'
-                            : 'Match My Skills'}
+                        {Object.keys(appliedRecords).length} tracked in Applied
                       </span>
                     </button>
-                  </div>
+                  )}
                 </div>
-
-                {isSkillsEditorOpen && (
-                  <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2.5">
-                    <input
-                      type="text"
-                      value={userSkills}
-                      onChange={(e) =>
-                        setUserSkills(sanitizeText(e.target.value, 200))
-                      }
-                      aria-label="Enter your skills separated by commas"
-                      placeholder="e.g., Python, TypeScript, RLHF, Voiceover, Data Annotation"
-                      className="w-full min-h-[40px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
-                    />
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      {QUICK_SKILL_SUGGESTIONS.map((skill) => {
-                        const activeSkills = parseUserSkills(userSkills).map(
-                          (s) => s.toLowerCase()
-                        );
-                        const isAdded = activeSkills.includes(
-                          skill.toLowerCase()
-                        );
-                        return (
-                          <button
-                            key={skill}
-                            type="button"
-                            onClick={() => {
-                              const current = parseUserSkills(userSkills);
-                              if (isAdded) {
-                                setUserSkills(
-                                  current
-                                    .filter(
-                                      (s) =>
-                                        s.toLowerCase() !== skill.toLowerCase()
-                                    )
-                                    .join(', ')
-                                );
-                              } else {
-                                setUserSkills([...current, skill].join(', '));
-                              }
-                            }}
-                            className={`min-h-[30px] rounded-md border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
-                              isAdded
-                                ? 'border-cyan-400/60 bg-cyan-950/60 text-cyan-200'
-                                : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600'
-                            }`}
-                          >
-                            {isAdded ? `✓ ${skill}` : `+ ${skill}`}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-              </div>
+              )}
             </section>
 
-            {/* Urgent Partner Spotlight Strip (shown on unfiltered default view) */}
-            {isDefaultUnfiltered && spotlightJobs.length > 0 && (
-              <section
-                aria-label="Urgent hiring partner spotlight"
-                className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-2.5 sm:p-4"
-              >
-                <div className="flex items-center justify-between gap-3 mb-2 sm:mb-3">
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-amber-300">
-                    <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    <span>Urgent Partner Hiring Spotlight</span>
-                  </div>
-                  <span className="text-[11px] text-slate-400">
-                    Direct Partner Roles
-                  </span>
-                </div>
-                <div className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-3">
-                  {spotlightJobs.map((job) => (
-                    <div
-                      key={`spot-${job.id}`}
-                      onClick={() => setInspectedJob(job)}
-                      className="w-[215px] shrink-0 snap-start sm:w-auto cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-2.5 sm:p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-1.5 sm:gap-2"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between gap-2 text-xs">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <CompanyLogo
-                              company={job.company}
-                              short={job.companyShort}
-                              explicitLogoUrl={job.companyLogoUrl}
-                              websiteOrApplyUrl={
-                                job.companyWebsite || job.applyUrl
-                              }
-                              size="sm"
-                            />
-                            <span className="font-bold text-slate-100 truncate">
-                              {job.company}
-                            </span>
-                          </div>
-                          <span className="font-mono tabular-nums text-cyan-300 font-semibold shrink-0">
-                            {formatPayRate(
-                              job.payMinUsd,
-                              job.payMaxUsd,
-                              job.payUnit
-                            )}
-                          </span>
-                        </div>
-                        <p className="mt-1.5 sm:mt-2 text-xs text-slate-300 line-clamp-1">
-                          {job.title}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between pt-0.5 sm:pt-1">
-                        <span className="text-[11px] text-slate-500">
-                          {job.category}
-                        </span>
-                        <a
-                          href={resolveApplyUrl(job.company, job.applyUrl)}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
-                        >
-                          <span>Apply</span>
-                          <ArrowUpRight className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
+            {/* Main Job Cards Grid: First 3 Cards Immediately Below Top Controls */}
+            {filteredJobs.length > 0 ? (
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                  {firstThreeJobs.map((job) => (
+                    <JobCard
+                      key={job.id}
+                      job={job}
+                      isSaved={savedIds.includes(job.id)}
+                      appliedStatus={appliedRecords[job.id]?.status}
+                      skillMatch={computeSkillMatch(job, userSkills)}
+                      onToggleSave={toggleSaveJob}
+                      onOpenDetails={setInspectedJob}
+                    />
                   ))}
                 </div>
-              </section>
-            )}
 
-            {/* Job Cards Grid with Inline AdBanner every 8th card (capped to preserve speed & AdSense compliance) */}
-            {filteredJobs.length > 0 ? (
-              <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                  {visibleJobs.map((job, index) => {
-                    const adSlotNumber = Math.floor((index + 1) / 8);
-                    const shouldShowInlineAd =
-                      (index + 1) % 8 === 0 &&
-                      adSlotNumber <= MAX_INLINE_ADS_PER_VIEW;
-
-                    return (
-                      <React.Fragment key={job.id}>
-                        <JobCard
-                          job={job}
-                          isSaved={savedIds.includes(job.id)}
-                          appliedStatus={appliedRecords[job.id]?.status}
-                          skillMatch={computeSkillMatch(job, userSkills)}
-                          onToggleSave={toggleSaveJob}
-                          onOpenDetails={setInspectedJob}
-                        />
-                        {shouldShowInlineAd && (
-                          <div className="col-span-full py-1">
-                            <AdBanner placement="inline-feed" fullBleed />
+                {/* Urgent Partner Spotlight Strip (Moved after the first 3 job cards) */}
+                {isDefaultUnfiltered && spotlightJobs.length > 0 && (
+                  <section
+                    aria-label="Urgent hiring partner spotlight"
+                    className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-3 sm:p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3 mb-2.5 sm:mb-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-amber-300">
+                        <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                        <span>Urgent Partner Hiring Spotlight</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400">
+                        Direct Partner Roles
+                      </span>
+                    </div>
+                    <div className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-3">
+                      {spotlightJobs.map((job) => (
+                        <div
+                          key={`spot-${job.id}`}
+                          onClick={() => setInspectedJob(job)}
+                          className="w-[215px] shrink-0 snap-start sm:w-auto cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-2.5 sm:p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-1.5 sm:gap-2"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <CompanyLogo
+                                  company={job.company}
+                                  short={job.companyShort}
+                                  explicitLogoUrl={job.companyLogoUrl}
+                                  websiteOrApplyUrl={
+                                    job.companyWebsite || job.applyUrl
+                                  }
+                                  size="sm"
+                                />
+                                <span className="font-bold text-slate-100 truncate">
+                                  {job.company}
+                                </span>
+                              </div>
+                              <span className="font-mono tabular-nums text-cyan-300 font-semibold shrink-0">
+                                {formatPayRate(
+                                  job.payMinUsd,
+                                  job.payMaxUsd,
+                                  job.payUnit
+                                )}
+                              </span>
+                            </div>
+                            <p className="mt-1.5 sm:mt-2 text-xs text-slate-300 line-clamp-1">
+                              {job.title}
+                            </p>
                           </div>
-                        )}
-                      </React.Fragment>
-                    );
-                  })}
+                          <div className="flex items-center justify-between pt-0.5 sm:pt-1">
+                            <span className="text-[11px] text-slate-500">
+                              {job.category}
+                            </span>
+                            <a
+                              href={resolveApplyUrl(job.company, job.applyUrl)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
+                            >
+                              <span>Apply</span>
+                              <ArrowUpRight className="w-3 h-3" />
+                            </a>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
+
+                {/* Zero-Login Local Instant Skill Match % Bar (Moved after the first 3 job cards) */}
+                <div className="rounded-xl border border-slate-800/90 bg-[#0D1320] px-3.5 py-2.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 text-xs text-slate-300 min-w-0">
+                      <Sparkles className="w-3.5 h-3.5 text-cyan-300 shrink-0" />
+                      {parseUserSkills(userSkills).length > 0 ? (
+                        <span className="truncate">
+                          <strong className="text-cyan-300">
+                            Skill Match % Active:
+                          </strong>{' '}
+                          {parseUserSkills(userSkills).join(', ')}
+                        </span>
+                      ) : (
+                        <span>
+                          <strong className="text-slate-100">
+                            Instant Skill Match %:
+                          </strong>{' '}
+                          Add your skills locally (zero signup) to score every role.
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      {parseUserSkills(userSkills).length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setUserSkills('')}
+                          className="text-xs text-slate-400 hover:text-rose-300 transition-colors"
+                        >
+                          Clear
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setIsSkillsEditorOpen((prev) => !prev)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-cyan-300 hover:border-cyan-500/50 transition-colors"
+                      >
+                        <span>
+                          {isSkillsEditorOpen
+                            ? 'Done'
+                            : parseUserSkills(userSkills).length > 0
+                              ? 'Edit Skills'
+                              : 'Match My Skills'}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {isSkillsEditorOpen && (
+                    <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-2.5">
+                      <input
+                        type="text"
+                        value={userSkills}
+                        onChange={(e) =>
+                          setUserSkills(sanitizeText(e.target.value, 200))
+                        }
+                        aria-label="Enter your skills separated by commas"
+                        placeholder="e.g., Python, TypeScript, RLHF, Voiceover, Data Annotation"
+                        className="w-full min-h-[40px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      />
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {QUICK_SKILL_SUGGESTIONS.map((skill) => {
+                          const activeSkills = parseUserSkills(userSkills).map(
+                            (s) => s.toLowerCase()
+                          );
+                          const isAdded = activeSkills.includes(
+                            skill.toLowerCase()
+                          );
+                          return (
+                            <button
+                              key={skill}
+                              type="button"
+                              onClick={() => {
+                                const current = parseUserSkills(userSkills);
+                                if (isAdded) {
+                                  setUserSkills(
+                                    current
+                                      .filter(
+                                        (s) =>
+                                          s.toLowerCase() !==
+                                          skill.toLowerCase()
+                                      )
+                                      .join(', ')
+                                  );
+                                } else {
+                                  setUserSkills([...current, skill].join(', '));
+                                }
+                              }}
+                              className={`min-h-[30px] rounded-md border px-2.5 py-0.5 text-[11px] font-medium transition-colors ${
+                                isAdded
+                                  ? 'border-cyan-400/60 bg-cyan-950/60 text-cyan-200'
+                                  : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-slate-600'
+                              }`}
+                            >
+                              {isAdded ? `✓ ${skill}` : `+ ${skill}`}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
+
+                {/* Remaining Job Cards with Inline AdBanner every 8th overall card */}
+                {remainingJobs.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                    {remainingJobs.map((job, index) => {
+                      const overallIndex = index + 3;
+                      const adSlotNumber = Math.floor((overallIndex + 1) / 8);
+                      const shouldShowInlineAd =
+                        (overallIndex + 1) % 8 === 0 &&
+                        adSlotNumber <= MAX_INLINE_ADS_PER_VIEW;
+
+                      return (
+                        <React.Fragment key={job.id}>
+                          <JobCard
+                            job={job}
+                            isSaved={savedIds.includes(job.id)}
+                            appliedStatus={appliedRecords[job.id]?.status}
+                            skillMatch={computeSkillMatch(job, userSkills)}
+                            onToggleSave={toggleSaveJob}
+                            onOpenDetails={setInspectedJob}
+                          />
+                          {shouldShowInlineAd && (
+                            <div className="col-span-full py-1">
+                              <AdBanner placement="inline-feed" fullBleed />
+                            </div>
+                          )}
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                )}
 
                 {visibleCount < filteredJobs.length && (
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-slate-800/90 bg-[#0D1320] px-5 py-4">
@@ -1109,7 +1149,7 @@ export default function App() {
                       <strong className="font-mono tabular-nums text-cyan-300">
                         {filteredJobs.length}
                       </strong>{' '}
-                      matching roles
+                      matching roles in standard USD ($)
                     </p>
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
