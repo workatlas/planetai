@@ -31,7 +31,7 @@ import {
   getAssessmentAndPayoutInfo,
 } from '../utils/careerIntel';
 import {sanitizeText, validateHttpsUrl} from '../utils/sanitize';
-import {ApplicationStatus, AppliedRecord} from './JobCard';
+import {ApplicationStatus, AppliedRecord, CompanyLogo} from './JobCard';
 
 interface JobDetailModalProps {
   job: JobListing | null;
@@ -71,12 +71,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
 }) => {
   const [status, setStatus] = useState<ApplicationStatus>('Applied');
   const [note, setNote] = useState('');
-  const [logoFailed, setLogoFailed] = useState(false);
   const [weeklyHours, setWeeklyHours] = useState(25);
   const [shareCopied, setShareCopied] = useState(false);
 
   useEffect(() => {
-    setLogoFailed(false);
     setShareCopied(false);
     if (appliedRecord) {
       setStatus(appliedRecord.status);
@@ -85,7 +83,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
       setStatus('Applied');
       setNote('');
     }
-  }, [appliedRecord, job?.id, job?.companyLogoUrl]);
+  }, [appliedRecord, job?.id]);
 
   if (!job) return null;
 
@@ -95,10 +93,6 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     job.payUnit
   );
 
-  const safeLogoUrl = job.companyLogoUrl
-    ? validateHttpsUrl(job.companyLogoUrl)
-    : null;
-  const showLogo = Boolean(safeLogoUrl && !logoFailed);
   const safeWebsiteUrl = job.companyWebsite
     ? validateHttpsUrl(job.companyWebsite)
     : null;
@@ -196,18 +190,13 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         {/* Header */}
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            {showLogo && safeLogoUrl ? (
-              <img
-                src={safeLogoUrl}
-                alt={`${job.company} logo`}
-                onError={() => setLogoFailed(true)}
-                className="h-11 w-11 shrink-0 rounded-xl border border-slate-700 bg-slate-900 object-contain p-1"
-              />
-            ) : (
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-slate-700 bg-slate-900 font-display text-sm font-bold text-cyan-300">
-                {job.companyShort}
-              </div>
-            )}
+            <CompanyLogo
+              company={job.company}
+              short={job.companyShort}
+              explicitLogoUrl={job.companyLogoUrl}
+              websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
+              size="lg"
+            />
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-200">
                 <span>{job.company}</span>
