@@ -18,7 +18,6 @@ import {
 } from 'lucide-react';
 import {AdBanner} from './components/AdBanner';
 import {AddJobModal} from './components/AddJobModal';
-import {CompanyLogo} from './components/CompanyLogo';
 import {
   AIToolsView,
   RequestedAITool,
@@ -30,6 +29,7 @@ import {AlertPreferences, JobAlertModal} from './components/JobAlertModal';
 import {
   ApplicationStatus,
   AppliedRecord,
+  CompanyLogo,
   JobCard,
 } from './components/JobCard';
 import {JobDetailModal} from './components/JobDetailModal';
