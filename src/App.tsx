@@ -56,7 +56,7 @@ import {
 import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
 import {syncSeoMetadata} from './utils/seo';
 
-type SortOption = 'newest' | 'highest-pay' | 'urgent';
+type SortOption = 'newest' | 'highest-pay' | 'urgent' | 'alphabetical';
 type TierFilter = 'All' | CompanyTier;
 type PayTierFilter = 'all' | '25plus' | '50plus' | 'annual';
 type SavedSubTab = 'saved' | 'applied';
@@ -358,6 +358,15 @@ export default function App() {
         (a, b) =>
           Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
           Number(Boolean(b.urgent)) - Number(Boolean(a.urgent))
+      );
+    }
+    if (sortBy === 'alphabetical') {
+      return [...list].sort(
+        (a, b) =>
+          a.company.localeCompare(b.company, undefined, {
+            sensitivity: 'base',
+          }) ||
+          a.title.localeCompare(b.title, undefined, {sensitivity: 'base'})
       );
     }
     return [...list].sort(
@@ -750,6 +759,7 @@ export default function App() {
                       <option value="newest">Sort: Newest</option>
                       <option value="highest-pay">Sort: Highest Pay</option>
                       <option value="urgent">Sort: Urgent First</option>
+                      <option value="alphabetical">Sort: Alphabetical (A–Z)</option>
                     </select>
                   </div>
                 </div>
