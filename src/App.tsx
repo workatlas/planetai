@@ -84,6 +84,9 @@ const PARTNER_SPOTLIGHT_COMPANIES = [
   'Spout',
 ];
 
+const JOBS_PER_PAGE = 24;
+const MAX_INLINE_ADS_PER_VIEW = 4;
+
 function readStorage<T>(key: string, fallback: T): T {
   try {
     const raw = window.localStorage.getItem(key);
@@ -160,6 +163,7 @@ export default function App() {
   const [selectedPayTier, setSelectedPayTier] = useState<PayTierFilter>('all');
   const [selectedPlatform, setSelectedPlatform] = useState<string>('');
   const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [visibleCount, setVisibleCount] = useState<number>(JOBS_PER_PAGE);
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
@@ -367,6 +371,22 @@ export default function App() {
     selectedPlatform,
     sortBy,
   ]);
+
+  useEffect(() => {
+    setVisibleCount(JOBS_PER_PAGE);
+  }, [
+    searchQuery,
+    selectedCategory,
+    selectedTier,
+    selectedPayTier,
+    selectedPlatform,
+    sortBy,
+  ]);
+
+  const visibleJobs = useMemo(
+    () => filteredJobs.slice(0, visibleCount),
+    [filteredJobs, visibleCount]
+  );
 
   const savedJobs = useMemo(
     () => allJobs.filter((job) => savedIds.includes(job.id)),
@@ -675,7 +695,7 @@ export default function App() {
                     type="search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search 50+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
+                    placeholder="Search 200+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
                     aria-label="Search AI and remote jobs"
                     className="w-full min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-10 pr-10 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
                   />
@@ -819,8 +839,17 @@ export default function App() {
                   <span>
                     Showing{' '}
                     <strong className="font-mono tabular-nums text-slate-100">
-                      {filteredJobs.length}
-                    </strong>{' '}
+                      {visibleJobs.length}
+                    </strong>
+                    {visibleJobs.length < filteredJobs.length && (
+                      <>
+                        {' '}
+                        of{' '}
+                        <strong className="font-mono tabular-nums text-slate-100">
+                          {filteredJobs.length}
+                        </strong>
+                      </>
+                    )}{' '}
                     {filteredJobs.length === 1 ? 'role' : 'roles'} in standard USD ($)
                   </span>
                   {selectedPlatform && (
@@ -1014,26 +1043,76 @@ export default function App() {
               </section>
             )}
 
-            {/* Job Cards Grid with Inline AdBanner after every 8th job card */}
+            {/* Job Cards Grid with Inline AdBanner every 8th card (capped to preserve speed & AdSense compliance) */}
             {filteredJobs.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-                {filteredJobs.map((job, index) => (
-                  <React.Fragment key={job.id}>
-                    <JobCard
-                      job={job}
-                      isSaved={savedIds.includes(job.id)}
-                      appliedStatus={appliedRecords[job.id]?.status}
-                      skillMatch={computeSkillMatch(job, userSkills)}
-                      onToggleSave={toggleSaveJob}
-                      onOpenDetails={setInspectedJob}
-                    />
-                    {(index + 1) % 8 === 0 && (
-                      <div className="col-span-full py-1">
-                        <AdBanner placement="inline-feed" fullBleed />
-                      </div>
-                    )}
-                  </React.Fragment>
-                ))}
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {visibleJobs.map((job, index) => {
+                    const adSlotNumber = Math.floor((index + 1) / 8);
+                    const shouldShowInlineAd =
+                      (index + 1) % 8 === 0 &&
+                      adSlotNumber <= MAX_INLINE_ADS_PER_VIEW;
+
+                    return (
+                      <React.Fragment key={job.id}>
+                        <JobCard
+                          job={job}
+                          isSaved={savedIds.includes(job.id)}
+                          appliedStatus={appliedRecords[job.id]?.status}
+                          skillMatch={computeSkillMatch(job, userSkills)}
+                          onToggleSave={toggleSaveJob}
+                          onOpenDetails={setInspectedJob}
+                        />
+                        {shouldShowInlineAd && (
+                          <div className="col-span-full py-1">
+                            <AdBanner placement="inline-feed" fullBleed />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
+                </div>
+
+                {visibleCount < filteredJobs.length && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 rounded-2xl border border-slate-800/90 bg-[#0D1320] px-5 py-4">
+                    <p className="text-xs sm:text-sm text-slate-300">
+                      Viewing{' '}
+                      <strong className="font-mono tabular-nums text-slate-100">
+                        {visibleJobs.length}
+                      </strong>{' '}
+                      of{' '}
+                      <strong className="font-mono tabular-nums text-cyan-300">
+                        {filteredJobs.length}
+                      </strong>{' '}
+                      matching roles
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2.5">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setVisibleCount((prev) =>
+                            Math.min(prev + JOBS_PER_PAGE, filteredJobs.length)
+                          )
+                        }
+                        className="inline-flex items-center justify-center gap-2 min-h-[42px] px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-cyan-400 transition-colors"
+                      >
+                        Load{' '}
+                        {Math.min(
+                          JOBS_PER_PAGE,
+                          filteredJobs.length - visibleCount
+                        )}{' '}
+                        More Roles
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setVisibleCount(filteredJobs.length)}
+                        className="inline-flex items-center justify-center min-h-[42px] px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-semibold text-slate-200 hover:bg-slate-800 transition-colors"
+                      >
+                        Show All ({filteredJobs.length})
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
