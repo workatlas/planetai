@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import {AdBanner} from './components/AdBanner';
 import {AddJobModal} from './components/AddJobModal';
+import {CompanyLogo} from './components/CompanyLogo';
 import {
   AIToolsView,
   RequestedAITool,
@@ -1007,9 +1008,20 @@ export default function App() {
                     >
                       <div>
                         <div className="flex items-center justify-between gap-2 text-xs">
-                          <span className="font-bold text-slate-100 truncate">
-                            {job.company}
-                          </span>
+                          <div className="flex items-center gap-2 min-w-0">
+                            <CompanyLogo
+                              company={job.company}
+                              short={job.companyShort}
+                              explicitLogoUrl={job.companyLogoUrl}
+                              websiteOrApplyUrl={
+                                job.companyWebsite || job.applyUrl
+                              }
+                              size="sm"
+                            />
+                            <span className="font-bold text-slate-100 truncate">
+                              {job.company}
+                            </span>
+                          </div>
                           <span className="font-mono tabular-nums text-cyan-300 font-semibold shrink-0">
                             {formatPayRate(
                               job.payMinUsd,
@@ -1018,7 +1030,7 @@ export default function App() {
                             )}
                           </span>
                         </div>
-                        <p className="mt-1 text-xs text-slate-300 line-clamp-1">
+                        <p className="mt-2 text-xs text-slate-300 line-clamp-1">
                           {job.title}
                         </p>
                       </div>
