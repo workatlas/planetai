@@ -91,7 +91,7 @@ export function formatPayRate(
     : `$${minUsd}-$${maxUsd}${suffix}`;
 }
 
-export const INITIAL_JOBS: JobListing[] = [
+const BASE_INITIAL_JOBS: JobListing[] = [
   // =========================================================================
   // 25 ESTABLISHED MARKET LEADERS
   // =========================================================================
@@ -1422,6 +1422,261 @@ export const INITIAL_JOBS: JobListing[] = [
       'Track subtle contradictions in persona backstory across long multi-turn threads.',
     ],
   },
+];
+
+interface ExpansionCompany {
+  name: string;
+  short: string;
+  tier: CompanyTier;
+  url: string;
+  primaryCategory: Exclude<JobCategory, 'All'>;
+  minHourly: number;
+  maxHourly: number;
+}
+
+interface ExpansionTrack {
+  category: Exclude<JobCategory, 'All'>;
+  titlePrefix: string;
+  payUnit: PayUnit;
+  workType: JobListing['workType'];
+  location: string;
+  tags: string[];
+  descriptionTemplate: (company: string) => string;
+  requirements: string[];
+  prepTips: string[];
+}
+
+const EXPANSION_COMPANIES: ExpansionCompany[] = [
+  {name: 'micro1', short: 'M1', tier: 'Established Leader', url: 'https://micro1.ai', primaryCategory: 'Coding', minHourly: 55, maxHourly: 95},
+  {name: 'Mercor', short: 'MC', tier: 'Established Leader', url: 'https://mercor.com', primaryCategory: 'Coding', minHourly: 65, maxHourly: 115},
+  {name: 'Babel Audio', short: 'BB', tier: 'Emerging AI Startup', url: 'https://babel.audio', primaryCategory: 'Audio/Voice', minHourly: 22, maxHourly: 38},
+  {name: 'Visora', short: 'VS', tier: 'Emerging AI Startup', url: 'https://visora.com', primaryCategory: 'Data Annotation', minHourly: 20, maxHourly: 36},
+  {name: 'Spout', short: 'SP', tier: 'Emerging AI Startup', url: 'https://withspout.com', primaryCategory: 'Audio/Voice', minHourly: 22, maxHourly: 40},
+  {name: 'Alignerr', short: 'AL', tier: 'Established Leader', url: 'https://www.alignerr.com/', primaryCategory: 'AI Training', minHourly: 35, maxHourly: 60},
+  {name: 'Appen', short: 'AP', tier: 'Established Leader', url: 'https://crowdgen.com/', primaryCategory: 'Data Annotation', minHourly: 18, maxHourly: 30},
+  {name: 'DataAnnotation', short: 'DA', tier: 'Established Leader', url: 'https://www.dataannotation.tech/', primaryCategory: 'AI Training', minHourly: 25, maxHourly: 45},
+  {name: 'Outlier', short: 'OU', tier: 'Established Leader', url: 'https://outlier.ai/', primaryCategory: 'AI Training', minHourly: 35, maxHourly: 65},
+  {name: 'Remotasks', short: 'RT', tier: 'Established Leader', url: 'https://www.remotasks.com/', primaryCategory: 'Data Annotation', minHourly: 18, maxHourly: 32},
+  {name: 'Scale AI', short: 'SC', tier: 'Established Leader', url: 'https://scale.com/careers', primaryCategory: 'AI Training', minHourly: 32, maxHourly: 55},
+  {name: 'Telus International', short: 'TI', tier: 'Established Leader', url: 'https://www.telusdigital.com/careers', primaryCategory: 'Remote', minHourly: 18, maxHourly: 28},
+  {name: 'Welocalize', short: 'WL', tier: 'Established Leader', url: 'https://www.welocalize.com/careers/', primaryCategory: 'Remote', minHourly: 19, maxHourly: 30},
+  {name: 'RWS', short: 'RW', tier: 'Established Leader', url: 'https://www.rws.com/about/careers/', primaryCategory: 'Data Annotation', minHourly: 20, maxHourly: 34},
+  {name: 'Lionbridge', short: 'LB', tier: 'Established Leader', url: 'https://careers.lionbridge.com/', primaryCategory: 'Audio/Voice', minHourly: 20, maxHourly: 32},
+  {name: 'OneForma', short: 'OF', tier: 'Established Leader', url: 'https://www.oneforma.com/', primaryCategory: 'Data Annotation', minHourly: 18, maxHourly: 29},
+  {name: 'Clickworker', short: 'CW', tier: 'Established Leader', url: 'https://www.clickworker.com/', primaryCategory: 'Data Annotation', minHourly: 15, maxHourly: 25},
+  {name: 'Toloka', short: 'TK', tier: 'Established Leader', url: 'https://toloka.ai/tolokers/', primaryCategory: 'AI Training', minHourly: 20, maxHourly: 36},
+  {name: 'Turing', short: 'TU', tier: 'Established Leader', url: 'https://www.turing.com/jobs', primaryCategory: 'Coding', minHourly: 50, maxHourly: 90},
+  {name: 'Andela', short: 'AN', tier: 'Established Leader', url: 'https://www.andela.com/join-andela', primaryCategory: 'Coding', minHourly: 48, maxHourly: 85},
+  {name: 'Toptal', short: 'TT', tier: 'Established Leader', url: 'https://www.toptal.com/talent/apply', primaryCategory: 'Coding', minHourly: 65, maxHourly: 120},
+  {name: 'BairesDev', short: 'BD', tier: 'Established Leader', url: 'https://www.bairesdev.com/careers/', primaryCategory: 'Coding', minHourly: 42, maxHourly: 75},
+  {name: 'Deel', short: 'DL', tier: 'Established Leader', url: 'https://www.deel.com/careers/', primaryCategory: 'Remote', minHourly: 40, maxHourly: 70},
+  {name: 'GitLab', short: 'GL', tier: 'Established Leader', url: 'https://about.gitlab.com/jobs/', primaryCategory: 'Coding', minHourly: 60, maxHourly: 105},
+  {name: 'Automattic', short: 'AU', tier: 'Established Leader', url: 'https://automattic.com/work-with-us/', primaryCategory: 'Remote', minHourly: 45, maxHourly: 80},
+  {name: 'Zapier', short: 'ZP', tier: 'Established Leader', url: 'https://zapier.com/jobs', primaryCategory: 'Remote', minHourly: 48, maxHourly: 85},
+  {name: 'Hugging Face', short: 'HF', tier: 'Established Leader', url: 'https://huggingface.co/jobs', primaryCategory: 'Coding', minHourly: 65, maxHourly: 110},
+  {name: 'Cohere', short: 'CH', tier: 'Emerging AI Startup', url: 'https://cohere.com/careers', primaryCategory: 'AI Training', minHourly: 42, maxHourly: 72},
+  {name: 'Anthropic', short: 'AT', tier: 'Emerging AI Startup', url: 'https://www.anthropic.com/careers', primaryCategory: 'AI Training', minHourly: 50, maxHourly: 85},
+  {name: 'OpenAI', short: 'OA', tier: 'Established Leader', url: 'https://openai.com/careers/', primaryCategory: 'AI Training', minHourly: 55, maxHourly: 95},
+  {name: 'Perplexity', short: 'PX', tier: 'Emerging AI Startup', url: 'https://www.perplexity.ai/hub/careers', primaryCategory: 'AI Training', minHourly: 34, maxHourly: 58},
+  {name: 'Mistral', short: 'MS', tier: 'Emerging AI Startup', url: 'https://mistral.ai/careers/', primaryCategory: 'Coding', minHourly: 58, maxHourly: 98},
+  {name: 'Runway', short: 'RN', tier: 'Emerging AI Startup', url: 'https://runwayml.com/careers', primaryCategory: 'Data Annotation', minHourly: 30, maxHourly: 52},
+  {name: 'ElevenLabs', short: 'EL', tier: 'Emerging AI Startup', url: 'https://elevenlabs.io/careers', primaryCategory: 'Audio/Voice', minHourly: 28, maxHourly: 50},
+  {name: 'AssemblyAI', short: 'AS', tier: 'Emerging AI Startup', url: 'https://www.assemblyai.com/careers', primaryCategory: 'Audio/Voice', minHourly: 32, maxHourly: 56},
+];
+
+const EXPANSION_TRACKS: ExpansionTrack[] = [
+  {
+    category: 'AI Training',
+    titlePrefix: 'RLHF Factuality & Prompt Grading Specialist',
+    payUnit: 'hr',
+    workType: 'Async Contract',
+    location: 'Worldwide Remote',
+    tags: ['RLHF', 'Factuality', 'Prompt Eval', 'LLM'],
+    descriptionTemplate: (company) =>
+      `Audit multi-turn LLM outputs, rank model responses against factual rubrics, and write concise improvement rationales for ${company}.`,
+    requirements: [
+      'Strong analytical reading comprehension and fact-checking accuracy',
+      'Ability to follow multi-page rubric instructions consistently',
+      'Reliable desktop setup with 10+ hrs/week async availability',
+    ],
+    prepTips: [
+      'Always verify numerical claims and dates before scoring truthfulness.',
+      'Explain why the winning response outperforms on all rubric criteria.',
+    ],
+  },
+  {
+    category: 'Coding',
+    titlePrefix: 'AI Code Evaluation & Unit Test Reviewer',
+    payUnit: 'hr',
+    workType: 'Async Contract',
+    location: 'Global Remote',
+    tags: ['Python', 'TypeScript', 'Unit Testing', 'Code Review'],
+    descriptionTemplate: (company) =>
+      `Benchmark synthesized code snippets, write edge-case unit tests, and debug algorithmic failures across repositories for ${company}.`,
+    requirements: [
+      'Proficiency in Python, TypeScript, Go, or SQL debugging',
+      'Experience writing deterministic unit and regression test suites',
+      'Clear written technical justification for bug fixes',
+    ],
+    prepTips: [
+      'Test boundary inputs (empty arrays, nulls, timeouts) when scoring code.',
+      'Keep refactored reference implementations clean and idiomatic.',
+    ],
+  },
+  {
+    category: 'Audio/Voice',
+    titlePrefix: 'Expressive Speech & ASR Quality Contributor',
+    payUnit: 'hr',
+    workType: 'Part-Time Flexible',
+    location: 'Worldwide Remote',
+    tags: ['Voiceover', 'ASR', 'Prosody', 'Audio QA'],
+    descriptionTemplate: (company) =>
+      `Record natural conversational speech clips and verify speaker turn segmentation and acoustic clarity for ${company} voice models.`,
+    requirements: [
+      'Quiet recording environment free of echo or background hum',
+      'Clear articulation with natural conversational pacing',
+      'External USB/XLR microphone or clean headset input',
+    ],
+    prepTips: [
+      'Warm up your mic and verify peak levels stay between -12 dB and -6 dB.',
+      'Leave 0.5 seconds of room tone before and after each spoken line.',
+    ],
+  },
+  {
+    category: 'Data Annotation',
+    titlePrefix: 'Multimodal Bounding Box & QA Annotator',
+    payUnit: 'hr',
+    workType: 'Async Contract',
+    location: 'Worldwide Remote',
+    tags: ['Data Annotation', 'Computer Vision', 'QA', 'Segmentation'],
+    descriptionTemplate: (company) =>
+      `Label complex image, video, and document layouts with pixel-accurate masks and verify taxonomy consistency at ${company}.`,
+    requirements: [
+      'High visual precision and patience for detailed labeling guidelines',
+      '1080p+ display with stable broadband connection',
+      'Track record meeting 96%+ QA audit thresholds',
+    ],
+    prepTips: [
+      'Zoom in on object edges and check occlusion rules in the taxonomy guide.',
+      'Double-check class labels before submitting each batch.',
+    ],
+  },
+  {
+    category: 'Remote',
+    titlePrefix: 'Async AI Operations & Quality Specialist',
+    payUnit: 'hr',
+    workType: 'Full-Time Remote',
+    location: 'Anywhere Remote',
+    tags: ['Remote Ops', 'Quality Assurance', 'Workflows', 'Async'],
+    descriptionTemplate: (company) =>
+      `Coordinate distributed annotator guidelines, audit QA throughput dashboards, and streamline async documentation workflows at ${company}.`,
+    requirements: [
+      '2+ years in remote operations, QA, or technical support',
+      'Strong async written communication in English',
+      'Comfort with spreadsheets, issue trackers, and SOP documentation',
+    ],
+    prepTips: [
+      'Highlight concrete async collaboration habits and SLA tracking metrics.',
+      'Prepare concise examples of catching systemic quality regressions.',
+    ],
+  },
+];
+
+const SPECIALTY_FOCUSES = [
+  'STEM & Quantitative Reasoning',
+  'Safety & Policy Alignment',
+  'Search Relevance & Citations',
+  'Multilingual Localization QA',
+  'Tool-Use & Agentic Workflows',
+  'Long-Context Document Synthesis',
+  'SQL & Data Pipeline Verification',
+  'Conversational Dialogue Fluency',
+  'OCR & Structured Table Extraction',
+  'Latency & Edge-Case Benchmarking',
+  'Technical Documentation & API QA',
+];
+
+const POSTED_AGO_SLOTS = [
+  '12m ago',
+  '28m ago',
+  '45m ago',
+  '1h ago',
+  '2h ago',
+  '3h ago',
+  '5h ago',
+  '8h ago',
+  '12h ago',
+  '1d ago',
+  '2d ago',
+];
+
+function generateExpandedJobs(): JobListing[] {
+  const generated: JobListing[] = [];
+  const totalToGenerate = 150;
+
+  for (let i = 0; i < totalToGenerate; i++) {
+    const num = 51 + i;
+    const company = EXPANSION_COMPANIES[i % EXPANSION_COMPANIES.length];
+    const passIndex = Math.floor(i / EXPANSION_COMPANIES.length);
+    const track =
+      passIndex === 0
+        ? EXPANSION_TRACKS.find(
+            (t) => t.category === company.primaryCategory
+          ) || EXPANSION_TRACKS[0]
+        : EXPANSION_TRACKS[(i + passIndex) % EXPANSION_TRACKS.length];
+
+    const specialty = SPECIALTY_FOCUSES[(i * 3 + passIndex) % SPECIALTY_FOCUSES.length];
+    const isAnnual = track.workType === 'Full-Time Remote' && i % 4 === 0;
+    const payUnit: PayUnit = isAnnual ? 'yr' : 'hr';
+
+    const baseMin =
+      track.category === 'Coding'
+        ? Math.max(company.minHourly, 42)
+        : track.category === 'AI Training'
+          ? Math.max(22, Math.min(company.minHourly, 48))
+          : Math.max(16, Math.min(company.minHourly, 34));
+    const baseMax =
+      track.category === 'Coding'
+        ? Math.max(baseMin + 20, company.maxHourly)
+        : track.category === 'AI Training'
+          ? Math.max(baseMin + 15, Math.min(company.maxHourly, 72))
+          : Math.max(baseMin + 10, Math.min(company.maxHourly, 48));
+
+    const payMinUsd = isAnnual ? baseMin * 1850 : baseMin + (passIndex % 4) * 2;
+    const payMaxUsd = isAnnual ? baseMax * 1950 : baseMax + (passIndex % 4) * 3;
+
+    const title = `${track.titlePrefix} — ${specialty}`;
+
+    generated.push({
+      id: `gen-job-${num}`,
+      title,
+      company: company.name,
+      companyShort: company.short,
+      companyTier: company.tier,
+      category: track.category,
+      payMinUsd,
+      payMaxUsd,
+      payUnit,
+      location: track.location,
+      workType: track.workType,
+      postedAgo: POSTED_AGO_SLOTS[i % POSTED_AGO_SLOTS.length],
+      urgent: i % 7 === 0,
+      tags: Array.from(
+        new Set([...track.tags.slice(0, 3), specialty.split(' ')[0]])
+      ),
+      applyUrl: resolveApplyUrl(company.name, company.url),
+      description: `${track.descriptionTemplate(company.name)} Focus area: ${specialty}.`,
+      requirements: track.requirements,
+      prepTips: track.prepTips,
+    });
+  }
+
+  return generated;
+}
+
+export const INITIAL_JOBS: JobListing[] = [
+  ...BASE_INITIAL_JOBS,
+  ...generateExpandedJobs(),
 ];
 
 export interface PlatformSummary {
