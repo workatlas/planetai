@@ -196,6 +196,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               explicitLogoUrl={job.companyLogoUrl}
               websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
               size="lg"
+              lazy={false}
             />
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm font-semibold text-slate-200">
