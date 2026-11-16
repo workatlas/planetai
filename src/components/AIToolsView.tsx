@@ -622,7 +622,12 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span>{tab.label}</span>
-            </bu      {/* TOOL 1: Resume & Cover Letter Studio */}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* TOOL 1: Resume & Cover Letter Studio */}
       {activeTool === 'resume' && (
         <ResumeStudio
           targetRole={targetRole}
@@ -635,11 +640,6 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
           setJobDescInput={setJobDescInput}
           tailoredNotice={tailoredNotice}
         />
-      )}
-
-e>
-          </div>
-        </div>
       )}
 
       {/* TOOL 2: Quick Reply Email Drafter */}
