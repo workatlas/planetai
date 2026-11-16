@@ -644,10 +644,10 @@ export default function App() {
       </div>
 
       {/* Main Content */}
-      <main className="flex-1 mx-auto w-full max-w-7xl px-3.5 sm:px-6 py-2.5 sm:py-8">
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 sm:py-8">
         {activeTab === 'jobs' && (
-          <div className="space-y-2.5 sm:space-y-6">
-            {/* Compact Top Controls: Search Bar, Collapsible Filters & Post, and Horizontal Category Pills */}
+          <div className="space-y-3 sm:space-y-6">
+            {/* Compact Top Controls: Search Bar, Collapsible Filters & Post, and Category Filter Pills */}
             <section aria-labelledby="feed-heading" className="space-y-2 sm:space-y-4">
               {/* Desktop Hero Header (Hidden on <640px mobile so job cards appear above the fold) */}
               <div className="hidden sm:flex flex-col lg:flex-row lg:items-end justify-between gap-4">
@@ -722,9 +722,9 @@ export default function App() {
                   type="button"
                   onClick={() => setIsFiltersBarOpen((prev) => !prev)}
                   aria-expanded={isFiltersBarOpen}
-                  className="sm:hidden flex w-full items-center justify-between gap-2 min-h-[36px] rounded-xl border border-slate-800/90 bg-[#0D1320] px-3 py-1.5 text-xs font-medium text-slate-200 hover:border-slate-700 transition-colors"
+                  className="sm:hidden flex w-full items-center justify-between gap-2 min-h-[40px] rounded-xl border border-slate-800/90 bg-[#0D1320] px-3.5 py-2 text-xs font-medium text-slate-200 hover:border-slate-700 transition-colors"
                 >
-                  <span className="inline-flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 shrink-0">
                     <SlidersHorizontal className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
                     <span>Filters &amp; Post</span>
                     {activeFilterCount > 0 && (
@@ -733,12 +733,12 @@ export default function App() {
                       </span>
                     )}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400">
-                    <span>Rate · Sort · Companies · + Post</span>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-slate-400 min-w-0">
+                    <span className="truncate">Rate · Sort · Companies · + Post</span>
                     {isFiltersBarOpen ? (
-                      <ChevronUp className="w-3.5 h-3.5 text-slate-400" />
+                      <ChevronUp className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     ) : (
-                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                     )}
                   </span>
                 </button>
@@ -847,11 +847,11 @@ export default function App() {
                 </div>
               </div>
 
-              {/* Horizontal Category Filter Pills */}
+              {/* Category Filter Pills (2-column grid on mobile, wrap row on desktop) */}
               <div
                 role="tablist"
                 aria-label="Filter jobs by category"
-                className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar py-0.5"
+                className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 py-0.5"
               >
                 {JOB_CATEGORIES.map((category) => {
                   const isActive = selectedCategory === category;
@@ -863,15 +863,15 @@ export default function App() {
                       aria-selected={isActive}
                       type="button"
                       onClick={() => setSelectedCategory(category)}
-                      className={`inline-flex items-center gap-1.5 sm:gap-2 min-h-[34px] sm:min-h-[42px] px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                      className={`inline-flex items-center justify-between sm:justify-center gap-2 w-full sm:w-auto min-h-[38px] sm:min-h-[42px] px-3.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
                         isActive
                           ? 'border-cyan-400 bg-cyan-500 text-slate-950 font-semibold'
                           : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
                       }`}
                     >
-                      <span>{category}</span>
+                      <span className="truncate">{category}</span>
                       <span
-                        className={`font-mono text-[11px] sm:text-xs tabular-nums ${
+                        className={`font-mono text-[11px] sm:text-xs tabular-nums shrink-0 ${
                           isActive ? 'text-slate-900' : 'text-slate-500'
                         }`}
                       >
