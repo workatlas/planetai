@@ -251,15 +251,6 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
 }) => {
   const [activeTool, setActiveTool] = useState<AIToolKey>('resume');
 
-  useEffect(() => {
-    if (!requestedTool) return;
-    setActiveTool(requestedTool.tool);
-    if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
-    if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
-    if (requestedTool.skills) setSkillsInput(sanitizeText(requestedTool.skills, 200));
-    if (requestedTool.description) setJobDescInput(sanitizeText(requestedTool.description, 600));
-  }, [requestedTool]);
-
   // 1. Resume & Cover Letter Builder state
   const [savedCareerTarget] = useState(readSavedCareerTarget);
   const [targetRole, setTargetRole] = useState(
@@ -278,6 +269,15 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
   );
   const [tailoredNotice, setTailoredNotice] = useState<string | null>(null);
   const [copiedResume, setCopiedResume] = useState(false);
+
+  useEffect(() => {
+    if (!requestedTool) return;
+    setActiveTool(requestedTool.tool);
+    if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
+    if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
+    if (requestedTool.skills) setSkillsInput(sanitizeText(requestedTool.skills, 200));
+    if (requestedTool.description) setJobDescInput(sanitizeText(requestedTool.description, 600));
+  }, [requestedTool]);
 
   // Keep the selected job context available when users move between workspaces.
   useEffect(() => {
