@@ -1,6 +1,7 @@
 import React, {useEffect, useMemo, useState} from 'react';
 import PremiumMarketplacePreview from './preview/PremiumMarketplacePreview';
 import AdminDashboardPreview from './preview/AdminDashboardPreview';
+import ToolkitPreview from './preview/ToolkitPreview';
 import {
   ArrowUpRight,
   Bookmark,
@@ -621,6 +622,7 @@ export default function App() {
 
   if (experience === 'dashboard') return <AdminDashboardPreview />;
   if (experience === 'premium') return <PremiumMarketplacePreview />;
+  if (experience === 'toolkit') return <ToolkitPreview />;
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
