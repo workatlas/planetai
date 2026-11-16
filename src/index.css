@@ -64,6 +64,27 @@
   scrollbar-width: none;
 }
 
+.pt-safe {
+  padding-top: max(0.75rem, env(safe-area-inset-top, 0px));
+}
+
 .pb-safe {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.marquee-fade-mask {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 24px,
+    black calc(100% - 24px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    black 24px,
+    black calc(100% - 24px),
+    transparent 100%
+  );
 }
