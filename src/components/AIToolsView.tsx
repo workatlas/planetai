@@ -46,6 +46,32 @@ interface AIToolsViewProps {
   requestedTool?: RequestedAITool | null;
 }
 
+const CAREER_TARGET_STORAGE_KEY = 'planetai_career_target_v1';
+
+interface SavedCareerTarget {
+  role: string;
+  company: string;
+  skills: string;
+  description: string;
+}
+
+function readSavedCareerTarget(): Partial<SavedCareerTarget> | null {
+  try {
+    const raw = window.localStorage.getItem(CAREER_TARGET_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      role: typeof parsed.role === 'string' ? parsed.role : undefined,
+      company: typeof parsed.company === 'string' ? parsed.company : undefined,
+      skills: typeof parsed.skills === 'string' ? parsed.skills : undefined,
+      description:
+        typeof parsed.description === 'string' ? parsed.description : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 interface LearningGuide {
   id: string;
   prompt: string;
@@ -227,18 +253,40 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
   }, [requestedTool]);
 
   // 1. Resume & Cover Letter Builder state
+  const [savedCareerTarget] = useState(readSavedCareerTarget);
   const [targetRole, setTargetRole] = useState(
-    'Senior Python & TypeScript AI Code Reviewer'
+    savedCareerTarget?.role ?? 'Senior Python & TypeScript AI Code Reviewer'
   );
-  const [targetCompany, setTargetCompany] = useState('micro1');
+  const [targetCompany, setTargetCompany] = useState(
+    savedCareerTarget?.company ?? 'micro1'
+  );
   const [skillsInput, setSkillsInput] = useState(
-    'Python, TypeScript, Unit Testing, Rubric Grading, Technical Writing'
+    savedCareerTarget?.skills ??
+      'Python, TypeScript, Unit Testing, Rubric Grading, Technical Writing'
   );
   const [jobDescInput, setJobDescInput] = useState(
-    'Evaluate and refactor production Python and TypeScript solutions, write clear step-by-step reasoning, and verify edge-case test coverage.'
+    savedCareerTarget?.description ??
+      'Evaluate and refactor production Python and TypeScript solutions, write clear step-by-step reasoning, and verify edge-case test coverage.'
   );
   const [tailoredNotice, setTailoredNotice] = useState<string | null>(null);
   const [copiedResume, setCopiedResume] = useState(false);
+
+  // Keep the selected job context available when users move between workspaces.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        CAREER_TARGET_STORAGE_KEY,
+        JSON.stringify({
+          role: targetRole,
+          company: targetCompany,
+          skills: skillsInput,
+          description: jobDescInput,
+        })
+      );
+    } catch {
+      // Keep the workspace usable when browser storage is unavailable.
+    }
+  }, [targetRole, targetCompany, skillsInput, jobDescInput]);
 
   // Sync incoming "Tailor Resume for This Role" shortcut from Job Details Modal
   useEffect(() => {
