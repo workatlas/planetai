@@ -919,7 +919,7 @@ export default function App() {
             {/* Main Job Cards Grid: First 3 Cards Immediately Below Top Controls */}
             {filteredJobs.length > 0 ? (
               <div className="space-y-4 sm:space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {firstThreeJobs.map((job) => (
                     <JobCard
                       key={job.id}
@@ -948,12 +948,12 @@ export default function App() {
                         Direct Partner Roles
                       </span>
                     </div>
-                    <div className="flex overflow-x-auto no-scrollbar snap-x snap-mandatory gap-2.5 sm:grid sm:grid-cols-2 lg:grid-cols-5 sm:gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                       {spotlightJobs.map((job) => (
                         <div
                           key={`spot-${job.id}`}
                           onClick={() => setInspectedJob(job)}
-                          className="w-[215px] shrink-0 snap-start sm:w-auto cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-2.5 sm:p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-1.5 sm:gap-2"
+                          className="w-full cursor-pointer rounded-xl border border-slate-800 bg-[#111827] p-3 hover:border-cyan-500/45 transition-colors flex flex-col justify-between gap-2"
                         >
                           <div>
                             <div className="flex items-center justify-between gap-2 text-xs">
@@ -979,7 +979,7 @@ export default function App() {
                                 )}
                               </span>
                             </div>
-                            <p className="mt-1.5 sm:mt-2 text-xs text-slate-300 line-clamp-1">
+                            <p className="mt-2 text-xs text-slate-300 line-clamp-2 leading-snug">
                               {job.title}
                             </p>
                           </div>
@@ -1109,7 +1109,7 @@ export default function App() {
 
                 {/* Remaining Job Cards with Inline AdBanner every 8th overall card */}
                 {remainingJobs.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {remainingJobs.map((job, index) => {
                       const overallIndex = index + 3;
                       const adSlotNumber = Math.floor((overallIndex + 1) / 8);
