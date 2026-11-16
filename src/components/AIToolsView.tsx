@@ -39,6 +39,10 @@ export interface TailoredResumeDraft {
 export interface RequestedAITool {
   tool: AIToolKey;
   nonce: number;
+  role?: string;
+  company?: string;
+  skills?: string;
+  description?: string;
 }
 
 interface AIToolsViewProps {
@@ -250,6 +254,10 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
   useEffect(() => {
     if (!requestedTool) return;
     setActiveTool(requestedTool.tool);
+    if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
+    if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
+    if (requestedTool.skills) setSkillsInput(sanitizeText(requestedTool.skills, 200));
+    if (requestedTool.description) setJobDescInput(sanitizeText(requestedTool.description, 600));
   }, [requestedTool]);
 
   // 1. Resume & Cover Letter Builder state
@@ -834,7 +842,20 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
 
       {/* TOOL 3: AI Learning Assistant */}
       {activeTool === 'learning' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        <div className="space-y-5">
+          {(targetRole || targetCompany) && (
+            <div className="rounded-2xl border border-cyan-500/30 bg-cyan-950/20 p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-cyan-300">
+                <BookOpen className="w-4 h-4" />
+                <span>YOUR INTERVIEW PREP TARGET</span>
+              </div>
+              <h2 className="mt-2 text-base font-bold text-slate-50">{targetRole || 'Selected role'}</h2>
+              {targetCompany && <p className="mt-0.5 text-sm text-slate-300">{targetCompany}</p>}
+              {jobDescInput && <p className="mt-2 text-xs leading-relaxed text-slate-400">{jobDescInput}</p>}
+              {skillsInput && <p className="mt-2 text-xs text-cyan-200/80">Focus skills: {skillsInput}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-[#111827] p-5 space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -916,6 +937,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 {activeGuide.avoid}
               </p>
             </div>
+          </div>
           </div>
         </div>
       )}
