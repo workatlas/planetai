@@ -10,6 +10,8 @@ import {
   Mail,
   Mic,
   MicOff,
+  RotateCcw,
+  Scale,
   ShieldCheck,
   Sparkles,
   Square,
@@ -19,7 +21,7 @@ import {sanitizeText} from '../utils/sanitize';
 import {AdBanner} from './AdBanner';
 import {TOP_AI_ASSISTANTS} from './NewsDevToolsView';
 
-type AIToolKey = 'resume' | 'email' | 'learning' | 'voice';
+type AIToolKey = 'resume' | 'email' | 'learning' | 'voice' | 'simulator';
 type EmailTone = 'Professional' | 'Confident' | 'Polite Follow-Up';
 type EmailTemplateType =
   | 'recruiter-reply'
@@ -134,6 +136,58 @@ const VOICE_SCRIPTS: {title: string; context: string; text: string}[] = [
   },
 ];
 
+interface RubricScenario {
+  id: string;
+  dimension: string;
+  prompt: string;
+  responseA: string;
+  responseB: string;
+  winner: 'A' | 'B';
+  explanation: string;
+}
+
+const RUBRIC_SCENARIOS: RubricScenario[] = [
+  {
+    id: 'sim-1',
+    dimension: 'Factuality & Epistemic Honesty',
+    prompt:
+      'Summarize the exact release date and pricing of OpenAI GPT-6.',
+    responseA:
+      'GPT-6 was officially released on March 14, 2026 at $15 per million input tokens with native 10M context.',
+    responseB:
+      'I cannot verify a release date or official pricing for GPT-6—there is no confirmed public release or pricing schedule available to cite.',
+    winner: 'B',
+    explanation:
+      'Response B avoids fabricating dates and pricing (hallucination is an automatic fail on Outlier, Alignerr, and Scale AI rubrics). Response A invents unverified release details confidently.',
+  },
+  {
+    id: 'sim-2',
+    dimension: 'Constraint & Format Compliance',
+    prompt:
+      'List exactly 3 remote productivity tips in valid JSON array format with keys "title" and "benefit". Do not include markdown prose.',
+    responseA:
+      '[{"title":"Timeboxing","benefit":"Protects deep-work blocks"},{"title":"Async Check-ins","benefit":"Reduces meeting fatigue"},{"title":"Dedicated Workspace","benefit":"Signals clear work-rest boundaries"}]',
+    responseB:
+      'Sure! Here are 3 great productivity tips for remote workers:\n1. Timeboxing helps protect focus.\n2. Async updates save time.\n3. Take short breaks every 90 minutes.',
+    winner: 'A',
+    explanation:
+      'Response A strictly satisfies every negative and formatting constraint (valid JSON array, exact key names, zero surrounding prose). Response B fails the JSON format constraint.',
+  },
+  {
+    id: 'sim-3',
+    dimension: 'Code Correctness & Edge Cases',
+    prompt:
+      'Write a TypeScript helper that safely parses positive USD amounts from user input without returning NaN.',
+    responseA:
+      'export const parseUsd = (v: string) => parseFloat(v);',
+    responseB:
+      'export function parseUsd(v: string): number | null {\n  const n = Number(v.trim());\n  return Number.isFinite(n) && n > 0 ? n : null;\n}',
+    winner: 'B',
+    explanation:
+      'Response B guards against NaN, Infinity, empty strings, and negative/zero values cleanly, whereas Response A returns NaN on invalid strings and accepts negative amounts.',
+  },
+];
+
 function copyToClipboard(text: string): Promise<boolean> {
   if (navigator.clipboard && window.isSecureContext) {
     return navigator.clipboard
@@ -225,6 +279,11 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [micError, setMicError] = useState<string>('');
+
+  // 5. Interactive AI Evaluation Rubric Simulator state
+  const [simulatorAnswers, setSimulatorAnswers] = useState<
+    Record<string, 'A' | 'B'>
+  >({});
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -478,6 +537,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
     {id: 'resume', label: 'Resume & Cover Letter', icon: FileText},
     {id: 'email', label: 'Quick Email Drafter', icon: Mail},
     {id: 'learning', label: 'AI Interview Prep', icon: BookOpen},
+    {id: 'simulator', label: 'Rubric Simulator', icon: Scale},
     {id: 'voice', label: 'Voice Sample Prep', icon: Mic},
   ];
 
@@ -499,7 +559,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             </span>
           </div>
           <p className="mt-1.5 text-sm text-slate-400 max-w-2xl">
-            Four 100% free, client-side tools to tailor resumes, draft recruiter replies, master AI evaluation rubrics, and test microphone clarity locally.
+            Five 100% free, client-side tools to tailor resumes, draft recruiter replies, practice LLM rubric grading, and test microphone clarity locally.
           </p>
         </div>
       </div>
@@ -537,11 +597,13 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
       <div
         role="tablist"
         aria-label="AI Career Suite Tools"
-        className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1"
+        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5"
       >
-        {toolTabs.map((tab) => {
+        {toolTabs.map((tab, index) => {
           const Icon = tab.icon;
           const isActive = activeTool === tab.id;
+          const isOddLastOnMobile =
+            toolTabs.length % 2 === 1 && index === toolTabs.length - 1;
           return (
             <button
               key={tab.id}
@@ -549,7 +611,9 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               role="tab"
               aria-selected={isActive}
               onClick={() => setActiveTool(tab.id)}
-              className={`inline-flex items-center gap-2 min-h-[44px] px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold border transition-colors whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+              className={`inline-flex items-center justify-center gap-2 min-h-[46px] px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold border transition-colors text-center leading-tight focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${
+                isOddLastOnMobile ? 'col-span-2 sm:col-span-1' : ''
+              } ${
                 isActive
                   ? 'border-cyan-400 bg-cyan-500 text-slate-950'
                   : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
@@ -1044,6 +1108,148 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOOL 5: Interactive AI Evaluation Rubric Simulator */}
+      {activeTool === 'simulator' && (
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="font-display text-lg font-bold text-slate-50">
+                LLM Evaluation Mini-Simulator
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-slate-400">
+                Practice side-by-side Response A vs. Response B grading used on Outlier, Alignerr, DataAnnotation, and micro1 screening quizzes.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/35 px-3.5 py-2 text-center">
+                <span className="block text-[10px] font-medium text-cyan-300">
+                  Rubric Score
+                </span>
+                <span className="font-mono text-sm font-bold text-slate-50 tabular-nums">
+                  {
+                    RUBRIC_SCENARIOS.filter(
+                      (s) => simulatorAnswers[s.id] === s.winner
+                    ).length
+                  }{' '}
+                  / {RUBRIC_SCENARIOS.length}
+                </span>
+              </div>
+              {Object.keys(simulatorAnswers).length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSimulatorAnswers({})}
+                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Reset</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {RUBRIC_SCENARIOS.map((scenario, idx) => {
+              const chosen = simulatorAnswers[scenario.id];
+              const isCorrect = chosen === scenario.winner;
+              return (
+                <div
+                  key={scenario.id}
+                  className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-cyan-300">
+                      Scenario {idx + 1} · {scenario.dimension}
+                    </span>
+                    {chosen && (
+                      <span
+                        className={`text-xs font-bold ${
+                          isCorrect ? 'text-emerald-300' : 'text-amber-300'
+                        }`}
+                      >
+                        {isCorrect
+                          ? `✓ Matches Rubric (Response ${scenario.winner})`
+                          : `Rubric Winner: Response ${scenario.winner}`}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-3.5">
+                    <span className="block text-[11px] font-semibold text-slate-400 mb-1">
+                      User Prompt
+                    </span>
+                    <p className="text-sm text-slate-100">{scenario.prompt}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {(['A', 'B'] as const).map((choice) => {
+                      const text =
+                        choice === 'A'
+                          ? scenario.responseA
+                          : scenario.responseB;
+                      const selected = chosen === choice;
+                      const winnerChoice = scenario.winner === choice;
+                      let cardStyle =
+                        'border-slate-800 bg-[#0B111E] hover:border-cyan-500/50';
+                      if (chosen) {
+                        if (winnerChoice) {
+                          cardStyle = 'border-emerald-500/55 bg-emerald-950/25';
+                        } else if (selected) {
+                          cardStyle = 'border-rose-500/55 bg-rose-950/25';
+                        }
+                      }
+
+                      return (
+                        <button
+                          key={choice}
+                          type="button"
+                          onClick={() =>
+                            setSimulatorAnswers((prev) => ({
+                              ...prev,
+                              [scenario.id]: choice,
+                            }))
+                          }
+                          className={`text-left rounded-xl border p-4 transition-colors flex flex-col justify-between gap-3 ${cardStyle}`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <span className="text-xs font-bold text-slate-200">
+                                Response {choice}
+                              </span>
+                              {selected && (
+                                <span className="text-[11px] font-semibold text-cyan-300">
+                                  Your Pick
+                                </span>
+                              )}
+                            </div>
+                            <p className="font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+                              {text}
+                            </p>
+                          </div>
+                          <span className="text-[11px] font-semibold text-cyan-300">
+                            {selected
+                              ? 'Selected'
+                              : `Select Response ${choice} as Better`}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {chosen && (
+                    <div className="rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-3.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
+                      <strong className="text-cyan-300">
+                        Senior Evaluator Note:{' '}
+                      </strong>
+                      {scenario.explanation}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
