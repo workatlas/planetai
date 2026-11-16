@@ -103,7 +103,7 @@ export default function PremiumMarketplacePreview() {
         <section id="opportunities" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">The opportunity board</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Work worth exploring.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77847b]">Search roles by skill, company or location. Every listing should make the important details easy to understand.</p></div>
-            <div className="flex items-center gap-2 text-[11px] font-semibold text-[#718077]"><ShieldCheck size={16} className="text-[#58816b}"/> Built around employer accountability</div>
+            <div className="flex items-center gap-2 text-[11px] font-semibold text-[#718077]"><ShieldCheck size={16} className="text-[#58816b]"/> Built around employer accountability</div>
           </div>
           <div className="mt-9 rounded-2xl border border-[#e2e8e1] bg-white p-3 shadow-[0_12px_40px_rgba(28,55,42,.04)] sm:flex sm:items-center sm:gap-3 sm:p-4">
             <div className="flex min-h-12 flex-1 items-center gap-3 px-2"><Search size={18} className="shrink-0 text-[#839087]"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Job title, skill or company" aria-label="Search sample opportunities" className="w-full bg-transparent text-sm text-[#25372e] outline-none placeholder:text-[#a2aca5]"/></div>
