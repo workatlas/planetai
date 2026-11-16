@@ -1,4 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
+import PremiumMarketplacePreview from './preview/PremiumMarketplacePreview';
 import {
   ArrowUpRight,
   Bookmark,
@@ -614,6 +615,10 @@ export default function App() {
     (selectedPayTier !== 'all' ? 1 : 0) +
     (selectedTier !== 'All' ? 1 : 0) +
     (sortBy !== 'newest' ? 1 : 0);
+
+  const isPremiumPreview = new URLSearchParams(window.location.search).get('experience') === 'premium';
+
+  if (isPremiumPreview) return <PremiumMarketplacePreview />;
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
