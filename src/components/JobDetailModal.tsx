@@ -46,7 +46,7 @@ interface JobDetailModalProps {
   ) => void;
   onRemoveApplied: (jobId: string) => void;
   onTailorResume: (job: JobListing) => void;
-  onLaunchPrepTool: (tool: 'voice' | 'learning') => void;
+  onLaunchPrepTool: (tool: 'voice' | 'learning', job: JobListing) => void;
   onClose: () => void;
 }
 
@@ -422,7 +422,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               <button
                 type="button"
                 onClick={() =>
-                  onLaunchPrepTool(isAudioRole ? 'voice' : 'learning')
+                  onLaunchPrepTool(isAudioRole ? 'voice' : 'learning', job)
                 }
                 className="inline-flex items-center gap-1.5 text-xs font-semibold text-cyan-300 hover:text-cyan-200 underline underline-offset-4"
               >
