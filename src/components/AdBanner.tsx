@@ -54,18 +54,18 @@ export const AdBanner: React.FC<AdBannerProps> = ({
           : 'mx-auto w-full max-w-7xl px-4 sm:px-6'
       }
     >
-      <div className="relative flex items-center justify-between gap-4 h-[72px] sm:h-[90px] max-h-[90px] overflow-hidden rounded-xl border border-slate-800/80 bg-[#0D1320] px-4">
-        <div className="flex items-center gap-3 min-w-0">
+      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-h-[68px] sm:min-h-[82px] overflow-hidden rounded-xl border border-slate-800/80 bg-[#0D1320] px-4 py-2.5">
+        <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-2.5 gap-y-1.5 min-w-0 flex-1">
           <span className="shrink-0 rounded-md border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400">
             Sponsored
           </span>
-          <p className="text-xs text-slate-400 truncate">
+          <p className="text-xs text-slate-400 line-clamp-2 leading-snug min-w-0">
             Partner placements keep PlanetAI 100% free with zero signup required.
           </p>
         </div>
 
         <ins
-          className="adsbygoogle block shrink-0"
+          className="adsbygoogle block shrink-0 max-w-full"
           style={{display: 'inline-block', maxHeight: '72px'}}
           data-ad-client={ADSENSE_CLIENT}
           data-ad-slot={slotId}
