@@ -638,16 +638,11 @@ export default function App() {
         spotlightJobs={allJobs}
       />
 
-      {/* Non-Intrusive Top Banner Ad Below Marquee */}
-      <div className="pt-2 sm:pt-4">
-        <AdBanner placement="top-feed" />
-      </div>
-
       {/* Main Content */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 py-3 sm:py-8">
         {activeTab === 'jobs' && (
           <div className="space-y-3 sm:space-y-6">
-            {/* Compact Top Controls: Search Bar, Collapsible Filters & Post, and Category Filter Pills */}
+            {/* Compact Top Controls: Search Bar, Collapsible Filters & Post, and Horizontal Category Pills */}
             <section aria-labelledby="feed-heading" className="space-y-2 sm:space-y-4">
               {/* Desktop Hero Header (Hidden on <640px mobile so job cards appear above the fold) */}
               <div className="hidden sm:flex flex-col lg:flex-row lg:items-end justify-between gap-4">
