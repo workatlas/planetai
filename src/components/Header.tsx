@@ -49,16 +49,16 @@ export const Header: React.FC<HeaderProps> = ({
       : `${liveJobCount} / ${totalJobCount} Live`;
 
   return (
-    <header className="sticky top-0 z-40 h-14 lg:h-16 border-b border-slate-800/90 bg-[#090D16]/90 backdrop-blur-md">
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-3 sm:gap-5 px-4 sm:px-6">
+    <header className="sticky top-0 z-40 pt-safe pb-2.5 lg:py-0 min-h-[64px] lg:h-16 border-b border-slate-800/90 bg-[#090D16]/95 backdrop-blur-md">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-2 sm:gap-5 px-4 sm:px-6">
         {/* Zone 1: Brand Lockup */}
         <button
           type="button"
           onClick={() => onTabChange('jobs')}
-          className="flex items-center gap-2.5 min-h-[44px] rounded-xl pr-1 text-left whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+          className="flex items-center gap-2 sm:gap-2.5 min-h-[40px] sm:min-h-[44px] rounded-xl pr-1 text-left whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
         >
-          <PlanetAILogo className="w-8 h-8 sm:w-9 sm:h-9 shrink-0" />
-          <span className="font-display text-lg sm:text-xl font-extrabold tracking-tight text-slate-50">
+          <PlanetAILogo className="w-7 h-7 sm:w-9 sm:h-9 shrink-0" />
+          <span className="font-display text-base sm:text-xl font-extrabold tracking-tight text-slate-50">
             Planet<span className="text-cyan-400">AI</span>
           </span>
         </button>
@@ -99,10 +99,10 @@ export const Header: React.FC<HeaderProps> = ({
         </nav>
 
         {/* Zone 3: Live Counter, Job Alert Bell, Share App & PWA Install */}
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Live Job Counter Badge */}
           <div
-            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 text-xs font-medium text-emerald-300 whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium text-emerald-300 whitespace-nowrap shrink-0"
             title="Live available jobs matching current filters"
           >
             <span
@@ -122,11 +122,11 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onOpenAlerts}
             aria-label="Configure instant job alerts"
-            className="relative inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-xl border border-slate-800 bg-slate-900/90 text-slate-200 hover:border-slate-700 hover:bg-slate-800 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="relative inline-flex items-center justify-center min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] rounded-xl border border-slate-800 bg-slate-900/90 text-slate-200 hover:border-slate-700 hover:bg-slate-800 transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             <Bell className="w-4 h-4 text-cyan-300" />
             {alertCount > 0 && (
-              <span className="absolute top-1.5 right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-cyan-400 px-1 font-mono text-[10px] font-bold text-slate-950 leading-none">
+              <span className="absolute top-1 right-1 sm:top-1.5 sm:right-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-cyan-400 px-1 font-mono text-[10px] font-bold text-slate-950 leading-none">
                 {alertCount}
               </span>
             )}
@@ -137,7 +137,7 @@ export const Header: React.FC<HeaderProps> = ({
             type="button"
             onClick={onShareApp}
             aria-label="Share PlanetAI app link"
-            className="inline-flex items-center justify-center gap-2 min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-100 text-xs sm:text-sm font-medium hover:border-slate-700 hover:bg-slate-800 active:scale-[0.98] transition-all whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
+            className="inline-flex items-center justify-center gap-2 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] px-2.5 sm:px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-100 text-xs sm:text-sm font-medium hover:border-slate-700 hover:bg-slate-800 active:scale-[0.98] transition-all whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
           >
             {copied ? (
               <>
