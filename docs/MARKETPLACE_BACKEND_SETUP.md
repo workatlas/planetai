@@ -52,6 +52,8 @@ The intended production workflow is:
 - Do not allow anonymous clients to write directly to submissions, payments, audit events, or published jobs.
 - Keep employer email addresses and review notes out of the public jobs table.
 - Verify the PayPal webhook signature before changing payment or publication status.
+- Store only SHA-256 token hashes for email verification and private employer-management links; never store raw tokens.
+- Give verification tokens short expirations and single-use consumption; rotate or revoke employer-management tokens when necessary.
 - Add rate limiting and abuse monitoring to public submission and verification endpoints.
 
 ## 5. Not yet implemented
