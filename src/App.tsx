@@ -503,8 +503,15 @@ export default function App() {
     showToast(`Loaded "${job.title}" into Resume Builder.`);
   };
 
-  const handleLaunchPrepTool = (tool: 'voice' | 'learning') => {
-    setRequestedAITool({tool, nonce: Date.now()});
+  const handleLaunchPrepTool = (tool: 'voice' | 'learning', job: JobListing) => {
+    setRequestedAITool({
+      tool,
+      nonce: Date.now(),
+      role: job.title,
+      company: job.company,
+      skills: job.tags.join(', '),
+      description: job.description,
+    });
     setInspectedJob(null);
     setActiveTab('ai-tools');
     window.scrollTo({top: 0, behavior: 'smooth'});
