@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from 'react';
-import {ArrowLeft, BriefcaseBusiness, Check, CircleDollarSign, Clock3, Coffee, Focus, Globe2, Play, Plus, RotateCcw, Sparkles, Square, Timer, Trash2} from 'lucide-react';
+import {ArrowLeft, BriefcaseBusiness, Check, CircleDollarSign, Clock3, Coffee, Globe2, Play, Plus, RotateCcw, Sparkles, Square, Timer, Trash2} from 'lucide-react';
 
 type FocusMode = 'focus' | 'short' | 'long';
 type Project = {id: string; name: string; client: string; budget: number; done: boolean; createdAt: string};
@@ -53,9 +53,11 @@ export default function ToolkitPreview() {
           window.clearInterval(interval);
           setRunning(false);
           if (mode === 'focus') {
-            setCompletedSessions((count) => count + 1);
-            setMode((currentMode) => currentMode === 'focus' ? 'short' : 'focus');
-            return breakMinutes * 60;
+            const nextCount = completedSessions + 1;
+            setCompletedSessions(nextCount);
+            const nextMode: FocusMode = nextCount % 4 === 0 ? 'long' : 'short';
+            setMode(nextMode);
+            return nextMode === 'long' ? MODE_SECONDS.long : breakMinutes * 60;
           }
           setMode('focus');
           return focusMinutes * 60;
@@ -64,7 +66,7 @@ export default function ToolkitPreview() {
       });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [running, mode, focusMinutes, breakMinutes]);
+  }, [running, mode, focusMinutes, breakMinutes, completedSessions]);
 
   useEffect(() => {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(projects)); } catch { /* local storage may be unavailable */ }
