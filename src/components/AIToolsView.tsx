@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import {sanitizeText} from '../utils/sanitize';
 import {AdBanner} from './AdBanner';
+import {ResumeStudio} from './ResumeStudio';
 import {TOP_AI_ASSISTANTS} from './NewsDevToolsView';
 
 type AIToolKey = 'resume' | 'email' | 'learning' | 'voice' | 'simulator';
@@ -621,128 +622,22 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             >
               <Icon className="w-4 h-4 shrink-0" />
               <span>{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* TOOL 1: Resume & Cover Letter Builder */}
+            </bu      {/* TOOL 1: Resume & Cover Letter Studio */}
       {activeTool === 'resume' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-50">
-                Target Role Details
-              </h2>
-              {tailoredNotice && (
-                <span className="text-xs font-medium text-emerald-300">
-                  {tailoredNotice}
-                </span>
-              )}
-            </div>
+        <ResumeStudio
+          targetRole={targetRole}
+          setTargetRole={setTargetRole}
+          targetCompany={targetCompany}
+          setTargetCompany={setTargetCompany}
+          skillsInput={skillsInput}
+          setSkillsInput={setSkillsInput}
+          jobDescInput={jobDescInput}
+          setJobDescInput={setJobDescInput}
+          tailoredNotice={tailoredNotice}
+        />
+      )}
 
-            <div>
-              <label
-                htmlFor="resume-role"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Target Role
-              </label>
-              <input
-                id="resume-role"
-                type="text"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-company"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Platform / Company
-              </label>
-              <input
-                id="resume-company"
-                type="text"
-                value={targetCompany}
-                onChange={(e) => setTargetCompany(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-skills"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Core Skills (comma separated)
-              </label>
-              <input
-                id="resume-skills"
-                type="text"
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-jd"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Job Description / Key Requirements
-              </label>
-              <textarea
-                id="resume-jd"
-                rows={4}
-                value={jobDescInput}
-                onChange={(e) => setJobDescInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-50">
-                Generated ATS Summary & Cover Letter
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyResume}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-100 hover:bg-slate-800 transition-colors"
-                >
-                  {copiedResume ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadResume}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download .TXT</span>
-                </button>
-              </div>
-            </div>
-
-            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-slate-200 leading-relaxed rounded-xl border border-slate-800 bg-[#0B111E] p-4 max-h-[420px] overflow-y-auto">
-              {generatedResumeDoc}
-            </pre>
+e>
           </div>
         </div>
       )}
