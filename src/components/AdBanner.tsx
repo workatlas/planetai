@@ -50,27 +50,26 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       data-admob-unit={ADMOB_BANNER_UNIT}
       className={
         fullBleed
-          ? 'w-full'
-          : 'mx-auto w-full max-w-7xl px-4 sm:px-6'
+          ? 'w-full flex justify-center'
+          : 'mx-auto w-full max-w-7xl px-4 sm:px-6 flex justify-center'
       }
     >
-      <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 min-h-[68px] sm:min-h-[82px] overflow-hidden rounded-xl border border-slate-800/80 bg-[#0D1320] px-4 py-2.5">
-        <div className="flex flex-wrap sm:flex-nowrap items-center gap-x-2.5 gap-y-1.5 min-w-0 flex-1">
-          <span className="shrink-0 rounded-md border border-slate-700 bg-slate-900 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400">
+      <div className="ad-banner-frame relative mx-auto overflow-hidden rounded-xl border border-slate-800/80 bg-[#0D1320]">
+        <div className="flex h-full w-full items-center gap-2.5 px-3 md:px-4">
+          <span className="shrink-0 rounded-md border border-slate-700 bg-slate-900 px-1.5 md:px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400">
             Sponsored
           </span>
-          <p className="text-xs text-slate-400 line-clamp-2 leading-snug min-w-0">
+          <p className="text-[11px] md:text-xs text-slate-400 line-clamp-2 leading-tight min-w-0">
             Partner placements keep PlanetAI 100% free with zero signup required.
           </p>
         </div>
 
         <ins
-          className="adsbygoogle block shrink-0 max-w-full"
-          style={{display: 'inline-block', maxHeight: '72px'}}
+          className="adsbygoogle ad-banner-ins absolute inset-0 z-10"
           data-ad-client={ADSENSE_CLIENT}
           data-ad-slot={slotId}
           data-ad-format="horizontal"
-          data-full-width-responsive="true"
+          data-full-width-responsive="false"
         />
       </div>
     </aside>
