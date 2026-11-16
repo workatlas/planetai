@@ -18,7 +18,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import {sanitizeText} from '../utils/sanitize';
-import {AdBanner} from './AdBanner';
 import {ResumeStudio} from './ResumeStudio';
 import {TOP_AI_ASSISTANTS} from './NewsDevToolsView';
 
@@ -1149,10 +1148,6 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
         </div>
       )}
 
-      {/* Non-Intrusive Bottom Ad Placement */}
-      <div className="pt-2">
-        <AdBanner placement="bottom-suite" />
-      </div>
     </section>
   );
 };
