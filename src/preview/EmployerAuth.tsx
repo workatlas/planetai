@@ -47,18 +47,12 @@ export default function EmployerAuth() {
           ? session.user.user_metadata.company_name
           : '';
         const fallbackName = session?.user.email?.split('@')[0] || 'My company';
-        const { data: accountId, error: createError } = await supabase.rpc('create_employer_workspace', {
-          p_company_name: (metadataName || fallbackName).trim().slice(0, 100),
+        const { data, error: workspaceError } = await supabase.functions.invoke('employer-workspace', {
+          body: { company_name: (metadataName || fallbackName).trim().slice(0, 100) },
         });
-        if (createError) throw createError;
-        if (!accountId) throw new Error('Your workspace could not be created. Please try signing in again.');
-        const { data: account, error: readError } = await supabase
-          .from('employer_accounts')
-          .select('company_name')
-          .eq('id', accountId)
-          .single();
-        if (readError) throw readError;
-        if (active) setWorkspaceName(account.company_name);
+        if (workspaceError) throw workspaceError;
+        if (!data?.account?.company_name) throw new Error('Your workspace could not be created. Please try signing in again.');
+        if (active) setWorkspaceName(data.account.company_name);
       } catch (err) {
         if (active) setError(err instanceof Error ? err.message : 'Unable to load your employer workspace.');
       } finally {
