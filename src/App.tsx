@@ -21,7 +21,6 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import {AdBanner} from './components/AdBanner';
 import {AddJobModal} from './components/AddJobModal';
 import {
   AIToolsView,
@@ -147,7 +146,6 @@ const PARTNER_SPOTLIGHT_COMPANIES = [
 ];
 
 const JOBS_PER_PAGE = 24;
-const MAX_INLINE_ADS_PER_VIEW = 4;
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -1279,28 +1277,16 @@ export default function App() {
                 {remainingJobs.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {remainingJobs.map((job, index) => {
-                      const overallIndex = index + 3;
-                      const adSlotNumber = Math.floor((overallIndex + 1) / 8);
-                      const shouldShowInlineAd =
-                        (overallIndex + 1) % 8 === 0 &&
-                        adSlotNumber <= MAX_INLINE_ADS_PER_VIEW;
-
                       return (
-                        <React.Fragment key={job.id}>
-                          <JobCard
-                            job={job}
-                            isSaved={savedIds.includes(job.id)}
-                            appliedStatus={appliedRecords[job.id]?.status}
-                            skillMatch={computeSkillMatch(job, userSkills)}
-                            onToggleSave={toggleSaveJob}
-                            onOpenDetails={setInspectedJob}
-                          />
-                          {shouldShowInlineAd && (
-                            <div className="col-span-full py-1">
-                              <AdBanner placement="inline-feed" fullBleed />
-                            </div>
-                          )}
-                        </React.Fragment>
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          isSaved={savedIds.includes(job.id)}
+                          appliedStatus={appliedRecords[job.id]?.status}
+                          skillMatch={computeSkillMatch(job, userSkills)}
+                          onToggleSave={toggleSaveJob}
+                          onOpenDetails={setInspectedJob}
+                        />
                       );
                     })}
                   </div>
