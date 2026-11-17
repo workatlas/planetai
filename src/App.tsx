@@ -1456,6 +1456,12 @@ export default function App() {
             >
               AI Tools
             </button>
+            <a
+              href="?experience=toolkit"
+              className="hover:text-slate-300 transition-colors"
+            >
+              Focus Toolkit
+            </a>
             <button
               type="button"
               onClick={() => setIsAlertsOpen(true)}
