@@ -126,6 +126,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     await admin.from("job_submissions").update({ status: "pending_review" }).eq("id", submissionId).eq("status", "ready_to_publish");
     return json({ error: "Approval was not completed because the public listing could not be created." }, 500);
   }
+  const { error: publishedStatusError } = await admin.from("job_submissions")
+    .update({ status: "published" }).eq("id", submissionId).eq("status", "ready_to_publish");
+  if (publishedStatusError) console.error("Free listing status update failed", publishedStatusError);
   await admin.from("marketplace_audit_events").insert({
     actor_user_id: userId, submission_id: submissionId, event_type: "free_job_approved_and_published",
     details: { package_tier: "standard", notes },
