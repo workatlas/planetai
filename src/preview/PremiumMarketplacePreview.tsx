@@ -2,11 +2,10 @@ import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
   ArrowRight, ArrowUpRight, Bookmark, Check, Globe2, MapPin, Menu,
-  Search, ShieldCheck, X, BriefcaseBusiness,
+  Search, ShieldCheck, X,
 } from 'lucide-react';
-import {
-  formatPayRate, JOB_CATEGORIES, JobCategory, JobListing,
-} from '../data/jobs';
+import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
+import type {JobCategory, JobListing} from '../data/jobs';
 
 interface PremiumMarketplacePreviewProps {
   jobs: JobListing[];
@@ -130,7 +129,7 @@ export default function PremiumMarketplacePreview({
               <p className="mt-5 text-[11px] font-bold text-[#77867c]">{job.company}</p><h3 className="mt-1 text-[17px] font-bold tracking-[-.035em] text-[#1d3028]">{job.title}</h3><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-[#78867d]"><span className="inline-flex items-center gap-1"><MapPin size={12}/>{job.location}</span><span>·</span><span>{job.workType}</span></div><p className="mt-4 min-h-[42px] text-xs leading-5 text-[#7b887f]">{job.description}</p><div className="mt-4 flex flex-wrap gap-1.5">{job.tags.slice(0,5).map(tag => <span key={tag} className="rounded-md bg-[#f4f6f2] px-2.5 py-1.5 text-[9px] font-semibold text-[#718077]">{tag}</span>)}</div><div className="mt-5 flex items-center justify-between border-t border-[#edf0ec] pt-4"><div><p className="text-sm font-extrabold text-[#315b47]">{formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)}</p><p className="mt-1 text-[9px] font-semibold text-[#9aa49d]">{job.isCustomEmployerPost ? 'Employer published' : 'Curated role'} · {job.postedAgo}</p></div><button onClick={() => onOpenJob(job)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#315b47] transition group-hover:gap-2.5">View details <ArrowUpRight size={14}/></button></div>
             </article>)}
           </div>
-          {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-dashed border-[#d7e0d7] bg-white p-12 text-center"><Search className="mx-auto text-[#8b9a8f}"/><p className="mt-3 font-bold text-[#344a3d]">No matching opportunities</p><p className="mt-1 text-xs text-[#87938b]">Try a different search or category.</p></div>}
+          {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-dashed border-[#d7e0d7] bg-white p-12 text-center"><Search className="mx-auto text-[#8b9a8f]"/><p className="mt-3 font-bold text-[#344a3d]">No matching opportunities</p><p className="mt-1 text-xs text-[#87938b]">Try a different search or category.</p></div>}
         </section>
 
         <section id="how-it-works" className="border-y border-[#e3e9e2] bg-white">
