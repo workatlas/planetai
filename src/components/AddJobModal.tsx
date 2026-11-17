@@ -372,6 +372,33 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       .filter(Boolean)
       .slice(0, 5);
 
+    const stagedJob: JobListing = {
+      id: `submission-${Date.now()}`,
+      title: cleanTitle,
+      company: cleanCompany,
+      companyShort: short,
+      companyTier,
+      companyWebsite: validatedWebsite,
+      companyLogoUrl: validatedLogoUrl,
+      isCustomEmployerPost: true,
+      featured: false,
+      verified: false,
+      marqueeSpotlight: false,
+      category,
+      payMinUsd: min,
+      payMaxUsd: max,
+      payUnit,
+      location: cleanLocation,
+      workType,
+      postedAgo: 'Just submitted',
+      tags: tags.length ? tags : [category, 'Remote'],
+      applyUrl: validatedApplyUrl,
+      description: cleanDescription,
+      requirements: parsedRequirements,
+      prepTips: [],
+      contactEmail: cleanEmail,
+    };
+
     setIsSubmitting(true);
     try {
       const { data, error: submitError } = await supabase.functions.invoke('job-submission', {
@@ -399,7 +426,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       setPreviewActivated(false);
       setReceipt({
         referenceId: persistedReference, status: data.submission.status, verificationDelivery: data.email_verification_delivery || 'unknown', job: stagedJob,
-        addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
+        tier: selectedTier, addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
         submissionSaved: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
       });
       resetFormFields();
