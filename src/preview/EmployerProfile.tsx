@@ -147,6 +147,7 @@ export default function EmployerProfile() {
           <section className="rounded-3xl border border-[#e4eaf2] bg-white p-6 shadow-[0_24px_80px_rgba(28,52,84,.06)] sm:p-8">
             <div className="flex items-start justify-between gap-4"><div><p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">Company settings</p><h2 className="mt-2 text-2xl font-semibold tracking-tight">Company profile</h2><p className="mt-2 text-xs leading-6 text-[#8795aa]">Only your authenticated workspace owner can update these details.</p></div><span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-[#f1f5fb] text-[#315a91]"><Building2 size={20}/></span></div>
             {loading ? <div className="flex items-center gap-2 py-12 text-sm text-[#718096]"><LoaderCircle className="animate-spin" size={17}/> Loading your saved company profile…</div> : (
+              <>
               <div className="mt-7 space-y-5">
                 <div>
                   <div className="mb-2 flex items-center justify-between"><span className="text-xs font-semibold text-[#52627a]">Company cover image</span><span className="text-[10px] text-[#9aa8ba]">Wide banner · up to 5 MB</span></div>
@@ -172,6 +173,7 @@ export default function EmployerProfile() {
                 <label className="block"><span className="mb-2 block text-xs font-semibold text-[#52627a]">About your company</span><textarea rows={6} maxLength={2000} placeholder="Tell candidates what your company does, what you value, and why people enjoy working with your team…" value={profile.company_description} onChange={e=>change('company_description',e.target.value)} className="w-full resize-y rounded-xl border border-[#dce5f0] px-4 py-3 text-sm leading-6 outline-none focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/></label>
                 <div className="flex items-center justify-between gap-3 border-t border-[#edf1f6] pt-5"><p className="text-[10px] text-[#9aa8ba]">{profile.company_description.length}/2000 characters</p><button type="submit" disabled={saving || uploading!==null} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#172b49] px-5 py-3 text-xs font-bold text-white transition hover:bg-[#24446e] disabled:opacity-60">{saving ? <LoaderCircle className="animate-spin" size={15}/> : <Save size={15}/>} {saving ? 'Saving…' : 'Save company profile'}</button></div>
               </form>
+              </>
             )}
             {error && <p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">{error}</p>}
             {notice && <p role="status" className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs leading-5 text-emerald-800">{notice}</p>}
