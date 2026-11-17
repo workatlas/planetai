@@ -20,19 +20,64 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const userEmail = typeof ctx.userClaims?.email === "string" ? ctx.userClaims.email : null;
   if (!userId) return json({ error: "Authentication required" }, 401);
 
-  let body: { company_name?: unknown };
+  let body: { company_name?: unknown; action?: string };
   try {
     body = await req.json();
   } catch {
     return json({ error: "A valid JSON request body is required." }, 400);
   }
 
+  const admin = ctx.supabaseAdmin;
+
+  if (body.action === "list") {
+    const { data: membership, error: membershipError } = await admin
+      .from("employer_members")
+      .select("employer_account_id")
+      .eq("user_id", userId)
+      .limit(1)
+      .maybeSingle();
+    if (membershipError) {
+      console.error("Employer listing membership lookup failed", membershipError);
+      return json({ error: "We could not verify your employer workspace." }, 500);
+    }
+    if (!membership?.employer_account_id) return json({ listings: [] });
+    const { data: submissions, error: submissionsError } = await admin
+      .from("job_submissions")
+      .select("id, reference_code, job_title, company_name, package_tier, status, submitted_at")
+      .eq("employer_account_id", membership.employer_account_id)
+      .order("submitted_at", { ascending: false })
+      .limit(100);
+    if (submissionsError) {
+      console.error("Employer listing query failed", submissionsError);
+      return json({ error: "We could not load your submitted listings." }, 500);
+    }
+    const ids = (submissions || []).map((item) => item.id);
+    const { data: payments, error: paymentsError } = ids.length
+      ? await admin.from("job_payments")
+          .select("submission_id, status, amount, currency, provider_order_id, confirmed_at")
+          .in("submission_id", ids)
+          .order("created_at", { ascending: false })
+      : { data: [], error: null };
+    if (paymentsError) {
+      console.error("Employer payment query failed", paymentsError);
+      return json({ error: "We could not load your payment records." }, 500);
+    }
+    const latestPayment = new Map<string, typeof payments[number]>();
+    for (const payment of payments || []) {
+      if (!latestPayment.has(payment.submission_id)) latestPayment.set(payment.submission_id, payment);
+    }
+    return json({
+      listings: (submissions || []).map((item) => ({
+        ...item,
+        payment: latestPayment.get(item.id) || null,
+      })),
+    });
+  }
+
   const companyName = typeof body.company_name === "string" ? body.company_name.trim() : "";
   if (companyName.length < 2 || companyName.length > 100) {
     return json({ error: "Company name must be between 2 and 100 characters." }, 400);
   }
-
-  const admin = ctx.supabaseAdmin;
   const { data: existing, error: lookupError } = await admin
     .from("employer_accounts")
     .select("id, company_name")
