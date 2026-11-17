@@ -127,7 +127,7 @@ export default function PremiumMarketplacePreview({
           </nav>
           <div className="hidden items-center gap-2 sm:flex">
             <button onClick={() => onOpenWorkspace('ai-tools')} className="px-3 py-2 text-[12px] font-bold text-[#40534a] hover:text-[#183c32]">Career tools</button>
-            <PWAInstallButton compact /><a href="/?experience=employer-auth" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Employer sign in</a><button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
+            <PWAInstallButton compact /><a href="/?experience=employer-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Employer sign in</a><button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
           </div>
           <button onClick={() => setMobileMenu(v => !v)} className="grid h-10 w-10 place-items-center rounded-full border border-[#e0e6e0] lg:hidden" aria-label="Toggle navigation">{mobileMenu ? <X size={19}/> : <Menu size={19}/>}</button>
         </div>
