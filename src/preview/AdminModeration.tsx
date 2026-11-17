@@ -31,6 +31,7 @@ export default function AdminModeration() {
   const [password,setPassword]=useState("");
   const [showPassword,setShowPassword]=useState(false);
   const [authBusy,setAuthBusy]=useState(false);
+  const [resetBusy,setResetBusy]=useState(false);
 
   const load=useCallback(async()=>{
     setLoading(true); setError("");
@@ -59,6 +60,21 @@ export default function AdminModeration() {
       setError(err instanceof Error ? err.message : "Sign-in failed. Please check your credentials and try again.");
     } finally {
       setAuthBusy(false);
+    }
+  };
+
+  const requestPasswordReset=async()=>{
+    setResetBusy(true);setError("");setMessage("");
+    try {
+      const {error:resetError}=await supabase.auth.resetPasswordForEmail(loginEmail.trim(),{
+        redirectTo:window.location.origin + "/?experience=job-seeker-reset&returnTo=admin-moderation",
+      });
+      if(resetError) throw resetError;
+      setMessage("If this address belongs to an active PLANETAI account, a password reset link has been sent. Check your inbox and spam folder.");
+    } catch(err) {
+      setError(err instanceof Error ? err.message : "We could not request a password reset. Please try again later.");
+    } finally {
+      setResetBusy(false);
     }
   };
 
@@ -99,6 +115,7 @@ export default function AdminModeration() {
           </label>
           <button type="submit" disabled={authBusy} className="w-full rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60">{authBusy?"Verifying access…":"Sign in securely"}</button>
         </form>
+        <button type="button" onClick={()=>void requestPasswordReset()} disabled={resetBusy||!loginEmail.trim()} className="mt-4 w-full text-center text-xs font-semibold text-blue-700 hover:underline disabled:opacity-50">{resetBusy?"Sending reset link…":"Forgot your password? Send a reset link"}</button>
         {error&&<p role="alert" className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
         <p className="mt-6 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-400">Only accounts explicitly authorized by PLANETAI can access moderation. A successful sign-in alone does not grant administrator privileges.</p>
       </div>
