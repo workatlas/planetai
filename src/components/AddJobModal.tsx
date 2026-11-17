@@ -95,7 +95,7 @@ interface SubmittedReceipt {
   totalDueUsd: number;
   approvalSnippet: string;
   emailMessageBody: string;
-  emailSentViaWeb3Forms: boolean;
+  submissionSaved: boolean;
   primaryPaypalUrl: string | null;
   secondaryAddonPaypalUrl: string | null;
 }
@@ -373,73 +373,6 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       .filter(Boolean)
       .slice(0, 5);
 
-    const referenceId = `PAI-${Date.now().toString(36).toUpperCase()}`;
-
-    const stagedJob: JobListing = {
-      id: `custom-${Date.now()}`,
-      title: cleanTitle,
-      company: cleanCompany,
-      companyShort: short || 'CO',
-      companyTier,
-      companyWebsite: validatedWebsite,
-      companyLogoUrl: validatedLogoUrl,
-      isCustomEmployerPost: true,
-      featured: selectedTier.featured,
-      verified: addVerifiedBadge,
-      marqueeSpotlight: selectedTier.marqueeSpotlight,
-      category,
-      payMinUsd: min,
-      payMaxUsd: max,
-      payUnit,
-      location: cleanLocation,
-      workType,
-      postedAgo: 'Just now',
-      urgent: selectedTier.featured,
-      tags: tags.length > 0 ? tags : [category, 'Remote'],
-      applyUrl: validatedApplyUrl,
-      contactEmail: cleanEmail,
-      description:
-        cleanDescription ||
-        `Remote ${category} role at ${cleanCompany} (${workType}). Apply directly via ${cleanCompany}'s career portal.`,
-      requirements:
-        parsedRequirements.length > 0
-          ? parsedRequirements
-          : [
-              'Reliable internet connection and desktop workspace',
-              'Strong written communication and analytical accuracy',
-            ],
-      prepTips: [
-        'Use the Tailor Resume shortcut inside this modal before clicking Apply Now.',
-      ],
-    };
-
-    const approvalSnippet = JSON.stringify(stagedJob, null, 2);
-    const payRateLabel = formatPayRate(min, max, payUnit);
-    const emailMessageBody = [
-      `PlanetAI Employer Submission (${referenceId})`,
-      `==================================================`,
-      `Selected Tier: ${selectedTier.name} (${selectedTier.cadenceLabel})`,
-      `Verified Employer Badge (+$${VERIFIED_ADDON_PRICE_USD}): ${
-        addVerifiedBadge ? 'YES (+$39 one-time)' : 'No'
-      }`,
-      `Total Amount Due: $${totalDueUsd} USD`,
-      `--------------------------------------------------`,
-      `Company: ${cleanCompany} (${companyTier})`,
-      `Role Title: ${cleanTitle}`,
-      `Category: ${category} | Work Type: ${workType}`,
-      `Pay Rate (USD): ${payRateLabel}`,
-      `Location: ${cleanLocation}`,
-      `Recruiter Email: ${cleanEmail}`,
-      `Company Website / Career Portal: ${validatedWebsite || 'Not provided'}`,
-      `Company Logo URL: ${validatedLogoUrl || 'Not provided'}`,
-      `Direct Apply URL: ${validatedApplyUrl}`,
-      `No Upfront Fees Confirmed: YES`,
-      ``,
-      `READY-TO-PASTE APPROVAL OBJECT (Copy into INITIAL_JOBS in src/data/jobs.ts):`,
-      `--------------------------------------------------`,
-      approvalSnippet,
-    ].join('\n');
-
     setIsSubmitting(true);
     try {
       const { data, error: submitError } = await supabase.functions.invoke('job-submission', {
@@ -468,19 +401,11 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       setReceipt({
         referenceId: persistedReference, status: data.submission.status, verificationDelivery: data.email_verification_delivery || 'unknown', job: stagedJob,
         addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
-        emailSentViaWeb3Forms: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
+        submissionSaved: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
       });
       resetFormFields();
     } catch (submissionError) {
       setError(submissionError instanceof Error ? submissionError.message : 'Unable to save your job submission.');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-
-        'Network error while sending submission. Please check your connection and try again.'
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -594,7 +519,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   Your submission is saved, but guest email verification cannot be sent yet. We will enable this once the verification email service is configured. Please do not submit the same job again.
                 </div>
               )}
-              {!receipt.emailSentViaWeb3Forms && (
+              {!receipt.submissionSaved && (
                 <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-3 text-xs text-amber-200 space-y-2">
                   <p className="font-medium">
                     Web3Forms access key placeholder detected — use the 1-click Email Draft below to send your submission directly to {EMPLOYER_INBOX_EMAIL}:
@@ -611,43 +536,6 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 </div>
               )}
             </div>
-
-            {/* PayPal Checkout Links for Paid Selections */}
-            {receipt.totalDueUsd > 0 && receipt.primaryPaypalUrl && (
-              <div className="rounded-2xl border border-cyan-500/35 bg-cyan-950/20 p-4 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-semibold text-cyan-200">
-                  <CreditCard className="w-4 h-4 text-cyan-300 shrink-0" />
-                  <span>Complete Payment via PayPal Checkout</span>
-                </div>
-                <p className="text-xs text-slate-300">
-                  Complete your ${receipt.totalDueUsd} USD payment via PayPal so we can prioritize your approval and apply your Featured / Verified badges.
-                </p>
-                <div className="flex flex-col sm:flex-row flex-wrap gap-2.5">
-                  <a
-                    href={receipt.primaryPaypalUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-cyan-400 transition-colors"
-                  >
-                    <span>
-                      Re-open PayPal Checkout ({receipt.tier.id === 'free' ? `$${VERIFIED_ADDON_PRICE_USD}` : `$${receipt.tier.priceUsd}`})
-                    </span>
-                    <ArrowUpRight className="w-4 h-4 shrink-0" />
-                  </a>
-                  {receipt.secondaryAddonPaypalUrl && (
-                    <a
-                      href={receipt.secondaryAddonPaypalUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl border border-emerald-500/45 bg-emerald-950/40 text-emerald-200 text-xs sm:text-sm font-semibold hover:bg-emerald-950/70 transition-colors"
-                    >
-                      <span>Pay Verified Add-On (+${VERIFIED_ADDON_PRICE_USD})</span>
-                      <ArrowUpRight className="w-4 h-4 shrink-0" />
-                    </a>
-                  )}
-                </div>
-              </div>
-            )}
 
             {/* Temporary Local Preview & Copy Approval Snippet */}
             <div className="rounded-2xl border border-slate-800 bg-[#0B111E] p-4 space-y-3">
