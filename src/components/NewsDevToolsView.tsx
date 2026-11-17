@@ -455,7 +455,7 @@ export const NewsDevToolsView: React.FC<{showAds?: boolean}> = ({showAds = true}
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="you@domain.com"
-                  className="flex-1 min-h-[44px] rounded-xl border border-[#dce5dc] bg-[#f7f9f6] px-3.5 py-2 text-sm text-[#40534a] placeholder:text-[#1d3028]0 focus:border-[#39836a] focus:outline-none"
+                  className="flex-1 min-h-[44px] rounded-xl border border-[#dce5dc] bg-[#f7f9f6] px-3.5 py-2 text-sm text-[#40534a] placeholder:text-[#9aa49d] focus:border-[#39836a] focus:outline-none"
                 />
                 <button
                   type="submit"
