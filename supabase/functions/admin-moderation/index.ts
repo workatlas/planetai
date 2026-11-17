@@ -57,8 +57,18 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const { data: submission, error: loadError } = await admin.from("job_submissions")
     .select("*").eq("id", submissionId).maybeSingle();
   if (loadError || !submission) return json({ error: "Submission not found." }, 404);
-  if (submission.status !== "pending_review") {
-    return json({ error: "Only submissions awaiting review can be actioned." }, 409);
+  if (submission.status === "published" && decision === "approve") {
+    return json({ submission: { id: submissionId, status: "published" }, next_step: "This listing is already published." });
+  }
+  const canStartReview = submission.status === "pending_review";
+  const canResumeFreePublication = submission.status === "ready_to_publish" &&
+    decision === "approve" && submission.package_tier === "standard";
+  if (!canStartReview && !canResumeFreePublication) {
+    return json({ error: "This submission is not in a state that supports this action." }, 409);
+  }
+
+  if (decision === "reject" && !canStartReview) {
+    return json({ error: "Only submissions awaiting review can be rejected." }, 409);
   }
 
   if (decision === "reject") {
@@ -89,13 +99,23 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ submission: updated, next_step: "Payment is required before publication." });
   }
 
-  const { data: claimed, error: claimError } = await admin.from("job_submissions")
-    .update({ status: "ready_to_publish", reviewed_at: new Date().toISOString(), reviewed_by: userId, review_notes: notes || null })
-    .eq("id", submissionId).eq("status", "pending_review").select("id").maybeSingle();
-  if (claimError || !claimed) return json({ error: "The submission changed or could not be approved. Refresh and try again." }, 409);
+  if (canStartReview) {
+    const { data: claimed, error: claimError } = await admin.from("job_submissions")
+      .update({ status: "ready_to_publish", reviewed_at: new Date().toISOString(), reviewed_by: userId, review_notes: notes || null })
+      .eq("id", submissionId).eq("status", "pending_review").select("id").maybeSingle();
+    if (claimError || !claimed) return json({ error: "The submission changed or could not be approved. Refresh and try again." }, 409);
+  }
 
-  const slug = `${slugify(submission.job_title)}-${submission.reference_code.toLowerCase()}`;
-  const { error: publishError } = await admin.from("jobs").insert({
+  const { data: existingJob, error: existingJobError } = await admin.from("jobs")
+    .select("id").eq("submission_id", submissionId).maybeSingle();
+  if (existingJobError) {
+    console.error("Existing publication lookup failed", existingJobError);
+    return json({ error: "Could not verify whether this listing was already published. Please retry." }, 500);
+  }
+
+  if (!existingJob) {
+    const slug = `${slugify(submission.job_title)}-${submission.reference_code.toLowerCase()}`;
+    const { error: publishError } = await admin.from("jobs").insert({
     submission_id: submission.id,
     employer_account_id: submission.employer_account_id,
     slug,
@@ -121,14 +141,25 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     published_at: new Date().toISOString(),
     expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
   });
-  if (publishError) {
-    console.error("Approved free listing publication failed", publishError);
-    await admin.from("job_submissions").update({ status: "pending_review" }).eq("id", submissionId).eq("status", "ready_to_publish");
-    return json({ error: "Approval was not completed because the public listing could not be created." }, 500);
+    if (publishError) {
+      console.error("Approved free listing publication failed", publishError);
+      // A network failure can occur after the insert committed. Check once before
+      // returning an error so a retry cannot create a duplicate listing.
+      const { data: recoveredJob } = await admin.from("jobs")
+        .select("id").eq("submission_id", submissionId).maybeSingle();
+      if (!recoveredJob) {
+        return json({ error: "The listing could not be published yet. It remains ready to publish; an administrator can safely retry." }, 500);
+      }
+    }
   }
-  const { error: publishedStatusError } = await admin.from("job_submissions")
-    .update({ status: "published" }).eq("id", submissionId).eq("status", "ready_to_publish");
-  if (publishedStatusError) console.error("Free listing status update failed", publishedStatusError);
+
+  const { data: publishedStatus, error: publishedStatusError } = await admin.from("job_submissions")
+    .update({ status: "published" }).eq("id", submissionId).eq("status", "ready_to_publish")
+    .select("id, status").maybeSingle();
+  if (publishedStatusError || !publishedStatus) {
+    console.error("Free listing status update needs recovery", publishedStatusError);
+    return json({ error: "The job exists, but its submission status needs reconciliation. Retry the publish action safely." }, 500);
+  }
   await admin.from("marketplace_audit_events").insert({
     actor_user_id: userId, submission_id: submissionId, event_type: "free_job_approved_and_published",
     details: { package_tier: "standard", notes },
