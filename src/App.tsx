@@ -717,7 +717,29 @@ export default function App() {
       <PremiumMarketplacePreview
         jobs={marketplaceJobs}
         showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
-        careerToolsContent={<AIToolsView tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />}
+        careerToolsContent={
+          <div className="space-y-16">
+            <section id="career-ai-tools" className="scroll-mt-24">
+              <AIToolsView tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />
+            </section>
+            <section id="career-discovery" className="scroll-mt-24 space-y-6">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Discover what is next</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-.045em] text-[#1b3027] sm:text-3xl">AI, remote work & developer discovery.</h2>
+                <p className="mt-2 text-sm leading-6 text-[#77847b]">Explore AI assistants, industry signals, free app builders and practical developer tools.</p>
+              </div>
+              <NewsDevToolsView showAds={false} />
+            </section>
+            <section id="career-productivity" className="scroll-mt-24 space-y-6">
+              <div className="max-w-2xl">
+                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Work smarter</p>
+                <h2 className="mt-2 text-2xl font-semibold tracking-[-.045em] text-[#1b3027] sm:text-3xl">Your productivity toolkit.</h2>
+                <p className="mt-2 text-sm leading-6 text-[#77847b]">Focus sessions, freelancer income planning and a lightweight project tracker—all free to use.</p>
+              </div>
+              <ToolkitPreview embedded />
+            </section>
+          </div>
+        }
         onReturnToMarketplace={() => {
           const url = new URL(window.location.href);
           url.searchParams.delete('experience');
