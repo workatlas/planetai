@@ -13,6 +13,8 @@ export default function EmployerAuth() {
   const [company, setCompany] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [workspaceBusy, setWorkspaceBusy] = useState(false);
+  const [workspaceName, setWorkspaceName] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [session, setSession] = useState<Session | null>(null);
@@ -30,6 +32,42 @@ export default function EmployerAuth() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (!session) {
+      setWorkspaceName('');
+      return;
+    }
+    let active = true;
+    async function loadWorkspace() {
+      setWorkspaceBusy(true);
+      setError('');
+      try {
+        const metadataName = typeof session?.user.user_metadata?.company_name === 'string'
+          ? session.user.user_metadata.company_name
+          : '';
+        const fallbackName = session?.user.email?.split('@')[0] || 'My company';
+        const { data: accountId, error: createError } = await supabase.rpc('create_employer_workspace', {
+          p_company_name: (metadataName || fallbackName).trim().slice(0, 100),
+        });
+        if (createError) throw createError;
+        if (!accountId) throw new Error('Your workspace could not be created. Please try signing in again.');
+        const { data: account, error: readError } = await supabase
+          .from('employer_accounts')
+          .select('company_name')
+          .eq('id', accountId)
+          .single();
+        if (readError) throw readError;
+        if (active) setWorkspaceName(account.company_name);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : 'Unable to load your employer workspace.');
+      } finally {
+        if (active) setWorkspaceBusy(false);
+      }
+    }
+    loadWorkspace();
+    return () => { active = false; };
+  }, [session]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,9 +87,9 @@ export default function EmployerAuth() {
         if (authError) throw authError;
         if (data.session) {
           setSession(data.session);
-          setMessage('Your employer login is ready. Next we will finish setting up your company workspace.');
+          setMessage('Your employer account is ready. We are creating your private company workspace.');
         } else {
-          setMessage('Check your inbox to confirm your email address. After confirmation, return here to sign in and finish your company setup.');
+          setMessage('Check your inbox to confirm your email address. After confirmation, return here and sign in to create your private company workspace.');
         }
       } else {
         const { data, error: authError } = await supabase.auth.signInWithPassword({
@@ -60,7 +98,7 @@ export default function EmployerAuth() {
         });
         if (authError) throw authError;
         setSession(data.session);
-        setMessage('You are securely signed in. Your employer workspace setup is the next step.');
+        setMessage('You are securely signed in. Loading your private employer workspace…');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'We could not complete that request. Please try again.');
@@ -76,6 +114,7 @@ export default function EmployerAuth() {
     if (signOutError) setError(signOutError.message);
     else {
       setSession(null);
+      setWorkspaceName('');
       setMessage('You have been signed out.');
     }
   }
@@ -99,7 +138,7 @@ export default function EmployerAuth() {
           <p className="mt-5 max-w-lg text-sm leading-7 text-[#718096]">Create your employer account to prepare job listings, manage candidates and access your company workspace in one place.</p>
           <div className="mt-10 grid max-w-lg gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><BriefcaseBusiness className="text-[#315a91]" size={20}/><p className="mt-4 text-sm font-bold">Hiring workspace</p><p className="mt-1 text-xs leading-5 text-[#8795aa]">Keep company jobs and hiring activity together.</p></div>
-            <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><LockKeyhole className="text-[#315a91]" size={20}/><p className="mt-4 text-sm font-bold">Private by design</p><p className="mt-1 text-xs leading-5 text-[#8795aa]">Your account access is protected by Supabase authentication.</p></div>
+            <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><LockKeyhole className="text-[#315a91]" size={20}/><p className="mt-4 text-sm font-bold">Private by design</p><p className="mt-1 text-xs leading-5 text-[#8795aa]">Your account access is protected by Supabase authentication and database ownership checks.</p></div>
           </div>
         </section>
 
@@ -107,17 +146,22 @@ export default function EmployerAuth() {
           {session ? (
             <>
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-700"><CheckCircle2 size={23}/></span>
-              <p className="mt-6 text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">Authenticated</p>
+              <p className="mt-6 text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">Authenticated employer</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">Welcome to PLANETAI.</h2>
               <p className="mt-3 break-all text-sm text-[#718096]">{session.user.email}</p>
-              <div className="mt-6 rounded-2xl border border-[#dce7f5] bg-[#f5f8fd] p-4 text-xs leading-6 text-[#526b8b]">Your sign-in is working. The next milestone is creating and connecting your private employer company workspace.</div>
-              <button onClick={signOut} disabled={busy} className="mt-6 w-full rounded-xl border border-[#dce5f0] px-4 py-3 text-xs font-bold text-[#315a91] disabled:opacity-50">{busy ? 'Signing out…' : 'Sign out'}</button>
+              <div className="mt-6 rounded-2xl border border-[#dce7f5] bg-[#f5f8fd] p-4">
+                <p className="text-[9px] font-bold uppercase tracking-[.14em] text-[#7890ae]">Your company workspace</p>
+                {workspaceBusy ? <p className="mt-2 flex items-center gap-2 text-xs text-[#526b8b]"><LoaderCircle className="animate-spin" size={14}/> Setting up your private workspace…</p>
+                  : workspaceName ? <p className="mt-2 text-sm font-bold text-[#24446e]">{workspaceName}</p>
+                  : <p className="mt-2 text-xs leading-5 text-[#526b8b]">Workspace setup is waiting for a successful database response.</p>}
+              </div>
+              <button onClick={signOut} disabled={busy || workspaceBusy} className="mt-6 w-full rounded-xl border border-[#dce5f0] px-4 py-3 text-xs font-bold text-[#315a91] disabled:opacity-50">{busy ? 'Signing out…' : 'Sign out'}</button>
             </>
           ) : (
             <>
               <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">{mode === 'signup' ? 'Employer registration' : 'Employer sign in'}</p>
               <h2 className="mt-2 text-2xl font-semibold tracking-tight">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-              <p className="mt-2 text-xs leading-6 text-[#8795aa]">{mode === 'signup' ? 'Start with a secure account. Company workspace setup follows after email verification.' : 'Sign in to continue to your employer workspace.'}</p>
+              <p className="mt-2 text-xs leading-6 text-[#8795aa]">{mode === 'signup' ? 'Start with a secure account. We will create your private company workspace after email verification.' : 'Sign in to continue to your employer workspace.'}</p>
               <form onSubmit={submit} className="mt-7 space-y-4">
                 {mode === 'signup' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Company name</span><input value={company} onChange={e=>setCompany(e.target.value)} required minLength={2} maxLength={100} placeholder="Your company" className="w-full rounded-xl border border-[#dce5f0] bg-white px-4 py-3 text-xs outline-none transition focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/></label>}
                 <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Work email</span><span className="relative block"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa8ba]" size={15}/><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254} placeholder="you@company.com" className="w-full rounded-xl border border-[#dce5f0] bg-white py-3 pl-11 pr-4 text-xs outline-none transition focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/></span></label>
