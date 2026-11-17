@@ -62,7 +62,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       console.error("Employer payment query failed", paymentsError);
       return json({ error: "We could not load your payment records." }, 500);
     }
-    const latestPayment = new Map<string, typeof payments[number]>();
+    const latestPayment = new Map<string, { status: string; amount: number; currency: string; provider_order_id: string | null; confirmed_at: string | null }>();
     for (const payment of payments || []) {
       if (!latestPayment.has(payment.submission_id)) latestPayment.set(payment.submission_id, payment);
     }
