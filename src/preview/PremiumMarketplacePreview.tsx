@@ -8,6 +8,8 @@ import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
 import type {JobCategory, JobListing} from '../data/jobs';
 import {CompanyLogo} from '../components/JobCard';
 import {PlanetAILogo} from '../components/PlanetAILogo';
+import {PWAInstallButton} from '../components/PWAInstallButton';
+import {AdBanner} from '../components/AdBanner';
 
 interface PremiumMarketplacePreviewProps {
   jobs: JobListing[];
@@ -15,6 +17,8 @@ interface PremiumMarketplacePreviewProps {
   onToggleSave: (id: string) => void;
   onOpenJob: (job: JobListing) => void;
   onPostJob: () => void;
+  onOpenPrivacyPolicy: () => void;
+  privacyPolicyModal: ReactNode;
   onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app') => void;
   jobDetailModal: ReactNode;
   postJobModal: ReactNode;
@@ -40,6 +44,8 @@ export default function PremiumMarketplacePreview({
   onToggleSave,
   onOpenJob,
   onPostJob,
+  onOpenPrivacyPolicy,
+  privacyPolicyModal,
   onOpenWorkspace,
   jobDetailModal,
   postJobModal,
@@ -81,7 +87,7 @@ export default function PremiumMarketplacePreview({
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
               <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Career workspace</span></span>
             </a>
-            <button onClick={onReturnToMarketplace} className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Back to marketplace <ArrowRight className="ml-1 inline" size={13}/></button>
+            <div className="flex items-center gap-2"><PWAInstallButton compact /><button onClick={onReturnToMarketplace} className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Back to marketplace <ArrowRight className="ml-1 inline" size={13}/></button></div>
           </div>
         </header>
         <main className="mx-auto max-w-[1320px] px-5 py-9 sm:px-8 sm:py-12">
@@ -97,7 +103,8 @@ export default function PremiumMarketplacePreview({
           </div>
           {careerToolsContent}
         </main>
-        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-2 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><span>Free tools · Private by default · Browse freely</span></div></footer>
+        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button><PWAInstallButton compact /></div><span>Free tools · Browse freely</span></div></footer>
+        {privacyPolicyModal}
       </div>
     );
   }
@@ -120,11 +127,11 @@ export default function PremiumMarketplacePreview({
           </nav>
           <div className="hidden items-center gap-2 sm:flex">
             <button onClick={() => onOpenWorkspace('ai-tools')} className="px-3 py-2 text-[12px] font-bold text-[#40534a] hover:text-[#183c32]">Career tools</button>
-            <button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
+            <PWAInstallButton compact /><a href="/?experience=employer-auth" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Employer sign in</a><button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
           </div>
           <button onClick={() => setMobileMenu(v => !v)} className="grid h-10 w-10 place-items-center rounded-full border border-[#e0e6e0] lg:hidden" aria-label="Toggle navigation">{mobileMenu ? <X size={19}/> : <Menu size={19}/>}</button>
         </div>
-        {mobileMenu && <div className="border-t border-[#e5e9e5] bg-white px-6 py-4 lg:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><a href="#opportunities" onClick={() => setMobileMenu(false)}>Find opportunities</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><button className="text-left" onClick={() => {setMobileMenu(false); onOpenWorkspace('ai-tools');}}>Career tools</button><button className="text-left" onClick={() => {setMobileMenu(false); onPostJob();}}>Post a job</button></div></div>}
+        {mobileMenu && <div className="border-t border-[#e5e9e5] bg-white px-6 py-4 lg:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><a href="#opportunities" onClick={() => setMobileMenu(false)}>Find opportunities</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><button className="text-left" onClick={() => {setMobileMenu(false); onOpenWorkspace('ai-tools');}}>Career tools</button><a href="/?experience=employer-auth" onClick={() => setMobileMenu(false)}>Employer sign in</a><button className="text-left" onClick={() => {setMobileMenu(false); onPostJob();}}>Post a job</button><PWAInstallButton /></div></div>}
       </header>
 
       <main id="top">
@@ -181,12 +188,14 @@ export default function PremiumMarketplacePreview({
         <section id="how-it-works" className="border-y border-[#e3e9e2] bg-white">
           <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20"><div className="max-w-xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Simple by design</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Less friction. More possibility.</h2></div><div className="mt-10 grid gap-8 md:grid-cols-3">{[{n:'01',title:'Explore freely',body:'Browse roles and company information without creating a candidate account.'},{n:'02',title:'Know what to expect',body:'Review responsibilities, compensation, location, eligibility and requirements.'},{n:'03',title:'Apply directly',body:'Continue to the employer’s official application destination when you are ready.'}].map(item => <div key={item.n} className="border-t border-[#dce5dc] pt-5"><p className="text-xs font-bold text-[#71917b]">{item.n}</p><h3 className="mt-5 text-lg font-bold tracking-tight text-[#263b30]">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#7a887f]">{item.body}</p></div>)}</div></div>
         </section>
+        <section aria-label="Sponsored information" className="border-b border-[#e3e9e2] bg-[#f7f8f6] py-7"><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><AdBanner placement="bottom-suite" /></div></section>
 
-        <section id="employers" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24"><div className="overflow-hidden rounded-[28px] bg-[#183c32] p-7 text-white sm:p-12 lg:p-16"><div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a7c7b2]">For employers</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-.055em] sm:text-5xl">Meet the people who can move your business forward.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-[#c4d6ca]">Create an employer workspace, submit a role for review, and publish after approval. Free listings are welcome.</p><div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold text-[#d6e6db]"><span><Check className="mr-1 inline" size={14}/> Employer workspace</span><span><Check className="mr-1 inline" size={14}/> Human review</span><span><Check className="mr-1 inline" size={14}/> Clear listing packages</span></div></div><div><button onClick={onPostJob} className="inline-flex items-center gap-3 rounded-full bg-[#f1f5ec] px-6 py-4 text-[12px] font-extrabold text-[#183c32] transition hover:bg-white">Post a role <ArrowUpRight size={16}/></button></div></div></div></section>
+        <section id="employers" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24"><div className="overflow-hidden rounded-[28px] bg-[#183c32] p-7 text-white sm:p-12 lg:p-16"><div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a7c7b2]">For employers</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-.055em] sm:text-5xl">Meet the people who can move your business forward.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-[#c4d6ca]">Create an employer workspace, submit a role for review, and publish after approval. Free listings are welcome.</p><div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold text-[#d6e6db]"><span><Check className="mr-1 inline" size={14}/> Employer workspace</span><span><Check className="mr-1 inline" size={14}/> Human review</span><span><Check className="mr-1 inline" size={14}/> Clear listing packages</span></div></div><div className="flex flex-col items-start gap-3"><button onClick={onPostJob} className="inline-flex items-center gap-3 rounded-full bg-[#f1f5ec] px-6 py-4 text-[12px] font-extrabold text-[#183c32] transition hover:bg-white">Post a role <ArrowUpRight size={16}/></button><a href="/?experience=employer-auth" className="text-[11px] font-semibold text-[#d6e6db] underline underline-offset-4 hover:text-white">Already have an employer workspace? Sign in</a></div></div></div></section>
       </main>
-      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button></div><span>Browse freely · Apply directly</span></div></footer>
+      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
       {jobDetailModal}
       {postJobModal}
+      {privacyPolicyModal}
       <div className="fixed bottom-3 right-3 z-40 rounded-lg border border-[#dce4dc] bg-white/95 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-[#6b7d70] shadow-lg">PLANETAI Marketplace</div>
     </div>
   );
