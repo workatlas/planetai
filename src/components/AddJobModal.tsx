@@ -102,6 +102,7 @@ interface SubmittedReceipt {
 interface AddJobModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenPrivacyPolicy: () => void;
   onPreviewLocalJob: (job: JobListing) => void;
   localPreviewJobs?: JobListing[];
   onDeleteLocalPreview?: (id: string) => void;
@@ -143,6 +144,7 @@ function formatCooldown(ms: number): string {
 export const AddJobModal: React.FC<AddJobModalProps> = ({
   isOpen,
   onClose,
+  onOpenPrivacyPolicy,
   onPreviewLocalJob,
   localPreviewJobs = [],
   onDeleteLocalPreview,
@@ -460,7 +462,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
               <p className="text-xs text-[#77847b]">
                 Submit for review without an account · Existing employers can sign in
               </p>
-              <a href="/?experience=employer-auth" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Already have an employer workspace? Sign in <ArrowUpRight className="h-3 w-3" /></a>
+              <a href="/?experience=employer-auth" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Employer sign in / create account <ArrowUpRight className="h-3 w-3" /></a>
+              <button type="button" onClick={onOpenPrivacyPolicy} className="mt-1 w-fit text-[11px] font-semibold text-[#77847b] underline underline-offset-2 hover:text-[#315b47]">Privacy Policy</button>
             </div>
           </div>
 
