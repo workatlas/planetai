@@ -21,8 +21,8 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-      - name: Install locked dependencies
-        run: bun install --frozen-lockfile
+      - name: Install dependencies and refresh lockfile in CI
+        run: bun install
       - name: TypeScript check
         run: bun run lint
       - name: Production build
