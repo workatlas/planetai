@@ -752,6 +752,8 @@ export default function App() {
         onToggleSave={toggleSaveJob}
         onOpenJob={setInspectedJob}
         onPostJob={() => setIsAddJobOpen(true)}
+        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+        privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
         onOpenWorkspace={openCareerWorkspace}
         jobDetailModal={
           <JobDetailModal
