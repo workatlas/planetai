@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { RefreshCw, ShieldCheck, CheckCircle2, XCircle, Clock3, LogOut } from "lucide-react";
+import { RefreshCw, ShieldCheck, CheckCircle2, XCircle, Clock3, LogOut, Eye, EyeOff, LockKeyhole } from "lucide-react";
 
 type Submission = {
   id: string; reference_code: string; employer_name: string; employer_email: string;
@@ -27,6 +27,10 @@ export default function AdminModeration() {
   const [error,setError]=useState("");
   const [message,setMessage]=useState("");
   const [email,setEmail]=useState<string|null>(null);
+  const [loginEmail,setLoginEmail]=useState("planetai.operations@gmail.com");
+  const [password,setPassword]=useState("");
+  const [showPassword,setShowPassword]=useState(false);
+  const [authBusy,setAuthBusy]=useState(false);
 
   const load=useCallback(async()=>{
     setLoading(true); setError("");
@@ -39,6 +43,24 @@ export default function AdminModeration() {
     setLoading(false);
   },[]);
   useEffect(()=>{void load();},[load]);
+
+  const signIn=async(event:React.FormEvent<HTMLFormElement>)=>{
+    event.preventDefault();
+    setAuthBusy(true);setError("");setMessage("");
+    try {
+      const {error:authError}=await supabase.auth.signInWithPassword({
+        email:loginEmail.trim(),
+        password,
+      });
+      if(authError) throw authError;
+      setPassword("");
+      await load();
+    } catch(err) {
+      setError(err instanceof Error ? err.message : "Sign-in failed. Please check your credentials and try again.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
 
   const review=async(decision:"approve"|"reject")=>{
     if(!selected)return;
@@ -57,6 +79,32 @@ export default function AdminModeration() {
     payment:rows.filter(r=>r.status==="approved_awaiting_payment").length,
     published:rows.filter(r=>r.status==="published").length,
   };
+  if(!email&&!loading) return <div className="min-h-screen bg-slate-50 px-5 py-10 text-slate-900">
+    <div className="mx-auto max-w-md">
+      <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><ShieldCheck size={25}/></div>
+        <p className="mt-6 text-xs font-bold uppercase tracking-widest text-blue-700">PLANETAI · Secure administrator access</p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight">Sign in to moderation</h1>
+        <p className="mt-2 text-sm leading-6 text-slate-500">Use the administrator account authorized for PLANETAI. Access is verified by the server after sign-in.</p>
+        <form onSubmit={signIn} className="mt-7 space-y-4">
+          <label className="block text-xs font-semibold text-slate-600">Administrator email
+            <input type="email" autoComplete="username" required maxLength={254} value={loginEmail} onChange={e=>setLoginEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"/>
+          </label>
+          <label className="block text-xs font-semibold text-slate-600">Password
+            <span className="relative mt-2 block">
+              <LockKeyhole size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"/>
+              <input type={showPassword?"text":"password"} autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} className="w-full rounded-xl border border-slate-300 py-3 pl-11 pr-12 text-sm outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100"/>
+              <button type="button" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"} className="absolute right-3 top-1/2 -translate-y-1/2 rounded p-1 text-slate-500">{showPassword?<EyeOff size={17}/>:<Eye size={17}/>}</button>
+            </span>
+          </label>
+          <button type="submit" disabled={authBusy} className="w-full rounded-xl bg-slate-900 px-4 py-3.5 text-sm font-semibold text-white hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-60">{authBusy?"Verifying access…":"Sign in securely"}</button>
+        </form>
+        {error&&<p role="alert" className="mt-5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">{error}</p>}
+        <p className="mt-6 border-t border-slate-100 pt-5 text-xs leading-5 text-slate-400">Only accounts explicitly authorized by PLANETAI can access moderation. A successful sign-in alone does not grant administrator privileges.</p>
+      </div>
+    </div>
+  </div>;
+
   return <div className="min-h-screen bg-slate-50 text-slate-900">
     <header className="border-b border-slate-200 bg-white px-5 py-4 sm:px-8">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
