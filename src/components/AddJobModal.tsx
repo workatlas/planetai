@@ -85,10 +85,10 @@ const LISTING_TIERS: ListingTierOption[] = [
   },
 ];
 
-const VERIFIED_ADDON_PRICE_USD = 39;
-
 interface SubmittedReceipt {
   referenceId: string;
+  status: string;
+  verificationDelivery: string;
   job: JobListing;
   tier: ListingTierOption;
   addVerifiedBadge: boolean;
@@ -466,7 +466,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       setCooldownMs(SUBMISSION_COOLDOWN_MS);
       setPreviewActivated(false);
       setReceipt({
-        referenceId: persistedReference, job: stagedJob, tier: selectedTier,
+        referenceId: persistedReference, status: data.submission.status, verificationDelivery: data.email_verification_delivery || 'unknown', job: stagedJob,
         addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
         emailSentViaWeb3Forms: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
       });
@@ -550,14 +550,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <h3 className="font-display text-base font-bold text-slate-50">
-                    Submission Received for Manual Review
+                    Submission Saved Successfully
                   </h3>
                   <p className="mt-1 text-xs sm:text-sm text-slate-300">
                     Reference{' '}
                     <span className="font-mono font-semibold text-cyan-300">
                       {receipt.referenceId}
                     </span>{' '}
-                    has been securely saved. Jobs do not publish until verification and moderation are complete.
+                    has been securely saved. Current status: <strong className="text-slate-100">{receipt.status.replaceAll('_', ' ')}</strong>. Jobs do not publish until verification and moderation are complete.
                   </p>
                 </div>
               </div>
@@ -576,12 +576,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400">Verified Badge Add-On</span>
-                  <span className="font-medium text-slate-200">
-                    {receipt.addVerifiedBadge
-                      ? `Included (+$${VERIFIED_ADDON_PRICE_USD})`
-                      : 'Not selected'}
-                  </span>
+                  <span className="text-slate-400">Employer verification</span>
+                  <span className="font-medium text-slate-200">Separate review process</span>
                 </div>
                 <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
                   <span className="font-semibold text-slate-200">
@@ -593,6 +589,11 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 </div>
               </div>
 
+              {receipt.verificationDelivery === 'email_provider_not_configured' && receipt.status === 'email_verification_pending' && (
+                <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-3 text-xs text-amber-200">
+                  Your submission is saved, but guest email verification cannot be sent yet. We will enable this once the verification email service is configured. Please do not submit the same job again.
+                </div>
+              )}
               {!receipt.emailSentViaWeb3Forms && (
                 <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-3 text-xs text-amber-200 space-y-2">
                   <p className="font-medium">
@@ -890,6 +891,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       );
                     })}
                   </div>
+
+                </div>
 
                 {/* 2. Company & Role Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
