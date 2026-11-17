@@ -36,6 +36,14 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       }
       window.adsbygoogle = window.adsbygoogle || [];
       window.adsbygoogle.push({});
+      if (!document.getElementById('planetai-adsense-script')) {
+        const script = document.createElement('script');
+        script.id = 'planetai-adsense-script';
+        script.async = true;
+        script.crossOrigin = 'anonymous';
+        script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT;
+        document.head.appendChild(script);
+      }
     } catch {
       // Ad blockers, consent choices, or offline mode can prevent ad loading.
     }
