@@ -95,11 +95,11 @@ const handler = async (req: Request) => {
     return json({ error: "Company, logo, and application links must be valid HTTPS URLs. Shortened links are not accepted." }, 400);
   }
 
-  // The first live milestone deliberately accepts Free only. Paid tiers must be
-  // activated through server-created PayPal orders and verified captures later.
-  const requestedTier = clean(body.package_tier, 30);
-  if (requestedTier && requestedTier !== "standard" && requestedTier !== "free") {
-    return json({ error: "Paid listing upgrades are not available in this submission flow yet. Choose Free Standard." }, 409);
+  // Paid listing requests are accepted for authenticated employer workspaces only.
+  // They remain pending moderation; no paid visibility is granted at submission time.
+  const requestedTier = clean(body.package_tier, 30) || "standard";
+  if (!["standard", "free", "featured", "spotlight"].includes(requestedTier)) {
+    return json({ error: "Choose a valid listing package." }, 400);
   }
   if (body.verified_employer_addon === true || body.verified === true) {
     return json({ error: "Employer verification is based on review and cannot be purchased." }, 400);
@@ -148,6 +148,10 @@ const handler = async (req: Request) => {
     }
   }
 
+  if (requestedTier !== "standard" && requestedTier !== "free" && (!userId || !employerAccountId)) {
+    return json({ error: "Featured and Spotlight listings require a signed-in employer with a verified PLANETAI workspace. Free Standard remains available to everyone." }, 403);
+  }
+
   const referenceCode = `PAI-${crypto.randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
   const status = userId ? "pending_review" : "email_verification_pending";
 
@@ -173,7 +177,7 @@ const handler = async (req: Request) => {
       requirements,
       tags,
       apply_url: applyUrl,
-      package_tier: "standard",
+      package_tier: requestedTier === "free" ? "standard" : requestedTier,
       verified_employer_addon: false,
       status,
       employer_account_id: employerAccountId,
@@ -193,7 +197,7 @@ const handler = async (req: Request) => {
     details: {
       reference_code: referenceCode,
       channel: userId ? "authenticated_employer" : "guest",
-      package_tier: "standard",
+      package_tier: requestedTier === "free" ? "standard" : requestedTier,
       status,
     },
   });
