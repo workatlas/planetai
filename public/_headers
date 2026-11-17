@@ -1,5 +1,5 @@
 # Keep the HTML shell and service-worker entry points fresh on every deploy.
-/ 
+/
   Cache-Control: no-cache, no-store, must-revalidate
 /index.html
   Cache-Control: no-cache, no-store, must-revalidate
