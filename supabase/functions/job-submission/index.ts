@@ -121,39 +121,23 @@ const handler = async (req: Request) => {
     userId = data.user.id;
   }
 
-  let employerAccountId: string | null = null;
-  if (userId) {
-    const { data: membership, error: memberError } = await admin
-      .from("employer_members")
-      .select("employer_account_id")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
-    if (memberError) {
-      console.error("Employer membership lookup failed", memberError);
-      return json({ error: "We could not verify your employer workspace." }, 500);
-    }
-    employerAccountId = membership?.employer_account_id ?? null;
-    if (!employerAccountId) {
-      const { data: account, error: accountError } = await admin
-        .from("employer_accounts")
-        .select("id")
-        .eq("owner_user_id", userId)
-        .maybeSingle();
-      if (accountError) {
-        console.error("Employer account lookup failed", accountError);
-        return json({ error: "We could not verify your employer workspace." }, 500);
-      }
-      employerAccountId = account?.id ?? null;
-    }
+  const { data: membership, error: memberError } = await admin
+    .from("employer_members")
+    .select("employer_account_id, member_role")
+    .eq("user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (memberError) {
+    console.error("Employer membership lookup failed", memberError);
+    return json({ error: "We could not verify your employer workspace." }, 500);
   }
-
-  if (!employerAccountId) {
+  if (!membership?.employer_account_id) {
     return json({ error: "Create your free employer workspace before submitting a job listing." }, 403);
   }
-  if (requestedTier !== "standard" && requestedTier !== "free" && !employerAccountId) {
-    return json({ error: "Paid listing upgrades require a verified PLANETAI employer workspace." }, 403);
+  if (![ "owner", "admin", "recruiter" ].includes(membership.member_role)) {
+    return json({ error: "Your employer workspace role does not allow job submissions." }, 403);
   }
+  const employerAccountId = membership.employer_account_id;
 
   const referenceCode = `PAI-${crypto.randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
   const status = "pending_review";
