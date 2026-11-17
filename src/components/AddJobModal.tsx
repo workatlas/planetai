@@ -667,7 +667,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
               <div className="mt-4 space-y-3">
                 {localPreviewJobs.length === 0 ? (
                   <div className="rounded-xl border border-dashed border-[#e2e8e1] bg-[#f4f6f2]/50 p-6 text-center">
-                    <Building2 className="w-6 h-6 text-[#1d3028]0 mx-auto" />
+                    <Building2 className="w-6 h-6 text-[#9aa49d] mx-auto" />
                     <p className="mt-2 text-sm font-medium text-[#40534a]">
                       No temporary local previews active
                     </p>
@@ -720,7 +720,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                                 )}
                               </span>
                             </p>
-                            <p className="text-[11px] text-[#1d3028]0 truncate mt-1">
+                            <p className="text-[11px] text-[#9aa49d] truncate mt-1">
                               {job.companyWebsite || job.applyUrl}
                             </p>
                           </div>
@@ -830,7 +830,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="e.g., Acme AI Labs"
-                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
 
@@ -874,7 +874,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={companyWebsite}
                       onChange={(e) => setCompanyWebsite(e.target.value)}
                       placeholder="https://yourcompany.com/careers"
-                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
 
@@ -891,7 +891,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={companyLogoUrl}
                       onChange={(e) => setCompanyLogoUrl(e.target.value)}
                       placeholder="https://yourcompany.com/logo.png"
-                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -910,7 +910,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g., Bilingual AI Prompt Evaluator"
-                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
@@ -1033,7 +1033,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={applyUrl}
                       onChange={(e) => setApplyUrl(e.target.value)}
                       placeholder="https://yourcompany.com/jobs/role"
-                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                   <div>
@@ -1050,7 +1050,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       placeholder="hiring@yourcompany.com"
-                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1101,7 +1101,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe what your company builds and what the candidate will do..."
-                    className="w-full rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2.5 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                    className="w-full rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2.5 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
@@ -1118,7 +1118,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={requirementsInput}
                     onChange={(e) => setRequirementsInput(e.target.value)}
                     placeholder="e.g., 2+ yrs Python, Fluent English, Async availability"
-                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
