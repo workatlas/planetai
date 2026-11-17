@@ -9,6 +9,7 @@ import JobSeekerAuth from './preview/JobSeekerAuth';
 import JobSeekerDashboard from './preview/JobSeekerDashboard';
 import JobSeekerPasswordReset from './preview/JobSeekerPasswordReset';
 import AdminModeration from './preview/AdminModeration';
+import EmployerPayments from './preview/EmployerPayments';
 import './index.css';
 
 // Netlify deploy previews must not reuse a production PWA shell. A service
@@ -44,6 +45,7 @@ if ('serviceWorker' in navigator && isNetlifyPreview) {
 const experience = new URLSearchParams(window.location.search).get('experience');
 const preview = experience === 'admin-moderation' ? <AdminModeration />
   : experience === 'employer-profile' ? <EmployerProfile />
+  : experience === 'employer-payments' ? <EmployerPayments />
   : experience === 'employer-auth' ? <EmployerAuth />
   : experience === 'job-seeker-auth' ? <JobSeekerAuth />
   : experience === 'job-seeker-reset' ? <JobSeekerPasswordReset />
