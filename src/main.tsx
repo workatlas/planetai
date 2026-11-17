@@ -11,7 +11,33 @@ import JobSeekerPasswordReset from './preview/JobSeekerPasswordReset';
 import AdminModeration from './preview/AdminModeration';
 import './index.css';
 
-if ('serviceWorker' in navigator) {
+// Netlify deploy previews must not reuse a production PWA shell. A service
+// worker from an earlier deployment can otherwise serve stale JavaScript and
+// route password-recovery links back to the old homepage.
+const isNetlifyPreview = window.location.hostname.startsWith('deploy-preview-')
+  && window.location.hostname.endsWith('--planetai-global.netlify.app');
+
+if ('serviceWorker' in navigator && isNetlifyPreview) {
+  const cleanupFlag = '_planetai_preview_sw_cleaned';
+  if (sessionStorage.getItem(cleanupFlag) !== '1') {
+    sessionStorage.setItem(cleanupFlag, '1');
+    void (async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(registrations.map(registration => registration.unregister()));
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        await Promise.all(keys.map(key => caches.delete(key)));
+      }
+      const cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.set(cleanupFlag, '1');
+      window.location.replace(cleanUrl.toString());
+    })();
+  } else {
+    const cleanUrl = new URL(window.location.href);
+    cleanUrl.searchParams.delete(cleanupFlag);
+    window.history.replaceState({}, '', cleanUrl.toString());
+  }
+} else if ('serviceWorker' in navigator) {
   registerSW({ immediate: true, onOfflineReady() {} });
 }
 
