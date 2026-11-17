@@ -62,8 +62,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (submissionError || !submission) return json({ error: "Submission not found." }, 404);
   if (!submission.employer_account_id) return json({ error: "This listing is not attached to an employer workspace." }, 403);
   const { data: membership, error: membershipError } = await admin.from("employer_members")
-    .select("id").eq("employer_account_id", submission.employer_account_id).eq("user_id", userId).maybeSingle();
+    .select("id, member_role")
+    .eq("employer_account_id", submission.employer_account_id)
+    .eq("user_id", userId)
+    .maybeSingle();
   if (membershipError || !membership) return json({ error: "You do not have access to this employer listing." }, 403);
+  if (!["owner", "admin"].includes(membership.member_role)) {
+    return json({ error: "Only an employer workspace owner or administrator can authorize listing payments." }, 403);
+  }
 
   const amount = priceFor(submission.package_tier);
   if (!amount) return json({ error: "This listing does not require a paid upgrade." }, 400);
