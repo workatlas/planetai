@@ -174,7 +174,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
           },
         },
       },
-    }, `planetai-order-${submission.id}`);
+    }, `pa-o-${submission.id.replaceAll("-", "")}`);
 
     const { error: paymentError } = await admin.from("job_payments").insert({
       submission_id: submission.id,
@@ -185,8 +185,13 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       status: "pending",
     });
     if (paymentError) {
-      console.error("Pending PayPal ledger insert failed", paymentError);
-      return json({ error: "The payment order was created but could not be recorded. Contact support before retrying." }, 500);
+      // A concurrent request may have created the same idempotent PayPal order first.
+      const { data: racedPayment } = await admin.from("job_payments")
+        .select("id").eq("submission_id", submission.id).eq("provider_order_id", order.id).maybeSingle();
+      if (!racedPayment) {
+        console.error("Pending PayPal ledger insert failed", paymentError);
+        return json({ error: "The payment order was created but could not be recorded. Contact support before retrying." }, 500);
+      }
     }
     const approveUrl = order.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
     if (!approveUrl) return json({ error: "PayPal did not return an approval link. Contact support before retrying." }, 502);
