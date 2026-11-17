@@ -777,6 +777,7 @@ export default function App() {
           <AddJobModal
             isOpen={isAddJobOpen}
             onClose={() => setIsAddJobOpen(false)}
+            onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
             onPreviewLocalJob={handlePreviewLocalJob}
             localPreviewJobs={customJobs}
             onDeleteLocalPreview={handleDeleteCustomJob}
@@ -1678,6 +1679,7 @@ export default function App() {
       <AddJobModal
         isOpen={isAddJobOpen}
         onClose={() => setIsAddJobOpen(false)}
+        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
         onPreviewLocalJob={handlePreviewLocalJob}
         localPreviewJobs={customJobs}
         onDeleteLocalPreview={handleDeleteCustomJob}
