@@ -122,7 +122,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
     <div
       ref={containerRef}
       aria-hidden="true"
-      className={`flex ${box} shrink-0 items-center justify-center border border-slate-700/80 bg-gradient-to-br from-slate-800 to-slate-900 font-display ${text} font-bold tracking-tight text-cyan-300`}
+      className={`flex ${box} shrink-0 items-center justify-center border border-[#dce5dc] bg-gradient-to-br from-[#edf4ee] to-[#dfece2] font-display ${text} font-bold tracking-tight text-[#285c4b]`}
     >
       {short}
     </div>
