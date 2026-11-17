@@ -6,7 +6,8 @@ import { supabase } from '../lib/supabase';
 export default function JobSeekerPasswordReset() {
   const params = new URLSearchParams(window.location.search);
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-  const [recoveryReady, setRecoveryReady] = useState(params.has('code') || hash.get('type') === 'recovery');
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const [checkingRecovery, setCheckingRecovery] = useState(true);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -19,12 +20,19 @@ export default function JobSeekerPasswordReset() {
     let active = true;
     const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (!active) return;
-      if (event === 'PASSWORD_RECOVERY' && session) setRecoveryReady(true);
+      if (event === 'PASSWORD_RECOVERY' && session) {
+        setRecoveryReady(true);
+        setCheckingRecovery(false);
+      }
     });
     supabase.auth.getSession().then(({ data, error: sessionError }) => {
       if (!active) return;
       if (sessionError) setError(sessionError.message);
-      if (data.session && (params.has('code') || hash.get('type') === 'recovery')) setRecoveryReady(true);
+      // createClient has detectSessionInUrl enabled: getSession waits for Supabase
+      // to process the PKCE code/hash callback. Never show the form before that
+      // exchange has produced an authenticated recovery session.
+      setRecoveryReady(Boolean(data.session));
+      setCheckingRecovery(false);
     });
     return () => {
       active = false;
@@ -68,7 +76,7 @@ export default function JobSeekerPasswordReset() {
           <p className="mt-6 text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]"><ShieldCheck className="mr-1 inline" size={13}/> Password recovery</p>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">Choose a new password</h1>
           <p className="mt-2 text-xs leading-6 text-[#8795aa]">Create a new password for your PLANETAI job seeker account.</p>
-          {recoveryReady && !message ? <form onSubmit={submit} className="mt-7 space-y-4">
+          {checkingRecovery ? <div role="status" className="mt-6 rounded-xl border border-[#dce5f0] bg-[#f8fafc] p-4 text-xs leading-6 text-[#64748b]">Verifying your secure reset link…</div> : recoveryReady && !message ? <form onSubmit={submit} className="mt-7 space-y-4">
             <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">New password</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa8ba]" size={15}/><input type={showPassword?'text':'password'} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} maxLength={72} placeholder="At least 8 characters" className="w-full rounded-xl border border-[#dce5f0] bg-white py-3 pl-11 pr-12 text-xs outline-none focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/><button type="button" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?'Hide password':'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8795aa]">{showPassword?<EyeOff size={15}/>:<Eye size={15}/>}</button></span></label>
             <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Confirm new password</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa8ba]" size={15}/><input type={showConfirm?'text':'password'} autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} required minLength={8} maxLength={72} placeholder="Re-enter your new password" className="w-full rounded-xl border border-[#dce5f0] bg-white py-3 pl-11 pr-12 text-xs outline-none focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/><button type="button" onClick={()=>setShowConfirm(v=>!v)} aria-label={showConfirm?'Hide confirmation password':'Show confirmation password'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8795aa]">{showConfirm?<EyeOff size={15}/>:<Eye size={15}/>}</button></span>{confirmPassword && password!==confirmPassword && <span className="mt-2 block text-[10px] text-rose-600">Passwords do not match yet.</span>}</label>
             <p className="text-[10px] leading-5 text-[#8795aa]">Use at least 8 characters. Choose a password you do not use on other websites.</p>
