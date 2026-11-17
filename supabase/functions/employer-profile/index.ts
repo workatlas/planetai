@@ -20,7 +20,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const admin = ctx.supabaseAdmin;
   const { data: account, error: lookupError } = await admin
     .from("employer_accounts")
-    .select("id, owner_user_id, company_name, company_website, company_logo_url, company_description, company_location, contact_email")
+    .select("id, owner_user_id, company_name, company_website, company_logo_url, company_cover_image_url, company_description, company_location, contact_email")
     .eq("owner_user_id", userId)
     .maybeSingle();
 
@@ -41,7 +41,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const website = typeof input.company_website === "string" ? input.company_website.trim() : "";
   const description = typeof input.company_description === "string" ? input.company_description.trim() : "";
   const location = typeof input.company_location === "string" ? input.company_location.trim() : "";
-  const contactEmail = typeof input.contact_email === "string" ? input.contact_email.trim() : "";
+  const contactEmail = typeof input.contact_email === "string" ? input.contact_email.trim() : undefined;
+  const logoUrl = typeof input.company_logo_url === "string" ? input.company_logo_url.trim() : undefined;
+  const coverUrl = typeof input.company_cover_image_url === "string" ? input.company_cover_image_url.trim() : undefined;
 
   if (companyName.length < 2 || companyName.length > 100) return json({ error: "Company name must be between 2 and 100 characters." }, 400);
   if (website.length > 255 || (website && !/^https?:\/\//i.test(website))) return json({ error: "Enter a valid company website beginning with https:// or http://." }, 400);
@@ -61,7 +63,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     })
     .eq("id", account.id)
     .eq("owner_user_id", userId)
-    .select("id, company_name, company_website, company_logo_url, company_description, company_location, contact_email")
+    .select("id, company_name, company_website, company_logo_url, company_cover_image_url, company_description, company_location, contact_email")
     .single();
 
   if (updateError) {
