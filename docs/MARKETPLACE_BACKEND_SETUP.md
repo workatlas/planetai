@@ -59,3 +59,17 @@ The intended production workflow is:
 ## 5. Not yet implemented
 
 This foundation still needs server-side submission and verification functions, authenticated owner dashboard integration, PayPal order/webhook handling, secure employer management links, expiry automation, and end-to-end tests. Do not advertise the new workflow as live until those pieces are deployed and tested.
+
+
+## 6. Employer workspaces and subscriptions
+
+Migration `supabase/migrations/20261117000100_employer_subscriptions.sql` adds:
+- Employer company workspaces and team membership roles.
+- A configurable employer subscription-plan catalogue.
+- Employer subscription records with monthly, annual, or one-time billing intervals.
+- Provider event records for auditable billing updates.
+- Optional links from existing job submissions and published jobs to an employer workspace.
+
+The migration intentionally does not invent subscription prices or activate a payment provider. Add approved plan rows to `employer_subscription_plans` only after the package names, prices, billing interval, limits, and provider are confirmed. Existing job listings and public feed records remain intact because the new employer links are nullable.
+
+All employer onboarding, workspace writes, subscription changes, and billing-event processing must be implemented in trusted server functions. Provider webhook signatures must be verified before changing subscription status or entitlements. The browser may read active plan descriptions and the signed-in employer's own workspace/subscription records, but it must never write billing status directly.
