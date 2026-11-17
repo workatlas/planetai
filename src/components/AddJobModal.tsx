@@ -1,4 +1,5 @@
 import React, {useEffect, useState} from 'react';
+import { supabase } from '../lib/supabase';
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -37,16 +38,6 @@ import {
 // LIVE CONFIGURATION — PlanetAI Employer Portal
 // ============================================================================
 const EMPLOYER_INBOX_EMAIL = 'workatlas.team@gmail.com';
-const WEB3FORMS_ACCESS_KEY: string = '3b9ef417-e803-4adb-8e5a-a0dbd9ffb631';
-const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
-
-const PAYPAL_LINKS = {
-  featured: 'https://www.paypal.com/ncp/payment/W5G33ADWVLC9U',
-  spotlight: 'https://www.paypal.com/ncp/payment/WT8YASEX3UGHJ',
-  verifiedAddon: 'https://www.paypal.com/ncp/payment/LDUK8WPY4DCR4',
-};
-
-
 const SUBMISSION_COOLDOWN_KEY = 'planetai_employer_cooldown_v1';
 const SUBMISSION_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
 
@@ -159,8 +150,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
 }) => {
   const [modalView, setModalView] = useState<ModalView>('post');
   const [selectedTierId, setSelectedTierId] =
-    useState<ListingTierId>('featured');
-  const [addVerifiedBadge, setAddVerifiedBadge] = useState(false);
+    useState<ListingTierId>('free');
+  const addVerifiedBadge = false;
 
   const [title, setTitle] = useState('');
   const [company, setCompany] = useState('');
@@ -204,7 +195,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
   const selectedTier =
     LISTING_TIERS.find((t) => t.id === selectedTierId) || LISTING_TIERS[0];
   const totalDueUsd =
-    selectedTier.priceUsd + (addVerifiedBadge ? VERIFIED_ADDON_PRICE_USD : 0);
+    selectedTier.priceUsd;
 
   const resetFormFields = () => {
     setTitle('');
@@ -449,90 +440,45 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       approvalSnippet,
     ].join('\n');
 
-    // Determine PayPal checkout link(s)
-    let primaryPaypalUrl: string | null = null;
-    let secondaryAddonPaypalUrl: string | null = null;
-    if (selectedTier.id === 'featured') {
-      primaryPaypalUrl = PAYPAL_LINKS.featured;
-      if (addVerifiedBadge) {
-        secondaryAddonPaypalUrl = PAYPAL_LINKS.verifiedAddon;
-      }
-    } else if (selectedTier.id === 'spotlight') {
-      primaryPaypalUrl = PAYPAL_LINKS.spotlight;
-      if (addVerifiedBadge) {
-        secondaryAddonPaypalUrl = PAYPAL_LINKS.verifiedAddon;
-      }
-    } else if (addVerifiedBadge) {
-      primaryPaypalUrl = PAYPAL_LINKS.verifiedAddon;
-    }
-
     setIsSubmitting(true);
-    let emailSentViaWeb3Forms = false;
-
     try {
-      if (
-        WEB3FORMS_ACCESS_KEY &&
-        WEB3FORMS_ACCESS_KEY !== 'YOUR_WEB3FORMS_ACCESS_KEY'
-      ) {
-        const response = await fetch(WEB3FORMS_ENDPOINT, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-          },
-          body: JSON.stringify({
-            access_key: WEB3FORMS_ACCESS_KEY,
-            to: EMPLOYER_INBOX_EMAIL,
-            replyto: cleanEmail,
-            from_name: `${cleanCompany} via PlanetAI Employer Portal`,
-            subject: `[PlanetAI Job Submission] ${cleanCompany} — ${cleanTitle} ($${totalDueUsd} USD)`,
-            reference_id: referenceId,
-            listing_tier: selectedTier.name,
-            verified_addon: addVerifiedBadge ? 'Yes (+$39)' : 'No',
-            total_due_usd: `$${totalDueUsd}`,
-            company_website: validatedWebsite || '',
-            company_logo_url: validatedLogoUrl || '',
-            apply_url: validatedApplyUrl,
-            message: emailMessageBody,
-          }),
-        });
-        const data = (await response.json()) as {success?: boolean};
-        if (!response.ok || !data.success) {
-          setError(
-            'Unable to deliver submission via Web3Forms right now. Please try again or use the email fallback.'
-          );
-          setIsSubmitting(false);
-          return;
-        }
-        emailSentViaWeb3Forms = true;
-      }
-
-      // Record 15-minute cooldown in localStorage
-      try {
-        window.localStorage.setItem(
-          SUBMISSION_COOLDOWN_KEY,
-          String(Date.now())
-        );
-      } catch {
-        // Ignore storage errors
-      }
+      const { data, error: submitError } = await supabase.functions.invoke('job-submission', {
+        body: {
+          company: cleanCompany, contact_email: cleanEmail, title: cleanTitle,
+          category, employment_type: workType, location: cleanLocation,
+          remote_policy: workType.toLowerCase().includes('remote') || cleanLocation.toLowerCase().includes('remote') ? 'Remote' : 'Hybrid',
+          salary_min: min, salary_max: max, pay_period: payUnit,
+          description: stagedJob.description,
+          requirements: parsedRequirements.length ? parsedRequirements : stagedJob.requirements,
+          tags: tags.length ? tags : [category, 'Remote'],
+          company_website: validatedWebsite || '', company_logo_url: validatedLogoUrl || '',
+          apply_url: validatedApplyUrl,
+          package_tier: selectedTier.id === 'free' ? 'standard' : selectedTier.id,
+          verified_employer_addon: false, bot_check: botCheck,
+        },
+      });
+      if (submitError) throw new Error(submitError.message || 'Secure submission service unavailable.');
+      if (!data?.submission?.reference_code) throw new Error(data?.error || 'No confirmation reference was returned.');
+      const persistedReference = data.submission.reference_code as string;
+      const approvalSnippet = JSON.stringify(stagedJob, null, 2);
+      const emailMessageBody = [`PlanetAI submission ${persistedReference}`, `Company: ${cleanCompany}`, `Role: ${cleanTitle}`, approvalSnippet].join('\\n');
+      try { window.localStorage.setItem(SUBMISSION_COOLDOWN_KEY, String(Date.now())); } catch { /* optional */ }
       setCooldownMs(SUBMISSION_COOLDOWN_MS);
       setPreviewActivated(false);
       setReceipt({
-        referenceId,
-        job: stagedJob,
-        tier: selectedTier,
-        addVerifiedBadge,
-        totalDueUsd,
-        approvalSnippet,
-        emailMessageBody,
-        emailSentViaWeb3Forms,
-        primaryPaypalUrl,
-        secondaryAddonPaypalUrl,
+        referenceId: persistedReference, job: stagedJob, tier: selectedTier,
+        addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
+        emailSentViaWeb3Forms: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
       });
       resetFormFields();
-    } catch {
-      setError(
+    } catch (submissionError) {
+      setError(submissionError instanceof Error ? submissionError.message : 'Unable to save your job submission.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+
         'Network error while sending submission. Please check your connection and try again.'
       );
     } finally {
@@ -611,11 +557,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     <span className="font-mono font-semibold text-cyan-300">
                       {receipt.referenceId}
                     </span>{' '}
-                    has been staged for moderation at{' '}
-                    <span className="font-medium text-slate-100">
-                      {EMPLOYER_INBOX_EMAIL}
-                    </span>
-                    . Jobs do not publish globally until reviewed and approved.
+                    has been securely saved. Jobs do not publish until verification and moderation are complete.
                   </p>
                 </div>
               </div>
@@ -918,13 +860,16 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                           key={tier.id}
                           type="button"
                           onClick={() => setSelectedTierId(tier.id)}
+                          disabled={tier.id !== 'free'}
                           aria-pressed={active}
                           className={`text-left rounded-xl border p-3 transition-all ${
                             active
                               ? tier.featured
                                 ? 'border-amber-400 bg-amber-950/35 ring-1 ring-amber-400/50'
                                 : 'border-cyan-400 bg-cyan-950/35 ring-1 ring-cyan-400/40'
-                              : 'border-slate-800 bg-slate-900/70 hover:border-slate-700'
+                              : tier.id !== 'free'
+                                ? 'border-slate-800 bg-slate-950/40 opacity-55 cursor-not-allowed'
+                                : 'border-slate-800 bg-slate-900/70 hover:border-slate-700'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -939,29 +884,12 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                             {tier.cadenceLabel}
                           </p>
                           <p className="mt-1 text-[11px] text-slate-400 leading-snug">
-                            {tier.description}
+                            {tier.id === 'free' ? tier.description : 'Coming soon — secure checkout is being prepared.'}
                           </p>
                         </button>
                       );
                     })}
                   </div>
-
-                  {/* Verified Employer Add-On Checkbox */}
-                  <label className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3 cursor-pointer hover:border-emerald-400/50 transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={addVerifiedBadge}
-                      onChange={(e) => setAddVerifiedBadge(e.target.checked)}
-                      className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-emerald-500 focus:ring-emerald-400"
-                    />
-                    <span className="text-xs text-slate-200 leading-relaxed">
-                      <strong className="text-emerald-300">
-                        ✓ Add Verified Employer Badge (+${VERIFIED_ADDON_PRICE_USD} one-time)
-                      </strong>{' '}
-                      — Permanent verification checkmark on your company and all active listings.
-                    </span>
-                  </label>
-                </div>
 
                 {/* 2. Company & Role Details */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1325,9 +1253,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     >
                       {isSubmitting
                         ? 'Submitting...'
-                        : totalDueUsd > 0
-                          ? `Submit & Checkout ($${totalDueUsd})`
-                          : 'Submit for Free Review'}
+                        : 'Submit Free Job for Review'}
                     </button>
                   </div>
                 </div>
