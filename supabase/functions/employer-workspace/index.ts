@@ -82,7 +82,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   return json({ account: { id: account.id, company_name: account.company_name } });
 });
 
-Deno.serve((req) => {
+Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  return handler(req);
+  const response = await handler(req);
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(corsHeaders)) headers.set(name, value);
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 });
