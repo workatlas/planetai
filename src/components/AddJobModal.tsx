@@ -458,7 +458,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 Employer &amp; Recruiter Portal
               </h2>
               <p className="text-xs text-slate-400">
-                Submit your company role for manual approval — zero account needed
+                Free Standard is open to all; paid upgrades require an employer account
               </p>
             </div>
           </div>
@@ -539,6 +539,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   </span>
                 </div>
               </div>
+
+              {receipt.totalDueUsd > 0 && (
+                <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/25 p-3.5 text-xs leading-5 text-cyan-100">
+                  No payment is collected now. Your paid listing must pass moderation first. Once approved, sign in to your employer workspace and complete payment from Listings &amp; Payments.
+                  <a href="/?experience=employer-payments" className="mt-3 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-cyan-400 px-3.5 py-2 font-bold text-slate-950 hover:bg-cyan-300">Open Listings &amp; Payments</a>
+                </div>
+              )}
 
               {receipt.verificationDelivery === 'email_provider_not_configured' && receipt.status === 'email_verification_pending' && (
                 <div className="rounded-xl border border-amber-500/35 bg-amber-950/30 p-3 text-xs text-amber-200">
@@ -775,14 +782,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                           key={tier.id}
                           type="button"
                           onClick={() => setSelectedTierId(tier.id)}
-                          disabled={false}
+                          disabled={tier.id === 'spotlight'}
                           aria-pressed={active}
                           className={`text-left rounded-xl border p-3 transition-all ${
                             active
                               ? tier.featured
                                 ? 'border-amber-400 bg-amber-950/35 ring-1 ring-amber-400/50'
                                 : 'border-cyan-400 bg-cyan-950/35 ring-1 ring-cyan-400/40'
-                              : 'border-slate-800 bg-slate-900/70 hover:border-slate-600'
+                               : tier.id === 'spotlight' ? 'border-slate-800 bg-slate-950/40 opacity-55 cursor-not-allowed' : 'border-slate-800 bg-slate-900/70 hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -797,7 +804,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                             {tier.cadenceLabel}
                           </p>
                           <p className="mt-1 text-[11px] text-slate-400 leading-snug">
-                            {tier.description}
+                            {tier.id === 'spotlight' ? 'Coming soon — Marquee placement will be activated before this tier accepts payment.' : tier.description}
                           </p>
                         </button>
                       );
