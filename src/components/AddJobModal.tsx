@@ -458,9 +458,10 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 Employer &amp; Recruiter Portal
               </h2>
               <p className="text-xs text-[#77847b]">
-                Free Standard is open to all; paid upgrades require an employer account
+                Submit for review without an account · Existing employers can sign in
               </p>
             </div>
+            <a href="/?experience=employer-auth" className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Already have an employer workspace? Sign in <ArrowUpRight className="h-3 w-3" /></a>
           </div>
 
           <button
