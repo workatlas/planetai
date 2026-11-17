@@ -41,14 +41,14 @@ language sql
 stable
 security definer
 set search_path = ''
-as $
+as $$
   select (select auth.uid()) is not null and exists (
     select 1
     from public.employer_members m
     where m.employer_account_id = p_account_id
       and m.user_id = (select auth.uid())
   );
-$;
+$$;
 
 revoke all on function private.is_employer_member(uuid) from public, anon;
 grant usage on schema private to authenticated;
