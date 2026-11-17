@@ -10,6 +10,7 @@ import EmployerAuth from './preview/EmployerAuth';
 import EmployerProfile from './preview/EmployerProfile';
 import JobSeekerAuth from './preview/JobSeekerAuth';
 import JobSeekerDashboard from './preview/JobSeekerDashboard';
+import JobSeekerPasswordReset from './preview/JobSeekerPasswordReset';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
@@ -28,13 +29,15 @@ const preview = experience === 'employer-profile'
   ? <EmployerAuth />
   : experience === 'job-seeker-auth'
     ? <JobSeekerAuth />
-    : experience === 'job-seeker-dashboard'
-      ? <JobSeekerDashboard />
-      : experience === 'employer'
-        ? <EmployerDashboardPreview />
-        : experience === 'applicant'
-          ? <ApplicantDashboardPreview />
-          : <App />;
+    : experience === 'job-seeker-reset'
+      ? <JobSeekerPasswordReset />
+      : experience === 'job-seeker-dashboard'
+        ? <JobSeekerDashboard />
+        : experience === 'employer'
+          ? <EmployerDashboardPreview />
+          : experience === 'applicant'
+            ? <ApplicantDashboardPreview />
+            : <App />;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
