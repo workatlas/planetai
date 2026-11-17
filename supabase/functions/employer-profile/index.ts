@@ -46,10 +46,10 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const coverUrl = typeof input.company_cover_image_url === "string" ? input.company_cover_image_url.trim() : undefined;
 
   if (companyName !== undefined && (companyName.length < 2 || companyName.length > 100)) return json({ error: "Company name must be between 2 and 100 characters." }, 400);
-  if (website !== undefined && (website.length > 255 || (website && !/^https?:\\/\\//i.test(website)))) return json({ error: "Enter a valid company website beginning with https:// or http://." }, 400);
+  if (website !== undefined && (website.length > 255 || (website && !(website.startsWith("https://") || website.startsWith("http://"))))) return json({ error: "Enter a valid company website beginning with https:// or http://." }, 400);
   if (description !== undefined && description.length > 2000) return json({ error: "Company description must be 2,000 characters or fewer." }, 400);
   if (location !== undefined && location.length > 120) return json({ error: "Location must be 120 characters or fewer." }, 400);
-  if (contactEmail !== undefined && (contactEmail.length > 254 || (contactEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contactEmail)))) return json({ error: "Enter a valid contact email address." }, 400);
+  if (contactEmail !== undefined && (contactEmail.length > 254 || (contactEmail && (contactEmail.includes(" ") || contactEmail.split("@").length !== 2 || !contactEmail.split("@")[1].includes("."))))) return json({ error: "Enter a valid contact email address." }, 400);
 
   const storageBase = Deno.env.get("SUPABASE_URL") + "/storage/v1/object/public/employer-branding/" + userId + "/";
   if (logoUrl !== undefined && logoUrl && !logoUrl.startsWith(storageBase + "logo-")) return json({ error: "Company logo must be uploaded to your verified company branding storage." }, 400);
