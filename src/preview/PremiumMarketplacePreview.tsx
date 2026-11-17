@@ -16,6 +16,9 @@ interface PremiumMarketplacePreviewProps {
   onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app') => void;
   jobDetailModal: ReactNode;
   postJobModal: ReactNode;
+  showCareerTools: boolean;
+  careerToolsContent: ReactNode;
+  onReturnToMarketplace: () => void;
 }
 
 const categoryLabel = (category: JobCategory) =>
@@ -30,6 +33,9 @@ export default function PremiumMarketplacePreview({
   onOpenWorkspace,
   jobDetailModal,
   postJobModal,
+  showCareerTools,
+  careerToolsContent,
+  onReturnToMarketplace,
 }: PremiumMarketplacePreviewProps) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<JobCategory>('All');
@@ -55,6 +61,31 @@ export default function PremiumMarketplacePreview({
   }, [jobs, query, category, sort]);
 
   const spotlight = filtered.find(job => job.featured) || filtered[0] || jobs[0] || null;
+
+  if (showCareerTools) {
+    return (
+      <div className="min-h-screen bg-[#f7f8f6] text-[#172b24]">
+        <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
+          <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
+            <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><Globe2 size={21}/></span>
+              <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Career workspace</span></span>
+            </a>
+            <button onClick={onReturnToMarketplace} className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Back to marketplace <ArrowRight className="ml-1 inline" size={13}/></button>
+          </div>
+        </header>
+        <main className="mx-auto max-w-[1320px] px-5 py-9 sm:px-8 sm:py-12">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">PLANETAI · Free career tools</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Your career workspace.</h1>
+            <p className="mt-3 text-sm leading-6 text-[#77847b]">Build your resume, prepare for interviews and make your next career move—all in the same PLANETAI experience.</p>
+          </div>
+          {careerToolsContent}
+        </main>
+        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-2 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><span>Free tools · Private by default · Browse freely</span></div></footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f7f8f6] text-[#17231f]">
