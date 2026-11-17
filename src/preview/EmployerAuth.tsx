@@ -146,7 +146,7 @@ export default function EmployerAuth() {
               <div className="mt-6 rounded-2xl border border-[#dce7f5] bg-[#f5f8fd] p-4">
                 <p className="text-[9px] font-bold uppercase tracking-[.14em] text-[#7890ae]">Your company workspace</p>
                 {workspaceBusy ? <p className="mt-2 flex items-center gap-2 text-xs text-[#526b8b]"><LoaderCircle className="animate-spin" size={14}/> Setting up your private workspace…</p>
-                  : workspaceName ? <><p className="mt-2 text-sm font-bold text-[#24446e]">{workspaceName}</p><a href="/?experience=employer-profile" className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#172b49] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#24446e]">Open company profile</a></>
+                  : workspaceName ? <><p className="mt-2 text-sm font-bold text-[#24446e]">{workspaceName}</p><a href="/?experience=employer-profile" className="mt-4 inline-flex w-full items-center justify-center rounded-xl bg-[#172b49] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#24446e]">Open company profile</a><a href="/?experience=employer-payments" className="mt-2 inline-flex w-full items-center justify-center rounded-xl border border-[#dce5f0] bg-white px-4 py-3 text-xs font-bold text-[#315a91] transition hover:bg-[#f5f8fd]">Manage listings & payments</a></>
                   : <p className="mt-2 text-xs leading-5 text-[#526b8b]">Workspace setup is waiting for a successful database response.</p>}
               </div>
               <button onClick={signOut} disabled={busy || workspaceBusy} className="mt-6 w-full rounded-xl border border-[#dce5f0] px-4 py-3 text-xs font-bold text-[#315a91] disabled:opacity-50">{busy ? 'Signing out…' : 'Sign out'}</button>
