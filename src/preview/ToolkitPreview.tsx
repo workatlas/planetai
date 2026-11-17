@@ -23,7 +23,9 @@ function formatTime(seconds: number) {
   return `${String(Math.floor(safe / 60)).padStart(2, '0')}:${String(safe % 60).padStart(2, '0')}`;
 }
 
-export default function ToolkitPreview() {
+interface ToolkitPreviewProps { embedded?: boolean; }
+
+export default function ToolkitPreview({embedded = false}: ToolkitPreviewProps) {
   const [section, setSection] = useState<'focus' | 'freelance'>('focus');
   const [mode, setMode] = useState<FocusMode>('focus');
   const [secondsLeft, setSecondsLeft] = useState(MODE_SECONDS.focus);
@@ -106,23 +108,27 @@ export default function ToolkitPreview() {
   const money = (value: number) => new Intl.NumberFormat('en-US', {style: 'currency', currency: 'USD', maximumFractionDigits: 0}).format(value);
 
   return (
-    <div className="min-h-screen bg-[#f7f8f5] text-[#1c3026]">
-      <header className="sticky top-0 z-30 border-b border-[#e4e9e1] bg-white/90 backdrop-blur-xl">
-        <div className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between px-5 sm:px-8">
-          <a href={window.location.pathname} className="flex items-center gap-3" aria-label="PLANETAI home">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><Globe2 size={20}/></span>
-            <span><b className="block text-[16px] tracking-[-.06em]">PLANET<span className="text-[#39836a]">AI</span></b><small className="block text-[9px] font-semibold uppercase tracking-[.18em] text-[#87948a]">Work & career toolkit</small></span>
-          </a>
-          <a href={window.location.pathname} className="inline-flex items-center gap-2 rounded-full border border-[#e2e8f0] px-4 py-2.5 text-[11px] font-bold text-[#53675a] transition hover:border-[#aebfae]"><ArrowLeft size={14}/> Main marketplace</a>
-        </div>
-      </header>
+    <div className={embedded ? "text-[#1c3026]" : "min-h-screen bg-[#f7f8f5] text-[#1c3026]"}>
+      {!embedded && (
+        <header className="sticky top-0 z-30 border-b border-[#e4e9e1] bg-white/90 backdrop-blur-xl">
+          <div className="mx-auto flex h-[72px] max-w-[1180px] items-center justify-between px-5 sm:px-8">
+            <a href={window.location.pathname} className="flex items-center gap-3" aria-label="PLANETAI home">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><Globe2 size={20}/></span>
+              <span><b className="block text-[16px] tracking-[-.06em]">PLANET<span className="text-[#39836a]">AI</span></b><small className="block text-[9px] font-semibold uppercase tracking-[.18em] text-[#87948a]">Work & career toolkit</small></span>
+            </a>
+            <a href={window.location.pathname} className="inline-flex items-center gap-2 rounded-full border border-[#e2e8f0] px-4 py-2.5 text-[11px] font-bold text-[#53675a] transition hover:border-[#aebfae]"><ArrowLeft size={14}/> Main marketplace</a>
+          </div>
+        </header>
+      )}
 
-      <main className="mx-auto max-w-[1180px] px-5 py-10 sm:px-8 sm:py-14">
-        <div className="max-w-2xl">
-          <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#63856c]">Free tools for getting work done</p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] sm:text-4xl">Make time for the work that matters.</h1>
-          <p className="mt-3 text-sm leading-6 text-[#64748b]">A practical workspace for focused work and independent professionals. Your project notes stay in this browser on this device.</p>
-        </div>
+      <main className={embedded ? "mx-auto max-w-[1180px] py-2" : "mx-auto max-w-[1180px] px-5 py-10 sm:px-8 sm:py-14"}>
+        {!embedded && (
+          <div className="max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#63856c]">Free tools for getting work done</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] sm:text-4xl">Make time for the work that matters.</h1>
+            <p className="mt-3 text-sm leading-6 text-[#64748b]">A practical workspace for focused work and independent professionals. Your project notes stay in this browser on this device.</p>
+          </div>
+        )}
 
         <div className="mt-8 flex flex-wrap gap-2 border-b border-[#e4eaf2] pb-4">
           <button onClick={() => setSection('focus')} className={`inline-flex items-center gap-2 rounded-full px-5 py-3 text-xs font-bold transition ${section === 'focus' ? 'bg-[#172b49] text-white' : 'bg-white text-[#64748b] border border-[#e2e8f0] hover:border-[#b5c5b6]'}`}><Timer size={15}/> Focus timer</button>
@@ -201,7 +207,7 @@ export default function ToolkitPreview() {
             </section>
           </div>
         )}
-        <div className="mt-10 flex items-start gap-3 rounded-2xl border border-[#e5eaf2] bg-white px-5 py-4"><div className="mt-0.5 text-[#66856d]"><Globe2 size={16}/></div><p className="text-[10px] leading-5 text-[#859188]"><b className="text-[#5b6e60]">PLANETAI Toolkit preview.</b> These tools run locally in your browser. No account is required, and project information stays on this device. This is an early development preview, not yet part of the live website.</p></div>
+        <div className="mt-10 flex items-start gap-3 rounded-2xl border border-[#e5eaf2] bg-white px-5 py-4"><div className="mt-0.5 text-[#66856d]"><Globe2 size={16}/></div><p className="text-[10px] leading-5 text-[#859188]"><b className="text-[#5b6e60]">PLANETAI productivity tools.</b> These tools run locally in your browser. No account is required, and project information stays on this device.</p></div>
       </main>
     </div>
   );
