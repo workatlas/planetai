@@ -203,6 +203,7 @@ function hydrateCustomJobs(): JobListing[] {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('jobs');
+  const [isCareerToolsOpen, setIsCareerToolsOpen] = useState(() => new URLSearchParams(window.location.search).get('experience') === 'career-tools');
   const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>('saved');
   const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
   const [databaseJobs, setDatabaseJobs] = useState<JobListing[]>([]);
@@ -702,18 +703,29 @@ export default function App() {
 
   const openCareerWorkspace = (tab: AppTab = 'ai-tools') => {
     const url = new URL(window.location.href);
-    url.searchParams.set('experience', 'legacy');
+    url.searchParams.set('experience', 'career-tools');
     window.history.replaceState({}, '', url.pathname + url.search);
+    setIsCareerToolsOpen(true);
     setActiveTab(tab);
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
   const marketplaceJobs = [...databaseJobs, ...INITIAL_JOBS];
 
-  if (experience === 'premium' || experience === null) {
+  if (experience === 'premium' || experience === null || experience === 'career-tools' || experience === 'legacy') {
     return (
       <PremiumMarketplacePreview
         jobs={marketplaceJobs}
+        showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
+        careerToolsContent={<AIToolsView tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />}
+        onReturnToMarketplace={() => {
+          const url = new URL(window.location.href);
+          url.searchParams.delete('experience');
+          window.history.replaceState({}, '', url.pathname + url.search);
+          setIsCareerToolsOpen(false);
+          setActiveTab('jobs');
+          window.scrollTo({top: 0, behavior: 'smooth'});
+        }}
         savedIds={savedIds}
         onToggleSave={toggleSaveJob}
         onOpenJob={setInspectedJob}
