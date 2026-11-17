@@ -20,28 +20,28 @@ const isNetlifyPreview = window.location.hostname.startsWith('deploy-preview-')
   && window.location.hostname.endsWith('--planetai-global.netlify.app');
 
 if ('serviceWorker' in navigator && isNetlifyPreview) {
-  void (async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    const cacheNames = 'caches' in window ? await caches.keys() : [];
-    const hadStaleState = registrations.length > 0 || cacheNames.length > 0;
+  if (navigator.serviceWorker.controller) {
+    // Replace an active stale preview worker with the self-destroying worker
+    // generated for Netlify Deploy Previews. It unregisters and clears caches.
+    registerSW({ immediate: true, onOfflineReady() {} });
+  } else {
+    // No worker currently controls this page, so remove any leftover
+    // registration/cache state without registering another preview worker.
+    void (async () => {
+      const registrations = await navigator.serviceWorker.getRegistrations();
+      const cacheNames = 'caches' in window ? await caches.keys() : [];
+      const hadStaleState = registrations.length > 0 || cacheNames.length > 0;
 
-    await Promise.all(registrations.map(registration => registration.unregister()));
-    if ('caches' in window) {
-      await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
-    }
+      await Promise.all(registrations.map(registration => registration.unregister()));
+      if ('caches' in window) {
+        await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+      }
 
-    const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete('_planetai_preview_sw_cleaned');
-    cleanUrl.searchParams.delete('_planetai_preview_cache_bust');
-
-    // Reload once only when there was state to remove. The next load sees no
-    // registrations/caches and therefore cannot enter a reload loop.
-    if (hadStaleState) {
-      window.location.replace(cleanUrl.toString());
-    } else if (cleanUrl.toString() !== window.location.href) {
-      window.history.replaceState({}, '', cleanUrl.toString());
-    }
-  })();
+      if (hadStaleState) {
+        window.location.reload();
+      }
+    })();
+  }
 } else if ('serviceWorker' in navigator) {
   registerSW({ immediate: true, onOfflineReady() {} });
 }
