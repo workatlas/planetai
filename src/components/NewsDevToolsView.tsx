@@ -289,6 +289,7 @@ export const NewsDevToolsView: React.FC<{showAds?: boolean}> = ({showAds = true}
             AI & Remote Work Radar
           </h2>
         </div>
+        <p className="text-sm text-[#819087]">Curated industry signals and source links. Open each source for its latest updates.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {LIVE_NEWS.map((item) => (
@@ -424,7 +425,7 @@ export const NewsDevToolsView: React.FC<{showAds?: boolean}> = ({showAds = true}
 
           <div className="w-full lg:w-auto lg:min-w-[380px]">
             {subscribedEmail ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[#b9d7c0] bg-[#f0f7f0] px-4 py-3 text-sm text-[#356a45]">
                 <div className="flex items-center gap-2 min-w-0">
                   <CheckCircle2 className="w-4 h-4 text-[#39836a] shrink-0" />
                   <span className="truncate">
