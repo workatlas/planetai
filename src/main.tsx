@@ -7,6 +7,7 @@ import {
   EmployerDashboardPreview,
 } from './preview/MarketplaceDashboardsPreview';
 import EmployerAuth from './preview/EmployerAuth';
+import EmployerProfile from './preview/EmployerProfile';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
@@ -19,7 +20,9 @@ if ('serviceWorker' in navigator) {
 }
 
 const experience = new URLSearchParams(window.location.search).get('experience');
-const preview = experience === 'employer-auth'
+const preview = experience === 'employer-profile'
+  ? <EmployerProfile />
+  : experience === 'employer-auth'
   ? <EmployerAuth />
   : experience === 'employer'
     ? <EmployerDashboardPreview />
