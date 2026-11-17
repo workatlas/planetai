@@ -44,7 +44,7 @@ export const TOP_AI_ASSISTANTS: AIAssistantItem[] = [
     id: 'gemini',
     name: 'Google Gemini',
     useCase: 'Multimodal reasoning & workspace prep',
-    url: 'https://google.com',
+    url: 'https://gemini.google.com/',
   },
   {
     id: 'claude',
@@ -113,7 +113,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Workspace',
     description:
       'Rapid AI app prototyping with instant full-stack preview, prompt testing, and deployment readiness.',
-    url: 'https://google.com',
+    url: 'https://aistudio.google.com/',
   },
   {
     id: 'builder-2',
@@ -131,7 +131,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Cloud IDE',
     description:
       'Cloud AI development workspace for building full-stack web apps, mobile previews, and APIs in browser.',
-    url: 'https://google.com',
+    url: 'https://idx.google.com/',
   },
   {
     id: 'builder-4',
@@ -140,7 +140,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Starter Tier',
     description:
       'Free instant web and PWA hosting with automated HTTPS, edge previews, and continuous Git deployments.',
-    url: 'https://netlify.com',
+    url: 'https://www.netlify.com/',
   },
   {
     id: 'builder-5',
@@ -149,7 +149,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: '100% Free Utility',
     description:
       'Free PWA to Android APK/AAB packager for Google Play Store submission and Trusted Web Activity builds.',
-    url: 'https://pwabuilder.com',
+    url: 'https://www.pwabuilder.com/',
   },
   {
     id: 'tool-1',
