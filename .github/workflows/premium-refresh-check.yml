@@ -23,7 +23,7 @@ jobs:
           bun-version: latest
       - name: Install dependencies and refresh lockfile in CI
         run: bun install
-      - name: Show dependency lockfile update\n        run: git diff -- bun.lock\n      - name: TypeScript check
+      - name: TypeScript check
         run: bun run lint
       - name: Production build
         run: bun run build
