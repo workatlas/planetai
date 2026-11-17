@@ -22,6 +22,8 @@ import {
   Zap,
 } from 'lucide-react';
 import {AddJobModal} from './components/AddJobModal';
+import {EmployerEntryModal} from './components/EmployerEntryModal';
+import EmployerAuth from './preview/EmployerAuth';
 import {
   AIToolsView,
   RequestedAITool,
@@ -230,6 +232,7 @@ export default function App() {
 
   const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+  const [isEmployerEntryOpen, setIsEmployerEntryOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [inspectedJob, setInspectedJob] = useState<JobListing | null>(null);
   const [tailoredDraft, setTailoredDraft] =
@@ -696,6 +699,7 @@ export default function App() {
 
   const experience = new URLSearchParams(window.location.search).get('experience');
 
+  if (experience === 'employer-auth') return <EmployerAuth />;
   if (experience === 'dashboard') return <AdminDashboardPreview />;
   if (experience === 'toolkit') return <ToolkitPreview />;
 
@@ -749,7 +753,7 @@ export default function App() {
         savedIds={savedIds}
         onToggleSave={toggleSaveJob}
         onOpenJob={setInspectedJob}
-        onPostJob={() => setIsAddJobOpen(true)}
+        onPostJob={() => setIsEmployerEntryOpen(true)}
         onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
         privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
         onOpenWorkspace={openCareerWorkspace}
@@ -774,14 +778,21 @@ export default function App() {
           />
         }
         postJobModal={
-          <AddJobModal
-            isOpen={isAddJobOpen}
-            onClose={() => setIsAddJobOpen(false)}
-            onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
-            onPreviewLocalJob={handlePreviewLocalJob}
-            localPreviewJobs={customJobs}
-            onDeleteLocalPreview={handleDeleteCustomJob}
-          />
+          <>
+            <EmployerEntryModal
+              isOpen={isEmployerEntryOpen}
+              onClose={() => setIsEmployerEntryOpen(false)}
+              onContinueWithoutAccount={() => { setIsEmployerEntryOpen(false); setIsAddJobOpen(true); }}
+            />
+            <AddJobModal
+              isOpen={isAddJobOpen}
+              onClose={() => setIsAddJobOpen(false)}
+              onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+              onPreviewLocalJob={handlePreviewLocalJob}
+              localPreviewJobs={customJobs}
+              onDeleteLocalPreview={handleDeleteCustomJob}
+            />
+          </>
         }
       />
     );
@@ -1676,14 +1687,21 @@ export default function App() {
         onClose={() => setInspectedJob(null)}
       />
 
-      <AddJobModal
-        isOpen={isAddJobOpen}
-        onClose={() => setIsAddJobOpen(false)}
-        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
-        onPreviewLocalJob={handlePreviewLocalJob}
-        localPreviewJobs={customJobs}
-        onDeleteLocalPreview={handleDeleteCustomJob}
-      />
+      <>
+        <EmployerEntryModal
+          isOpen={isEmployerEntryOpen}
+          onClose={() => setIsEmployerEntryOpen(false)}
+          onContinueWithoutAccount={() => { setIsEmployerEntryOpen(false); setIsAddJobOpen(true); }}
+        />
+        <AddJobModal
+          isOpen={isAddJobOpen}
+          onClose={() => setIsAddJobOpen(false)}
+          onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+          onPreviewLocalJob={handlePreviewLocalJob}
+          localPreviewJobs={customJobs}
+          onDeleteLocalPreview={handleDeleteCustomJob}
+        />
+      </>
 
       <PrivacyTermsModal
         isOpen={isPrivacyOpen}
