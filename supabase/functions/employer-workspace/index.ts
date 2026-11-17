@@ -15,7 +15,8 @@ const json = (body: unknown, status = 200) =>
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  const userId = ctx.userClaims?.sub;
+  // @supabase/server exposes the verified user's ID as `id`, not the raw JWT `sub` claim.
+  const userId = ctx.userClaims?.id;
   const userEmail = typeof ctx.userClaims?.email === "string" ? ctx.userClaims.email : null;
   if (!userId) return json({ error: "Authentication required" }, 401);
 
