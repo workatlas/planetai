@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Clock,
   Copy,
-  CreditCard,
   Eye,
   Mail,
   PlusCircle,
@@ -458,11 +457,11 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
             <div className="flex items-center gap-2.5 min-w-0">
               <Tag className="w-4 h-4 text-amber-300 shrink-0" />
               <p className="text-xs sm:text-sm font-semibold text-amber-100">
-                Launch Special: 50% Off Featured Listings
+                Free job posting for growing teams — no upfront fee
               </p>
             </div>
             <span className="font-mono text-[11px] font-bold text-amber-300 shrink-0">
-              FROM $49
+              $0 TO SUBMIT
             </span>
           </div>
         </div>
