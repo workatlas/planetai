@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
 import type {JobCategory, JobListing} from '../data/jobs';
+import {CompanyLogo} from '../components/JobCard';
+import {PlanetAILogo} from '../components/PlanetAILogo';
 
 interface PremiumMarketplacePreviewProps {
   jobs: JobListing[];
@@ -20,6 +22,14 @@ interface PremiumMarketplacePreviewProps {
   careerToolsContent: ReactNode;
   onReturnToMarketplace: () => void;
 }
+
+const categoryTones: Record<string, {card: string; badge: string}> = {
+  'AI Training': {card: 'border-l-[#6f9fe0] bg-[#f5f8ff]', badge: 'bg-[#e8f0ff] text-[#3567a8]'},
+  'Coding': {card: 'border-l-[#dfb84f] bg-[#fffaf0]', badge: 'bg-[#fff1c9] text-[#8a6413]'},
+  'Audio/Voice': {card: 'border-l-[#a88bd4] bg-[#faf7ff]', badge: 'bg-[#f0e9fb] text-[#7352a5]'},
+  'Data Annotation': {card: 'border-l-[#76a987] bg-[#f4faf5]', badge: 'bg-[#e6f3e8] text-[#42734f]'},
+  'Remote': {card: 'border-l-[#9aa99d] bg-[#f8faf7]', badge: 'bg-[#edf1ed] text-[#617066]'},
+};
 
 const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
@@ -68,7 +78,7 @@ export default function PremiumMarketplacePreview({
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
           <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
             <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><Globe2 size={21}/></span>
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
               <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Career workspace</span></span>
             </a>
             <button onClick={onReturnToMarketplace} className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Back to marketplace <ArrowRight className="ml-1 inline" size={13}/></button>
@@ -79,6 +89,11 @@ export default function PremiumMarketplacePreview({
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">PLANETAI · Free career tools</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Your career workspace.</h1>
             <p className="mt-3 text-sm leading-6 text-[#77847b]">Build your resume, prepare for interviews and make your next career move—all in the same PLANETAI experience.</p>
+            <nav aria-label="Career workspace sections" className="mt-6 flex flex-wrap gap-2">
+              <a href="#career-ai-tools" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">AI career tools</a>
+              <a href="#career-discovery" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">AI & developer discovery</a>
+              <a href="#career-productivity" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">Productivity toolkit</a>
+            </nav>
           </div>
           {careerToolsContent}
         </main>
@@ -132,7 +147,7 @@ export default function PremiumMarketplacePreview({
               <div className="relative rounded-[28px] border border-white/80 bg-white p-5 shadow-[0_30px_80px_rgba(28,55,42,.12)] sm:p-7">
                 <div className="flex items-center justify-between"><div><p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#819087]">Opportunity spotlight</p><p className="mt-1 text-lg font-bold tracking-tight text-[#1d3028]">A better next step.</p></div><span className="rounded-full bg-[#eef4ee] px-3 py-1.5 text-[10px] font-bold text-[#47745c]">{spotlight ? (spotlight.isCustomEmployerPost ? 'Employer published' : 'Curated role') : 'Opportunities'}</span></div>
                 {spotlight ? <button onClick={() => onOpenJob(spotlight)} className="mt-6 block w-full rounded-2xl bg-[#f4f6f2] p-4 text-left transition hover:bg-[#edf2eb]">
-                  <div className="flex items-center gap-3"><div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#e6e0f5] text-sm font-extrabold text-[#426353]">{spotlight.companyLogoUrl ? <img src={spotlight.companyLogoUrl} alt="" className="h-full w-full object-contain"/> : spotlight.companyShort}</div><div className="min-w-0 flex-1"><p className="text-sm font-bold text-[#25372e]">{spotlight.title}</p><p className="mt-1 text-[11px] text-[#7b8980]">{spotlight.company} · {spotlight.location}</p></div><Bookmark size={17} className="text-[#819087]"/></div>
+                  <div className="flex items-center gap-3"><CompanyLogo company={spotlight.company} short={spotlight.companyShort} explicitLogoUrl={spotlight.companyLogoUrl} websiteOrApplyUrl={spotlight.companyWebsite || spotlight.applyUrl} size="lg" lazy={false}/><div className="min-w-0 flex-1"><p className="text-sm font-bold text-[#25372e]">{spotlight.title}</p><p className="mt-1 text-[11px] text-[#7b8980]">{spotlight.company} · {spotlight.location}</p></div><Bookmark size={17} className="text-[#819087]"/></div>
                   <div className="mt-4 flex flex-wrap gap-2"><span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold text-[#66766c]">{spotlight.workType}</span><span className="rounded-full bg-white px-3 py-1.5 text-[10px] font-semibold text-[#66766c]">{spotlight.category}</span></div>
                   <div className="mt-5 flex items-center justify-between border-t border-[#e1e7df] pt-4"><span className="text-sm font-extrabold text-[#315b47]">{formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit)}</span><span className="text-[10px] font-bold text-[#537a64]">VIEW ROLE ↗</span></div>
                 </button> : <div className="mt-6 rounded-2xl bg-[#f4f6f2] p-8 text-center text-sm text-[#77847b]">New opportunities are on the way.</div>}
@@ -155,9 +170,9 @@ export default function PremiumMarketplacePreview({
           <div className="no-scrollbar mt-6 flex gap-2 overflow-x-auto pb-2">{JOB_CATEGORIES.map(item => <button key={item} onClick={() => setCategory(item)} className={`whitespace-nowrap rounded-full px-4 py-2.5 text-[11px] font-bold transition ${category === item ? 'bg-[#183c32] text-white' : 'border border-[#e0e7df] bg-white text-[#68766d] hover:border-[#a9bcae]'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-5 flex items-center justify-between"><p className="text-xs font-bold text-[#40534a]">{filtered.length} opportunities</p><p className="text-[10px] text-[#9aa49d]">Curated and approved employer listings</p></div>
           <div id="role-list" className="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map(job => <article key={job.id} className="group rounded-2xl border border-[#e2e8e1] bg-white p-5 transition duration-200 hover:-translate-y-1 hover:border-[#c1d2c4] hover:shadow-[0_18px_42px_rgba(28,55,42,.07)] sm:p-6">
-              <div className="flex items-start justify-between gap-3"><div className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-xl bg-[#edf2eb] text-sm font-extrabold text-[#426353]">{job.companyLogoUrl ? <img src={job.companyLogoUrl} alt="" className="h-full w-full object-contain"/> : job.companyShort}</div><div className="flex items-center gap-2">{job.featured && <span className="rounded-full bg-[#f2f5ed] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#5c7b60]">Featured</span>}<button onClick={() => onToggleSave(job.id)} aria-label={savedIds.includes(job.id) ? 'Remove saved role' : 'Save role'} className={`grid h-9 w-9 place-items-center rounded-full border ${savedIds.includes(job.id) ? 'border-[#8eae98] bg-[#eef5ee] text-[#47745c]' : 'border-[#e7ece6] text-[#8a978e] hover:text-[#47745c]'}`}><Bookmark size={16} fill={savedIds.includes(job.id) ? 'currentColor' : 'none'}/></button></div></div>
-              <p className="mt-5 text-[11px] font-bold text-[#77867c]">{job.company}</p><h3 className="mt-1 text-[17px] font-bold tracking-[-.035em] text-[#1d3028]">{job.title}</h3><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-[#78867d]"><span className="inline-flex items-center gap-1"><MapPin size={12}/>{job.location}</span><span>·</span><span>{job.workType}</span></div><p className="mt-4 min-h-[42px] text-xs leading-5 text-[#7b887f]">{job.description}</p><div className="mt-4 flex flex-wrap gap-1.5">{job.tags.slice(0,5).map(tag => <span key={tag} className="rounded-md bg-[#f4f6f2] px-2.5 py-1.5 text-[9px] font-semibold text-[#718077]">{tag}</span>)}</div><div className="mt-5 flex items-center justify-between border-t border-[#edf0ec] pt-4"><div><p className="text-sm font-extrabold text-[#315b47]">{formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)}</p><p className="mt-1 text-[9px] font-semibold text-[#9aa49d]">{job.isCustomEmployerPost ? 'Employer published' : 'Curated role'} · {job.postedAgo}</p></div><button onClick={() => onOpenJob(job)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#315b47] transition group-hover:gap-2.5">View details <ArrowUpRight size={14}/></button></div>
+            {filtered.map(job => <article key={job.id} className={`group rounded-2xl border border-[#e2e8e1] border-l-[4px] ${categoryTones[job.category]?.card || "bg-white border-l-[#9aa99d]"} p-5 transition duration-200 hover:-translate-y-1 hover:shadow-[0_18px_42px_rgba(28,55,42,.07)] sm:p-6`}>
+              <div className="flex items-start justify-between gap-3"><CompanyLogo company={job.company} short={job.companyShort} explicitLogoUrl={job.companyLogoUrl} websiteOrApplyUrl={job.companyWebsite || job.applyUrl} size="lg" lazy={false}/><div className="flex items-center gap-2">{job.featured && <span className="rounded-full bg-[#f2f5ed] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#5c7b60]">Featured</span>}<button onClick={() => onToggleSave(job.id)} aria-label={savedIds.includes(job.id) ? 'Remove saved role' : 'Save role'} className={`grid h-9 w-9 place-items-center rounded-full border ${savedIds.includes(job.id) ? 'border-[#8eae98] bg-[#eef5ee] text-[#47745c]' : 'border-[#e7ece6] text-[#8a978e] hover:text-[#47745c]'}`}><Bookmark size={16} fill={savedIds.includes(job.id) ? 'currentColor' : 'none'}/></button></div></div>
+              <div className="mt-4"><span className={`inline-flex rounded-full px-2.5 py-1 text-[9px] font-bold ${categoryTones[job.category]?.badge || "bg-[#edf1ed] text-[#617066]"}`}>{job.category}</span></div><p className="mt-3 text-[11px] font-bold text-[#77867c]">{job.company}</p><h3 className="mt-1 text-[17px] font-bold tracking-[-.035em] text-[#1d3028]">{job.title}</h3><div className="mt-3 flex flex-wrap gap-2 text-[10px] font-semibold text-[#78867d]"><span className="inline-flex items-center gap-1"><MapPin size={12}/>{job.location}</span><span>·</span><span>{job.workType}</span></div><p className="mt-4 min-h-[42px] text-xs leading-5 text-[#7b887f]">{job.description}</p><div className="mt-4 flex flex-wrap gap-1.5">{job.tags.slice(0,5).map(tag => <span key={tag} className="rounded-md bg-[#f4f6f2] px-2.5 py-1.5 text-[9px] font-semibold text-[#718077]">{tag}</span>)}</div><div className="mt-5 flex items-center justify-between border-t border-[#edf0ec] pt-4"><div><p className="text-sm font-extrabold text-[#315b47]">{formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)}</p><p className="mt-1 text-[9px] font-semibold text-[#9aa49d]">{job.isCustomEmployerPost ? 'Employer published' : 'Curated role'} · {job.postedAgo}</p></div><button onClick={() => onOpenJob(job)} className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#315b47] transition group-hover:gap-2.5">View details <ArrowUpRight size={14}/></button></div>
             </article>)}
           </div>
           {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-dashed border-[#d7e0d7] bg-white p-12 text-center"><Search className="mx-auto text-[#8b9a8f]"/><p className="mt-3 font-bold text-[#344a3d]">No matching opportunities</p><p className="mt-1 text-xs text-[#87938b]">Try a different search or category.</p></div>}
