@@ -6,6 +6,7 @@ import {
   ApplicantDashboardPreview,
   EmployerDashboardPreview,
 } from './preview/MarketplaceDashboardsPreview';
+import EmployerAuth from './preview/EmployerAuth';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
@@ -18,11 +19,13 @@ if ('serviceWorker' in navigator) {
 }
 
 const experience = new URLSearchParams(window.location.search).get('experience');
-const preview = experience === 'employer'
-  ? <EmployerDashboardPreview />
-  : experience === 'applicant'
-    ? <ApplicantDashboardPreview />
-    : <App />;
+const preview = experience === 'employer-auth'
+  ? <EmployerAuth />
+  : experience === 'employer'
+    ? <EmployerDashboardPreview />
+    : experience === 'applicant'
+      ? <ApplicantDashboardPreview />
+      : <App />;
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
