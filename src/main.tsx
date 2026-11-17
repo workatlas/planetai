@@ -12,32 +12,36 @@ import AdminModeration from './preview/AdminModeration';
 import EmployerPayments from './preview/EmployerPayments';
 import './index.css';
 
-// Netlify deploy previews must not reuse a production PWA shell. A service
-// worker from an earlier deployment can otherwise serve stale JavaScript and
-// route password-recovery links back to the old homepage.
+// Deploy previews are test environments, not installable production PWAs.
+// Always remove any worker/cache left by an earlier preview deployment.
+// Do not gate this cleanup behind sessionStorage: that flag can outlive a
+// failed cleanup and prevent the stale worker from ever being removed.
 const isNetlifyPreview = window.location.hostname.startsWith('deploy-preview-')
   && window.location.hostname.endsWith('--planetai-global.netlify.app');
 
 if ('serviceWorker' in navigator && isNetlifyPreview) {
-  const cleanupFlag = '_planetai_preview_sw_cleaned';
-  if (sessionStorage.getItem(cleanupFlag) !== '1') {
-    sessionStorage.setItem(cleanupFlag, '1');
-    void (async () => {
-      const registrations = await navigator.serviceWorker.getRegistrations();
-      await Promise.all(registrations.map(registration => registration.unregister()));
-      if ('caches' in window) {
-        const keys = await caches.keys();
-        await Promise.all(keys.map(key => caches.delete(key)));
-      }
-      const cleanUrl = new URL(window.location.href);
-      cleanUrl.searchParams.set(cleanupFlag, '1');
-      window.location.replace(cleanUrl.toString());
-    })();
-  } else {
+  void (async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    const cacheNames = 'caches' in window ? await caches.keys() : [];
+    const hadStaleState = registrations.length > 0 || cacheNames.length > 0;
+
+    await Promise.all(registrations.map(registration => registration.unregister()));
+    if ('caches' in window) {
+      await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
+    }
+
     const cleanUrl = new URL(window.location.href);
-    cleanUrl.searchParams.delete(cleanupFlag);
-    window.history.replaceState({}, '', cleanUrl.toString());
-  }
+    cleanUrl.searchParams.delete('_planetai_preview_sw_cleaned');
+    cleanUrl.searchParams.delete('_planetai_preview_cache_bust');
+
+    // Reload once only when there was state to remove. The next load sees no
+    // registrations/caches and therefore cannot enter a reload loop.
+    if (hadStaleState) {
+      window.location.replace(cleanUrl.toString());
+    } else if (cleanUrl.toString() !== window.location.href) {
+      window.history.replaceState({}, '', cleanUrl.toString());
+    }
+  })();
 } else if ('serviceWorker' in navigator) {
   registerSW({ immediate: true, onOfflineReady() {} });
 }
