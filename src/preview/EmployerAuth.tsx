@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase';
 type Mode = 'signin' | 'signup';
 
 export default function EmployerAuth() {
-  const [mode, setMode] = useState<Mode>('signup');
+  const [mode, setMode] = useState<Mode>(() => new URLSearchParams(window.location.search).get('mode') === 'signin' ? 'signin' : 'signup');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [company, setCompany] = useState('');
