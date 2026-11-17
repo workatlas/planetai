@@ -11,6 +11,7 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
 }) => {
   const {isInstallable, isInstalled, isIOS, install} = usePWAInstall();
   const [showGuide, setShowGuide] = useState(false);
+  const isDeployPreview = typeof window !== 'undefined' && window.location.hostname.startsWith('deploy-preview-');
 
   if (isInstalled) return null;
 
@@ -74,7 +75,9 @@ export const PWAInstallButton: React.FC<PWAInstallButtonProps> = ({
               </ol>
             )}
             <p className="mt-4 text-[11px] leading-5 text-[#87938b]">
-              If the install option is unavailable, your browser may not support app installation or the site may not yet meet its install requirements.
+              {isDeployPreview
+                ? 'This review preview intentionally disables its service worker to prevent stale cached builds. Install PlanetAI from the production website after release.'
+                : 'If the install option is unavailable, your browser may not support app installation or the site may not yet meet its install requirements.'}
             </p>
             <button
               type="button"
