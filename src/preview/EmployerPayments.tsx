@@ -156,11 +156,11 @@ export default function EmployerPayments() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] text-[#17243a]">
-      <header className="border-b border-[#e4eaf2] bg-white">
+    <div className="min-h-screen bg-[#f7f8f6] text-[#17243a]">
+      <header className="border-b border-[#e2e8e1] bg-white">
         <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
           <a href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><Globe2 size={20}/></span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><Globe2 size={20}/></span>
             <span><b className="block text-sm tracking-[-.05em]">PLANETAI</b><small className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Employer billing</small></span>
           </a>
           <button onClick={signOut} className="inline-flex items-center gap-2 text-xs font-semibold text-[#64748b]"><LogOut size={14}/> Sign out</button>
@@ -171,19 +171,19 @@ export default function EmployerPayments() {
         <a href="/?experience=employer-auth" className="inline-flex items-center gap-2 text-xs font-semibold text-[#64748b]"><ArrowLeft size={14}/> Employer workspace</a>
         <div className="mt-7 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-[#dce7f5] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[.13em] text-[#315a91]"><ShieldCheck size={14}/> Secure listing payments</span>
+            <span className="inline-flex items-center gap-2 rounded-full border border-[#d7e0d7] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-[.13em] text-[#47745c]"><ShieldCheck size={14}/> Secure listing payments</span>
             <h1 className="mt-4 text-3xl font-semibold tracking-[-.05em] sm:text-4xl">Listings &amp; payments</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#718096]">Track moderation, pay only after approval, and follow your listing through publication.</p>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-[#77847b]">Track moderation, pay only after approval, and follow your listing through publication.</p>
           </div>
-          <button onClick={loadListings} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-[#dce5f0] bg-white px-4 py-3 text-xs font-bold text-[#315a91] disabled:opacity-50">
+          <button onClick={loadListings} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-[#d7e0d7] bg-white px-4 py-3 text-xs font-bold text-[#47745c] disabled:opacity-50">
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/> Refresh
           </button>
         </div>
 
         <div className="mt-7 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Your listings</p><p className="mt-2 text-3xl font-semibold">{listings.length}</p></div>
-          <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Awaiting review</p><p className="mt-2 text-3xl font-semibold">{listings.filter(item => item.status === 'pending_review').length}</p></div>
-          <div className="rounded-2xl border border-[#e4eaf2] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Payment due</p><p className="mt-2 text-3xl font-semibold">{listings.filter(item => item.status === 'approved_awaiting_payment').length}</p></div>
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Your listings</p><p className="mt-2 text-3xl font-semibold">{listings.length}</p></div>
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Awaiting review</p><p className="mt-2 text-3xl font-semibold">{listings.filter(item => item.status === 'pending_review').length}</p></div>
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5"><p className="text-[10px] font-bold uppercase tracking-wider text-[#8a9ab0]">Payment due</p><p className="mt-2 text-3xl font-semibold">{listings.filter(item => item.status === 'approved_awaiting_payment').length}</p></div>
         </div>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</p>}
@@ -191,37 +191,37 @@ export default function EmployerPayments() {
 
         <section className="mt-7 space-y-4">
           {loading ? (
-            <div className="rounded-2xl border border-[#e4eaf2] bg-white p-12 text-center text-sm text-[#718096]">
+            <div className="rounded-2xl border border-[#e2e8e1] bg-white p-12 text-center text-sm text-[#77847b]">
               <LoaderCircle className="mx-auto mb-3 animate-spin" size={22}/> Loading your employer listings…
             </div>
           ) : listings.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-[#cbd7e6] bg-white p-12 text-center">
-              <CreditCard className="mx-auto text-[#7890ae]" size={28}/>
+              <CreditCard className="mx-auto text-[#819087]" size={28}/>
               <h2 className="mt-4 text-lg font-semibold">No listings yet</h2>
-              <p className="mt-2 text-sm text-[#8795aa]">Your submitted roles will appear here, along with moderation and payment updates.</p>
-              <a href="/" className="mt-5 inline-flex rounded-xl bg-[#172b49] px-5 py-3 text-xs font-bold text-white">Browse PLANETAI</a>
+              <p className="mt-2 text-sm text-[#8b978e]">Your submitted roles will appear here, along with moderation and payment updates.</p>
+              <a href="/" className="mt-5 inline-flex rounded-xl bg-[#183c32] px-5 py-3 text-xs font-bold text-white">Browse PLANETAI</a>
             </div>
           ) : listings.map(listing => {
             const amount = priceFor(listing.package_tier);
             const canPay = listing.status === 'approved_awaiting_payment' && amount !== null && amount > 0 && listing.payment?.status !== 'completed';
             return (
-              <article key={listing.id} className="rounded-2xl border border-[#e4eaf2] bg-white p-5 shadow-[0_8px_30px_rgba(28,52,84,.035)] sm:p-6">
+              <article key={listing.id} className="rounded-2xl border border-[#e2e8e1] bg-white p-5 shadow-[0_8px_30px_rgba(28,52,84,.035)] sm:p-6">
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-[#edf3fb] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#315a91]">{tierName(listing.package_tier)}</span>
-                      <span className="text-[10px] text-[#9aa8ba]">{listing.reference_code}</span>
+                      <span className="rounded-full bg-[#edf3fb] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#47745c]">{tierName(listing.package_tier)}</span>
+                      <span className="text-[10px] text-[#9aa49d]">{listing.reference_code}</span>
                     </div>
                     <h2 className="mt-3 text-lg font-semibold">{listing.job_title}</h2>
-                    <p className="mt-1 text-xs text-[#8795aa]">{listing.company_name} · Submitted {new Date(listing.submitted_at).toLocaleDateString()}</p>
+                    <p className="mt-1 text-xs text-[#8b978e]">{listing.company_name} · Submitted {new Date(listing.submitted_at).toLocaleDateString()}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-semibold">{amount === null ? 'Coming soon' : amount > 0 ? '$' + amount.toFixed(2) : 'Free'}</p>
-                    <p className="mt-1 text-[10px] text-[#9aa8ba]">{amount === null ? 'Marquee placement is not yet available' : amount > 0 ? 'USD · one-time listing upgrade' : 'No payment required'}</p>
+                    <p className="mt-1 text-[10px] text-[#9aa49d]">{amount === null ? 'Marquee placement is not yet available' : amount > 0 ? 'USD · one-time listing upgrade' : 'No payment required'}</p>
                   </div>
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1f6] pt-4">
+                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#edf0ec] pt-4">
                   <div className="flex items-center gap-2 text-xs font-semibold text-[#52627a]"><Clock3 size={15}/>{statusLabel(listing.status)}</div>
                   {listing.payment?.status === 'completed' ? (
                     listing.status === 'published' ? (
@@ -232,19 +232,19 @@ export default function EmployerPayments() {
                       </button>
                     )
                   ) : canPay ? (
-                    <button onClick={() => startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#172b49] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
+                    <button onClick={() => startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
                       {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <CreditCard size={14}/>} Pay securely with PayPal <ExternalLink size={13}/>
                     </button>
                   ) : listing.status === 'rejected' ? (
                     <span className="text-xs text-rose-600">No payment is due.</span>
                   ) : (
-                    <span className="text-[10px] text-[#9aa8ba]">
+                    <span className="text-[10px] text-[#9aa49d]">
                       {listing.status === 'published' ? 'Your listing is live.' : listing.status === 'approved_awaiting_payment' ? 'Payment is not available for this package yet.' : 'We will unlock payment here after approval.'}
                     </span>
                   )}
                 </div>
                 {listing.payment?.status === 'completed' && (
-                  <p className="mt-3 text-[10px] text-[#8795aa]">
+                  <p className="mt-3 text-[10px] text-[#8b978e]">
                     Payment recorded{listing.payment.confirmed_at ? ' on ' + new Date(listing.payment.confirmed_at).toLocaleString() : ''}. Your payment is linked to this listing.
                   </p>
                 )}
@@ -253,7 +253,7 @@ export default function EmployerPayments() {
           })}
         </section>
 
-        <p className="mt-8 text-[10px] leading-5 text-[#9aa8ba]">PLANETAI never applies paid visibility before moderation approval and server-side payment confirmation. Employer verification is separate and cannot be purchased.</p>
+        <p className="mt-8 text-[10px] leading-5 text-[#9aa49d]">PLANETAI never applies paid visibility before moderation approval and server-side payment confirmation. Employer verification is separate and cannot be purchased.</p>
       </main>
     </div>
   );
