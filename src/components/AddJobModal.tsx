@@ -444,20 +444,20 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       aria-modal="true"
       aria-labelledby="add-job-title"
     >
-      <div className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border border-slate-800 bg-[#111827] p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
+      <div className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border border-[#e2e8e1] bg-white p-6 shadow-2xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef4ee] border border-[#c1d2c4] text-[#47745c]">
               <PlusCircle className="w-5 h-5" />
             </div>
             <div>
               <h2
                 id="add-job-title"
-                className="font-display text-lg font-bold text-slate-50"
+                className="font-display text-lg font-bold text-[#1d3028]"
               >
                 Employer &amp; Recruiter Portal
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#77847b]">
                 Free Standard is open to all; paid upgrades require an employer account
               </p>
             </div>
@@ -467,7 +467,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
             type="button"
             onClick={handleCloseModal}
             aria-label="Close post job modal"
-            className="min-h-[44px] min-w-[44px] -mr-2 -mt-2 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            className="min-h-[44px] min-w-[44px] -mr-2 -mt-2 flex items-center justify-center rounded-xl text-[#77847b] hover:text-[#25372e] hover:bg-[#e9eee8] transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -496,42 +496,42 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
         {/* Confirmation Receipt Screen (Shown after submit) */}
         {receipt ? (
           <div className="mt-5 space-y-4">
-            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-950/25 p-5 space-y-3">
+            <div className="rounded-2xl border border-[#c1d2c4] bg-emerald-950/25 p-5 space-y-3">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
                 <div>
-                  <h3 className="font-display text-base font-bold text-slate-50">
+                  <h3 className="font-display text-base font-bold text-[#1d3028]">
                     Submission Saved Successfully
                   </h3>
-                  <p className="mt-1 text-xs sm:text-sm text-slate-300">
+                  <p className="mt-1 text-xs sm:text-sm text-[#65736b]">
                     Reference{' '}
-                    <span className="font-mono font-semibold text-cyan-300">
+                    <span className="font-mono font-semibold text-[#47745c]">
                       {receipt.referenceId}
                     </span>{' '}
-                    has been securely saved. Current status: <strong className="text-slate-100">{receipt.status.replaceAll('_', ' ')}</strong>. Jobs do not publish until verification and moderation are complete.
+                    has been securely saved. Current status: <strong className="text-[#25372e]">{receipt.status.replaceAll('_', ' ')}</strong>. Jobs do not publish until verification and moderation are complete.
                   </p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-3.5 text-xs space-y-1.5">
+              <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-3.5 text-xs space-y-1.5">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400">Company &amp; Role</span>
-                  <span className="font-semibold text-slate-100 text-right">
+                  <span className="text-[#77847b]">Company &amp; Role</span>
+                  <span className="font-semibold text-[#25372e] text-right">
                     {receipt.job.company} — {receipt.job.title}
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400">Listing Tier</span>
-                  <span className="font-medium text-cyan-300">
+                  <span className="text-[#77847b]">Listing Tier</span>
+                  <span className="font-medium text-[#47745c]">
                     {receipt.tier.name} ({receipt.tier.cadenceLabel})
                   </span>
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-slate-400">Employer verification</span>
-                  <span className="font-medium text-slate-200">Separate review process</span>
+                  <span className="text-[#77847b]">Employer verification</span>
+                  <span className="font-medium text-[#40534a]">Separate review process</span>
                 </div>
-                <div className="pt-2 border-t border-slate-800 flex items-center justify-between gap-2">
-                  <span className="font-semibold text-slate-200">
+                <div className="pt-2 border-t border-[#e2e8e1] flex items-center justify-between gap-2">
+                  <span className="font-semibold text-[#40534a]">
                     Total Amount Due
                   </span>
                   <span className="font-mono text-base font-bold text-amber-300">
@@ -541,9 +541,9 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
               </div>
 
               {receipt.totalDueUsd > 0 && (
-                <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/25 p-3.5 text-xs leading-5 text-cyan-100">
+                <div className="rounded-xl border border-[#c1d2c4] bg-[#eef4ee] p-3.5 text-xs leading-5 text-[#40534a]">
                   No payment is collected now. Your paid listing must pass moderation first. Once approved, sign in to your employer workspace and complete payment from Listings &amp; Payments.
-                  <a href="/?experience=employer-payments" className="mt-3 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-cyan-400 px-3.5 py-2 font-bold text-slate-950 hover:bg-cyan-300">Open Listings &amp; Payments</a>
+                  <a href="/?experience=employer-payments" className="mt-3 inline-flex min-h-[38px] items-center justify-center rounded-lg bg-cyan-400 px-3.5 py-2 font-bold text-white hover:bg-cyan-300">Open Listings &amp; Payments</a>
                 </div>
               )}
 
@@ -561,7 +561,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     href={`mailto:${EMPLOYER_INBOX_EMAIL}?subject=${encodeURIComponent(
                       `[PlanetAI Job Submission] ${receipt.job.company} — ${receipt.job.title} ($${receipt.totalDueUsd} USD)`
                     )}&body=${encodeURIComponent(receipt.emailMessageBody)}`}
-                    className="inline-flex items-center justify-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-lg bg-amber-400 text-slate-950 text-xs font-bold hover:bg-amber-300 transition-colors"
+                    className="inline-flex items-center justify-center gap-1.5 min-h-[38px] px-3.5 py-1.5 rounded-lg bg-amber-400 text-white text-xs font-bold hover:bg-amber-300 transition-colors"
                   >
                     <Mail className="w-3.5 h-3.5" />
                     <span>Send Submission Email Now</span>
@@ -571,20 +571,20 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
             </div>
 
             {/* Temporary Local Preview & Copy Approval Snippet */}
-            <div className="rounded-2xl border border-slate-800 bg-[#0B111E] p-4 space-y-3">
+            <div className="rounded-2xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs font-semibold text-slate-200">
+                <span className="text-xs font-semibold text-[#40534a]">
                   Temporary Local Preview &amp; Moderator JSON
                 </span>
                 <button
                   type="button"
                   onClick={() => handleCopySnippet(receipt.approvalSnippet)}
-                  className="inline-flex items-center gap-1.5 text-xs font-medium text-cyan-300 hover:text-cyan-200"
+                  className="inline-flex items-center gap-1.5 text-xs font-medium text-[#47745c] hover:text-[#54806b]"
                 >
                   {copiedSnippet ? (
                     <>
                       <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied JSON!</span>
+                      <span className="text-[#47745c]">Copied JSON!</span>
                     </>
                   ) : (
                     <>
@@ -594,7 +594,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   )}
                 </button>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-[#77847b]">
                 Want to see how your card looks in your own browser while waiting for review? Load a temporary local preview below (visible only to you).
               </p>
               <div className="flex flex-wrap items-center gap-2.5">
@@ -607,8 +607,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   }}
                   className={`inline-flex items-center justify-center gap-2 min-h-[42px] px-4 py-2 rounded-xl border text-xs font-semibold transition-colors ${
                     previewActivated
-                      ? 'border-emerald-500/40 bg-emerald-950/40 text-emerald-300 cursor-default'
-                      : 'border-slate-700 bg-slate-900 text-slate-100 hover:border-cyan-500/50 hover:text-cyan-200'
+                      ? 'border-[#c1d2c4] bg-emerald-950/40 text-[#47745c] cursor-default'
+                      : 'border-[#d7e0d7] bg-[#f4f6f2] text-[#25372e] hover:border-[#a9bcae] hover:text-[#54806b]'
                   }`}
                 >
                   <Eye className="w-4 h-4 shrink-0" />
@@ -621,14 +621,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setReceipt(null)}
-                  className="min-h-[42px] px-4 py-2 rounded-xl text-xs font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+                  className="min-h-[42px] px-4 py-2 rounded-xl text-xs font-medium text-[#65736b] hover:text-[#25372e] hover:bg-[#e9eee8] transition-colors"
                 >
                   Back to Portal
                 </button>
                 <button
                   type="button"
                   onClick={handleCloseModal}
-                  className="min-h-[42px] px-4 py-2 rounded-xl bg-slate-800 text-slate-100 text-xs font-semibold hover:bg-slate-700 transition-colors ml-auto"
+                  className="min-h-[42px] px-4 py-2 rounded-xl bg-[#e9eee8] text-[#25372e] text-xs font-semibold hover:bg-slate-700 transition-colors ml-auto"
                 >
                   Done
                 </button>
@@ -638,14 +638,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
         ) : (
           <>
             {/* Portal Sub-Tabs (Submit Role vs Your Local Previews) */}
-            <div className="mt-4 flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/60 p-1">
+            <div className="mt-4 flex items-center gap-2 rounded-xl border border-[#e2e8e1] bg-slate-950/60 p-1">
               <button
                 type="button"
                 onClick={() => setModalView('post')}
                 className={`flex-1 min-h-[38px] rounded-lg px-3 text-xs font-semibold transition-colors ${
                   modalView === 'post'
-                    ? 'bg-cyan-500 text-slate-950'
-                    : 'text-slate-300 hover:text-slate-100'
+                    ? 'bg-[#183c32] text-white'
+                    : 'text-[#65736b] hover:text-[#25372e]'
                 }`}
               >
                 Submit Company Role
@@ -655,8 +655,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 onClick={() => setModalView('manage')}
                 className={`flex-1 min-h-[38px] rounded-lg px-3 text-xs font-semibold transition-colors ${
                   modalView === 'manage'
-                    ? 'bg-cyan-500 text-slate-950'
-                    : 'text-slate-300 hover:text-slate-100'
+                    ? 'bg-[#183c32] text-white'
+                    : 'text-[#65736b] hover:text-[#25372e]'
                 }`}
               >
                 Local Previews ({localPreviewJobs.length})
@@ -666,18 +666,18 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
             {modalView === 'manage' ? (
               <div className="mt-4 space-y-3">
                 {localPreviewJobs.length === 0 ? (
-                  <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/50 p-6 text-center">
-                    <Building2 className="w-6 h-6 text-slate-500 mx-auto" />
-                    <p className="mt-2 text-sm font-medium text-slate-200">
+                  <div className="rounded-xl border border-dashed border-[#e2e8e1] bg-[#f4f6f2]/50 p-6 text-center">
+                    <Building2 className="w-6 h-6 text-[#1d3028]0 mx-auto" />
+                    <p className="mt-2 text-sm font-medium text-[#40534a]">
                       No temporary local previews active
                     </p>
-                    <p className="mt-1 text-xs text-slate-400">
+                    <p className="mt-1 text-xs text-[#77847b]">
                       Submitted roles are emailed for moderation first and never publish globally without review.
                     </p>
                     <button
                       type="button"
                       onClick={() => setModalView('post')}
-                      className="mt-4 inline-flex items-center justify-center min-h-[40px] px-4 rounded-xl bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 transition-colors"
+                      className="mt-4 inline-flex items-center justify-center min-h-[40px] px-4 rounded-xl bg-[#183c32] text-white text-xs font-bold hover:bg-[#285c4b] transition-colors"
                     >
                       Submit a Company Role
                     </button>
@@ -687,32 +687,32 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     {localPreviewJobs.map((job) => (
                       <div
                         key={job.id}
-                        className="flex items-start justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/70 p-3.5"
+                        className="flex items-start justify-between gap-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2]/70 p-3.5"
                       >
                         <div className="flex items-start gap-3 min-w-0">
                           {job.companyLogoUrl ? (
                             <img
                               src={job.companyLogoUrl}
                               alt={`${job.company} logo`}
-                              className="h-9 w-9 rounded-lg border border-slate-700 bg-slate-950 object-contain p-0.5 shrink-0"
+                              className="h-9 w-9 rounded-lg border border-[#d7e0d7] bg-slate-950 object-contain p-0.5 shrink-0"
                             />
                           ) : (
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-700 bg-slate-950 font-display text-xs font-bold text-cyan-300">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-[#d7e0d7] bg-slate-950 font-display text-xs font-bold text-[#47745c]">
                               {job.companyShort}
                             </div>
                           )}
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <p className="text-sm font-semibold text-slate-100 truncate">
+                              <p className="text-sm font-semibold text-[#25372e] truncate">
                                 {job.title}
                               </p>
                               <span className="inline-flex items-center rounded border border-amber-500/35 bg-amber-950/40 px-1.5 py-0.5 text-[10px] font-medium text-amber-300">
                                 Custom Employer Post
                               </span>
                             </div>
-                            <p className="text-xs text-slate-400 mt-0.5">
+                            <p className="text-xs text-[#77847b] mt-0.5">
                               {job.company} · {job.companyTier} ·{' '}
-                              <span className="font-mono text-cyan-300">
+                              <span className="font-mono text-[#47745c]">
                                 {formatPayRate(
                                   job.payMinUsd,
                                   job.payMaxUsd,
@@ -720,7 +720,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                                 )}
                               </span>
                             </p>
-                            <p className="text-[11px] text-slate-500 truncate mt-1">
+                            <p className="text-[11px] text-[#1d3028]0 truncate mt-1">
                               {job.companyWebsite || job.applyUrl}
                             </p>
                           </div>
@@ -771,7 +771,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
 
                 {/* 1. Monetized Pricing Tiers */}
                 <div className="space-y-2.5">
-                  <span className="block text-xs font-semibold text-slate-200">
+                  <span className="block text-xs font-semibold text-[#40534a]">
                     1. Choose Listing Tier
                   </span>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
@@ -788,22 +788,22 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                             active
                               ? tier.featured
                                 ? 'border-amber-400 bg-amber-950/35 ring-1 ring-amber-400/50'
-                                : 'border-cyan-400 bg-cyan-950/35 ring-1 ring-cyan-400/40'
-                               : tier.id === 'spotlight' ? 'border-slate-800 bg-slate-950/40 opacity-55 cursor-not-allowed' : 'border-slate-800 bg-slate-900/70 hover:border-slate-600'
+                                : 'border-[#54806b] bg-[#eef4ee] ring-1 ring-cyan-400/40'
+                               : tier.id === 'spotlight' ? 'border-[#e2e8e1] bg-slate-950/40 opacity-55 cursor-not-allowed' : 'border-[#e2e8e1] bg-[#f4f6f2]/70 hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
-                            <span className="text-xs font-bold text-slate-100 flex items-center gap-1">
+                            <span className="text-xs font-bold text-[#25372e] flex items-center gap-1">
                               {tier.featured && (
                                 <Star className="w-3 h-3 fill-amber-300 text-amber-300 shrink-0" />
                               )}
                               <span>{tier.name}</span>
                             </span>
                           </div>
-                          <p className="mt-1 font-mono text-sm font-bold text-cyan-300">
+                          <p className="mt-1 font-mono text-sm font-bold text-[#47745c]">
                             {tier.cadenceLabel}
                           </p>
-                          <p className="mt-1 text-[11px] text-slate-400 leading-snug">
+                          <p className="mt-1 text-[11px] text-[#77847b] leading-snug">
                             {tier.id === 'spotlight' ? 'Coming soon — Marquee placement will be activated before this tier accepts payment.' : tier.description}
                           </p>
                         </button>
@@ -811,7 +811,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     })}
                   </div>
 
-                  <p className="text-[11px] leading-5 text-slate-400">Paid upgrades are charged only after your listing passes moderation. Featured and Spotlight require a signed-in employer workspace.</p>
+                  <p className="text-[11px] leading-5 text-[#77847b]">Paid upgrades are charged only after your listing passes moderation. Featured and Spotlight require a signed-in employer workspace.</p>
                 </div>
 
                 {/* 2. Company & Role Details */}
@@ -819,7 +819,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-company-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Your Company / Organization
                     </label>
@@ -830,14 +830,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={company}
                       onChange={(e) => setCompany(e.target.value)}
                       placeholder="e.g., Acme AI Labs"
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="job-tier-select"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Partner / Company Type
                     </label>
@@ -847,7 +847,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       onChange={(e) =>
                         setCompanyTier(e.target.value as CompanyTier)
                       }
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     >
                       <option value="Custom Partner">Custom Partner</option>
                       <option value="Emerging AI Startup">
@@ -864,7 +864,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-website-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Company Website / Career Portal
                     </label>
@@ -874,14 +874,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={companyWebsite}
                       onChange={(e) => setCompanyWebsite(e.target.value)}
                       placeholder="https://yourcompany.com/careers"
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
 
                   <div>
                     <label
                       htmlFor="job-logo-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Company Logo URL (Optional)
                     </label>
@@ -891,7 +891,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={companyLogoUrl}
                       onChange={(e) => setCompanyLogoUrl(e.target.value)}
                       placeholder="https://yourcompany.com/logo.png"
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -899,7 +899,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 <div>
                   <label
                     htmlFor="job-title-input"
-                    className="block text-xs font-medium text-slate-300 mb-1.5"
+                    className="block text-xs font-medium text-[#65736b] mb-1.5"
                   >
                     Job Title
                   </label>
@@ -910,7 +910,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
                     placeholder="e.g., Bilingual AI Prompt Evaluator"
-                    className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
@@ -918,7 +918,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-category-select"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Category
                     </label>
@@ -930,7 +930,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                           e.target.value as Exclude<JobCategory, 'All'>
                         )
                       }
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     >
                       {VALID_CATEGORIES.map((cat) => (
                         <option key={cat} value={cat}>
@@ -943,7 +943,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-worktype-select"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Work Arrangement
                     </label>
@@ -953,7 +953,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       onChange={(e) =>
                         setWorkType(e.target.value as JobListing['workType'])
                       }
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     >
                       <option value="Async Contract">Async Contract</option>
                       <option value="Full-Time Remote">Full-Time Remote</option>
@@ -968,7 +968,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-paymin-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Min USD
                     </label>
@@ -979,13 +979,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       required
                       value={payMin}
                       onChange={(e) => setPayMin(e.target.value)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3 py-2 font-mono text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="job-paymax-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Max USD
                     </label>
@@ -996,13 +996,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       required
                       value={payMax}
                       onChange={(e) => setPayMax(e.target.value)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 font-mono text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3 py-2 font-mono text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="job-payunit-select"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Cadence
                     </label>
@@ -1010,7 +1010,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       id="job-payunit-select"
                       value={payUnit}
                       onChange={(e) => setPayUnit(e.target.value as PayUnit)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     >
                       <option value="hr">/ hour</option>
                       <option value="yr">/ year</option>
@@ -1023,7 +1023,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-url-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Direct Role Apply URL (https://)
                     </label>
@@ -1033,13 +1033,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={applyUrl}
                       onChange={(e) => setApplyUrl(e.target.value)}
                       placeholder="https://yourcompany.com/jobs/role"
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="job-contact-email"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Recruiter / Approval Email *
                     </label>
@@ -1050,7 +1050,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       value={contactEmail}
                       onChange={(e) => setContactEmail(e.target.value)}
                       placeholder="hiring@yourcompany.com"
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1059,7 +1059,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                   <div>
                     <label
                       htmlFor="job-location-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Location
                     </label>
@@ -1068,13 +1068,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                   <div>
                     <label
                       htmlFor="job-tags-input"
-                      className="block text-xs font-medium text-slate-300 mb-1.5"
+                      className="block text-xs font-medium text-[#65736b] mb-1.5"
                     >
                       Skills / Tags (comma separated)
                     </label>
@@ -1083,7 +1083,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       type="text"
                       value={tagsInput}
                       onChange={(e) => setTagsInput(e.target.value)}
-                      className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                      className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                     />
                   </div>
                 </div>
@@ -1091,7 +1091,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 <div>
                   <label
                     htmlFor="job-desc-input"
-                    className="block text-xs font-medium text-slate-300 mb-1.5"
+                    className="block text-xs font-medium text-[#65736b] mb-1.5"
                   >
                     Role &amp; Company Overview
                   </label>
@@ -1101,14 +1101,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe what your company builds and what the candidate will do..."
-                    className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                    className="w-full rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2.5 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label
                     htmlFor="job-req-input"
-                    className="block text-xs font-medium text-slate-300 mb-1.5"
+                    className="block text-xs font-medium text-[#65736b] mb-1.5"
                   >
                     Key Requirements (Optional, comma separated)
                   </label>
@@ -1118,21 +1118,21 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     value={requirementsInput}
                     onChange={(e) => setRequirementsInput(e.target.value)}
                     placeholder="e.g., 2+ yrs Python, Fluent English, Async availability"
-                    className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                    className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
                   />
                 </div>
 
                 {/* Mandatory No-Upfront-Fees Confirmation */}
-                <label className="flex items-start gap-3 rounded-xl border border-slate-800 bg-slate-900/60 p-3 cursor-pointer">
+                <label className="flex items-start gap-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2]/60 p-3 cursor-pointer">
                   <input
                     type="checkbox"
                     required
                     checked={noUpfrontFeesChecked}
                     onChange={(e) => setNoUpfrontFeesChecked(e.target.checked)}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-slate-900 text-cyan-500 focus:ring-cyan-400"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-600 bg-[#f4f6f2] text-cyan-500 focus:ring-[#54806b]"
                   />
-                  <span className="text-xs text-slate-300 leading-relaxed">
-                    <strong className="text-slate-100">
+                  <span className="text-xs text-[#65736b] leading-relaxed">
+                    <strong className="text-[#25372e]">
                       No upfront fees charged to applicants.
                     </strong>{' '}
                     I confirm this role is genuine, uses official company https:// links, and complies with PlanetAI moderation rules.
@@ -1148,7 +1148,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     <span>
                       {error}
                       {(error.toLowerCase().includes('employer account') || error.toLowerCase().includes('employer workspace')) && (
-                        <a href="/?experience=employer-auth" className="ml-1 inline-flex font-bold text-cyan-300 underline underline-offset-2">
+                        <a href="/?experience=employer-auth" className="ml-1 inline-flex font-bold text-[#47745c] underline underline-offset-2">
                           Sign in or create your free employer account
                         </a>
                       )}
@@ -1157,13 +1157,13 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 )}
 
                 {/* Order Summary & Submit Bar */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-slate-800 bg-[#0B111E] px-4 py-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] px-4 py-3">
                   <div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-[#77847b]">
                       {selectedTier.name}
                       {addVerifiedBadge ? ' + Verified Badge' : ''}
                     </p>
-                    <p className="font-mono text-base font-bold text-cyan-300">
+                    <p className="font-mono text-base font-bold text-[#47745c]">
                       Total Due: ${totalDueUsd} USD
                     </p>
                   </div>
@@ -1172,14 +1172,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     <button
                       type="button"
                       onClick={handleCloseModal}
-                      className="min-h-[44px] px-4 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+                      className="min-h-[44px] px-4 py-2 rounded-xl text-sm font-medium text-[#65736b] hover:text-[#25372e] hover:bg-[#e9eee8] transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={isSubmitting || cooldownMs > 0}
-                      className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      className="min-h-[44px] px-5 py-2 rounded-xl bg-[#183c32] text-white text-sm font-bold hover:bg-[#285c4b] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     >
                       {isSubmitting
                         ? 'Submitting...'
@@ -1193,23 +1193,23 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
         )}
 
         {/* Secondary Optional Hiring Partner Link */}
-        <div className="mt-5 pt-4 border-t border-slate-800/80">
+        <div className="mt-5 pt-4 border-t border-[#e2e8e1]/80">
           <a
             href="//https://company.micro1.ai/register/?referralCode=6b7ac363-af71-444b-97b2-ecc6dcc25f19&utm_source=referral&utm_medium=share&utm_campaign=job_referral"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-900/60 px-3.5 py-2.5 hover:border-cyan-500/40 transition-colors"
+            className="flex items-center justify-between gap-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2]/60 px-3.5 py-2.5 hover:border-[#c1d2c4] transition-colors"
           >
             <div className="flex items-center gap-2.5 min-w-0">
-              <Sparkles className="w-4 h-4 text-cyan-300 shrink-0" />
-              <p className="text-xs text-slate-300 truncate">
-                <span className="font-semibold text-slate-100">
+              <Sparkles className="w-4 h-4 text-[#47745c] shrink-0" />
+              <p className="text-xs text-[#65736b] truncate">
+                <span className="font-semibold text-[#25372e]">
                   Optional Partner:
                 </span>{' '}
                 Need pre-vetted AI talent fast? Explore micro1
               </p>
             </div>
-            <ArrowUpRight className="w-4 h-4 text-cyan-300 shrink-0" />
+            <ArrowUpRight className="w-4 h-4 text-[#47745c] shrink-0" />
           </a>
         </div>
       </div>
