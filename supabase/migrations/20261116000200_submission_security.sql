@@ -28,6 +28,7 @@ revoke all on table public.job_submission_tokens from anon, authenticated;
 revoke all on table public.job_submission_tokens from public;
 
 -- The admin predicate is only needed by authenticated admin policies.
-revoke all on function public.is_planetai_admin() from public;
-revoke all on function public.is_planetai_admin() from anon;
-grant execute on function public.is_planetai_admin() to authenticated;
+-- The private authorization helper is executable only by authenticated users.
+revoke all on function private.is_planetai_admin() from public, anon;
+grant usage on schema private to authenticated;
+grant execute on function private.is_planetai_admin() to authenticated;
