@@ -450,7 +450,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eef4ee] border border-[#c1d2c4] text-[#47745c]">
               <PlusCircle className="w-5 h-5" />
             </div>
-            <div>
+            <div className="flex min-w-0 flex-col gap-1">
               <h2
                 id="add-job-title"
                 className="font-display text-lg font-bold text-[#1d3028]"
@@ -460,8 +460,8 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
               <p className="text-xs text-[#77847b]">
                 Submit for review without an account · Existing employers can sign in
               </p>
+              <a href="/?experience=employer-auth" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Already have an employer workspace? Sign in <ArrowUpRight className="h-3 w-3" /></a>
             </div>
-            <a href="/?experience=employer-auth" className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Already have an employer workspace? Sign in <ArrowUpRight className="h-3 w-3" /></a>
           </div>
 
           <button
