@@ -86,6 +86,19 @@ export default function EmployerPayments() {
     }
   }
 
+  async function retryPublication(listing: Listing) {
+    if (!listing.payment?.provider_order_id) return;
+    setBusyId(listing.id); setError(''); setNotice('Retrying publication for your verified payment…');
+    const { data, error: requestError } = await supabase.functions.invoke('paypal-listing-checkout', {
+      body: { action: 'capture-order', submission_id: listing.id, order_id: listing.payment.provider_order_id },
+    });
+    if (requestError || !data?.paid || !data?.published) {
+      setError(data?.error || requestError?.message || 'Payment is confirmed, but publication still needs attention. Please try again shortly.');
+    } else setNotice('Your verified payment has been reconciled and the listing is published.');
+    await loadListings();
+    setBusyId('');
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     window.location.replace('/?experience=employer-auth');
@@ -124,7 +137,7 @@ export default function EmployerPayments() {
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1f6] pt-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[#52627a]"><Clock3 size={15}/>{statusLabel(listing.status)}</div>
-                {listing.payment?.status === 'completed' ? <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700"><CheckCircle2 size={15}/> Payment confirmed</span>
+                {listing.payment?.status === 'completed' ? listing.status === 'published' ? <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700"><CheckCircle2 size={15}/> Payment confirmed · Published</span> : <button onClick={()=>retryPublication(listing)} disabled={busyId===listing.id} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800 disabled:opacity-60">{busyId===listing.id?<LoaderCircle className="animate-spin" size={14}/>:<RefreshCw size={14}/>} Retry publication</button>
                   : canPay ? <button onClick={()=>startCheckout(listing)} disabled={busyId===listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#172b49] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">{busyId===listing.id?<LoaderCircle className="animate-spin" size={14}/>:<CreditCard size={14}/>} Pay securely with PayPal <ExternalLink size={13}/></button>
                   : listing.status==='rejected' ? <span className="text-xs text-rose-600">No payment is due.</span>
                   : <span className="text-[10px] text-[#9aa8ba]">{listing.status==='published'?'Your listing is live.':listing.status==='approved_awaiting_payment'?'Payment can be completed once checkout is available.':'We will unlock payment here after approval.'}</span>}
