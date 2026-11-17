@@ -6,7 +6,7 @@ type Payment = { status: string; amount: number; currency: string; provider_orde
 type Listing = { id: string; reference_code: string; job_title: string; company_name: string; package_tier: string; status: string; submitted_at: string; payment: Payment | null };
 
 const tierName = (tier: string) => tier === 'featured' ? 'Featured Boost' : tier === 'spotlight' ? 'Spotlight + Marquee' : 'Free Standard';
-const priceFor = (tier: string) => tier === 'featured' ? 49 : tier === 'spotlight' ? 149 : 0;
+const priceFor = (tier: string) => tier === 'featured' ? 49 : tier === 'spotlight' ? null : 0;
 const statusLabel = (status: string) => ({
   pending_review: 'In moderation', email_verification_pending: 'Email verification pending',
   approved_awaiting_payment: 'Approved · Payment required', ready_to_publish: 'Ready to publish',
@@ -133,7 +133,24 @@ export default function EmployerPayments() {
             return <article key={listing.id} className="rounded-2xl border border-[#e4eaf2] bg-white p-5 shadow-[0_8px_30px_rgba(28,52,84,.035)] sm:p-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#edf3fb] px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-[#315a91]">{tierName(listing.package_tier)}</span><span className="text-[10px] text-[#9aa8ba]">{listing.reference_code}</span></div><h2 className="mt-3 text-lg font-semibold">{listing.job_title}</h2><p className="mt-1 text-xs text-[#8795aa]">{listing.company_name} · Submitted {new Date(listing.submitted_at).toLocaleDateString()}</p></div>
-                <div className="text-right"><p className="text-xl font-semibold">{amount ? '$'+amount.toFixed(2) : 'Free'}</p><p className="mt-1 text-[10px] text-[#9aa8ba]">{amount ? 'USD · one-time listing upgrade' : 'No payment required'}</p></div>
+                <div className="text-right"><p className="text-xl font-semibold">{amount === null ? 'Coming soon' : amount ? '</p><p className="mt-1 text-[10px] text-[#9aa8ba]">{amount === null ? 'Marquee placement is not yet available' : amount ? 'USD · one-time listing upgrade' : 'No payment required'}</p></div>
+              </div>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1f6] pt-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-[#52627a]"><Clock3 size={15}/>{statusLabel(listing.status)}</div>
+                {listing.payment?.status === 'completed' ? listing.status === 'published' ? <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700"><CheckCircle2 size={15}/> Payment confirmed · Published</span> : <button onClick={()=>retryPublication(listing)} disabled={busyId===listing.id} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800 disabled:opacity-60">{busyId===listing.id?<LoaderCircle className="animate-spin" size={14}/>:<RefreshCw size={14}/>} Retry publication</button>
+                  : canPay ? <button onClick={()=>startCheckout(listing)} disabled={busyId===listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#172b49] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">{busyId===listing.id?<LoaderCircle className="animate-spin" size={14}/>:<CreditCard size={14}/>} Pay securely with PayPal <ExternalLink size={13}/></button>
+                  : listing.status==='rejected' ? <span className="text-xs text-rose-600">No payment is due.</span>
+                  : <span className="text-[10px] text-[#9aa8ba]">{listing.status==='published'?'Your listing is live.':listing.status==='approved_awaiting_payment'?'Payment can be completed once checkout is available.':'We will unlock payment here after approval.'}</span>}
+              </div>
+              {listing.payment?.status==='completed' && <p className="mt-3 text-[10px] text-[#8795aa]">Payment recorded{listing.payment.confirmed_at ? ' on '+new Date(listing.payment.confirmed_at).toLocaleString() : ''}. Your payment is linked to this listing.</p>}
+            </article>;
+          })}
+      </section>
+      <p className="mt-8 text-[10px] leading-5 text-[#9aa8ba]">PLANETAI never applies paid visibility before moderation approval and server-side payment confirmation. Employer verification is separate and cannot be purchased.</p>
+    </main>
+  </div>;
+}
++amount.toFixed(2) : 'Free'}</p><p className="mt-1 text-[10px] text-[#9aa8ba]">{amount ? 'USD · one-time listing upgrade' : 'No payment required'}</p></div>
               </div>
               <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-[#edf1f6] pt-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-[#52627a]"><Clock3 size={15}/>{statusLabel(listing.status)}</div>
