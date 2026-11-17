@@ -1,0 +1,142 @@
+import { withSupabase } from "npm:@supabase/server";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
+  status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+});
+const slugify = (value: string) => value.toLowerCase().normalize("NFKD")
+  .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "job";
+
+const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
+  const userId = ctx.userClaims?.id;
+  if (!userId) return json({ error: "Authentication required." }, 401);
+
+  const admin = ctx.supabaseAdmin;
+  const { data: adminRecord, error: adminError } = await admin
+    .from("admin_users").select("user_id").eq("user_id", userId).maybeSingle();
+  if (adminError) {
+    console.error("Admin authorization lookup failed", adminError);
+    return json({ error: "Administrator access could not be verified." }, 500);
+  }
+  if (!adminRecord) return json({ error: "Administrator access required." }, 403);
+
+  let body: { action?: string; submission_id?: string; decision?: string; notes?: string };
+  try { body = await req.json(); } catch { return json({ error: "A valid JSON body is required." }, 400); }
+
+  if (body.action === "list") {
+    const { data, error } = await admin.from("job_submissions")
+      .select("id, reference_code, employer_name, employer_email, company_name, company_website, company_logo_url, job_title, category, employment_type, location, remote_policy, salary_min, salary_max, salary_currency, pay_period, description, requirements, tags, apply_url, package_tier, verified_employer_addon, status, submitted_at, reviewed_at, review_notes")
+      .in("status", ["pending_review", "email_verification_pending", "approved_awaiting_payment", "ready_to_publish", "published", "rejected"])
+      .order("submitted_at", { ascending: false }).limit(200);
+    if (error) {
+      console.error("Admin submission list failed", error);
+      return json({ error: "Could not load submissions." }, 500);
+    }
+    const ids = (data ?? []).map((row) => row.id);
+    const payments = ids.length ? await admin.from("job_payments")
+      .select("submission_id, provider_order_id, provider_capture_id, amount, currency, status, confirmed_at")
+      .in("submission_id", ids) : { data: [], error: null };
+    if (payments.error) console.error("Payment list lookup failed", payments.error);
+    return json({ submissions: data ?? [], payments: payments.data ?? [] });
+  }
+
+  if (body.action !== "review") return json({ error: "Unsupported action." }, 400);
+  const submissionId = typeof body.submission_id === "string" ? body.submission_id : "";
+  const decision = body.decision;
+  const notes = typeof body.notes === "string" ? body.notes.trim().slice(0, 1000) : "";
+  if (!/^[0-9a-f-]{36}$/i.test(submissionId) || !["approve", "reject"].includes(decision ?? "")) {
+    return json({ error: "A valid submission and review decision are required." }, 400);
+  }
+
+  const { data: submission, error: loadError } = await admin.from("job_submissions")
+    .select("*").eq("id", submissionId).maybeSingle();
+  if (loadError || !submission) return json({ error: "Submission not found." }, 404);
+  if (submission.status !== "pending_review") {
+    return json({ error: "Only submissions awaiting review can be actioned." }, 409);
+  }
+
+  if (decision === "reject") {
+    const { data: updated, error } = await admin.from("job_submissions")
+      .update({ status: "rejected", reviewed_at: new Date().toISOString(), reviewed_by: userId, review_notes: notes || null })
+      .eq("id", submissionId).eq("status", "pending_review").select("id, status").maybeSingle();
+    if (error || !updated) return json({ error: "The submission changed or could not be rejected. Refresh and try again." }, 409);
+    await admin.from("marketplace_audit_events").insert({
+      actor_user_id: userId, submission_id: submissionId, event_type: "job_submission_rejected",
+      details: { notes },
+    });
+    return json({ submission: updated });
+  }
+
+  if (submission.package_tier !== "standard" && submission.package_tier !== "featured" && submission.package_tier !== "spotlight") {
+    return json({ error: "This listing has an unsupported package tier." }, 400);
+  }
+
+  if (submission.package_tier !== "standard") {
+    const { data: updated, error } = await admin.from("job_submissions")
+      .update({ status: "approved_awaiting_payment", reviewed_at: new Date().toISOString(), reviewed_by: userId, review_notes: notes || null })
+      .eq("id", submissionId).eq("status", "pending_review").select("id, status").maybeSingle();
+    if (error || !updated) return json({ error: "The submission changed or could not be approved. Refresh and try again." }, 409);
+    await admin.from("marketplace_audit_events").insert({
+      actor_user_id: userId, submission_id: submissionId, event_type: "job_submission_approved_awaiting_payment",
+      details: { package_tier: submission.package_tier, notes },
+    });
+    return json({ submission: updated, next_step: "Payment is required before publication." });
+  }
+
+  const { data: claimed, error: claimError } = await admin.from("job_submissions")
+    .update({ status: "ready_to_publish", reviewed_at: new Date().toISOString(), reviewed_by: userId, review_notes: notes || null })
+    .eq("id", submissionId).eq("status", "pending_review").select("id").maybeSingle();
+  if (claimError || !claimed) return json({ error: "The submission changed or could not be approved. Refresh and try again." }, 409);
+
+  const slug = `${slugify(submission.job_title)}-${submission.reference_code.toLowerCase()}`;
+  const { error: publishError } = await admin.from("jobs").insert({
+    submission_id: submission.id,
+    employer_account_id: submission.employer_account_id,
+    slug,
+    job_title: submission.job_title,
+    company_name: submission.company_name,
+    company_website: submission.company_website,
+    company_logo_url: submission.company_logo_url,
+    category: submission.category,
+    employment_type: submission.employment_type,
+    location: submission.location,
+    remote_policy: submission.remote_policy,
+    salary_min: submission.salary_min,
+    salary_max: submission.salary_max,
+    salary_currency: submission.salary_currency,
+    pay_period: submission.pay_period,
+    description: submission.description,
+    requirements: submission.requirements,
+    tags: submission.tags,
+    apply_url: submission.apply_url,
+    featured: false,
+    verified_employer: false,
+    status: "published",
+    published_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+  });
+  if (publishError) {
+    console.error("Approved free listing publication failed", publishError);
+    await admin.from("job_submissions").update({ status: "pending_review" }).eq("id", submissionId).eq("status", "ready_to_publish");
+    return json({ error: "Approval was not completed because the public listing could not be created." }, 500);
+  }
+  await admin.from("marketplace_audit_events").insert({
+    actor_user_id: userId, submission_id: submissionId, event_type: "free_job_approved_and_published",
+    details: { package_tier: "standard", notes },
+  });
+  return json({ submission: { id: submissionId, status: "published" }, next_step: "Free listing approved and published." });
+});
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  const response = await handler(req);
+  const headers = new Headers(response.headers);
+  for (const [name, value] of Object.entries(corsHeaders)) headers.set(name, value);
+  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
+});
