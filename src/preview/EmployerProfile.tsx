@@ -141,7 +141,7 @@ export default function EmployerProfile() {
             <div className="mt-7 rounded-2xl border border-[#e4eaf2] bg-white p-5">
               <Building2 size={21} className="text-[#315a91]"/>
               <p className="mt-3 text-sm font-bold">Your brand, your story</p>
-              <p className="mt-1 text-xs leading-6 text-[#8795aa]">Add your official website, location and company introduction. Logo and cover-image uploads are the next profile enhancement.</p>
+              <p className="mt-1 text-xs leading-6 text-[#8795aa]">Upload your official company logo and a wide cover image, then add the details candidates need to know.</p>
             </div>
           </section>
           <section className="rounded-3xl border border-[#e4eaf2] bg-white p-6 shadow-[0_24px_80px_rgba(28,52,84,.06)] sm:p-8">
