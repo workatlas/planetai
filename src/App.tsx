@@ -76,7 +76,7 @@ function mapPublishedDatabaseJob(row: {
     row.employment_type === 'Part-Time Flexible' ? row.employment_type : 'Async Contract';
   const payUnit: JobListing['payUnit'] = row.pay_period === 'yr' || row.pay_period === 'project'
     ? row.pay_period : 'hr';
-  const initials = row.company_name.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  const initials = row.company_name.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   const publishedDate = new Date(row.published_at);
   const ageDays = Number.isNaN(publishedDate.getTime()) ? 0 : Math.max(0, Math.floor((Date.now() - publishedDate.getTime()) / 86400000));
   return {
