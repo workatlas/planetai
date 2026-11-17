@@ -426,7 +426,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
       setPreviewActivated(false);
       setReceipt({
         referenceId: persistedReference, status: data.submission.status, verificationDelivery: data.email_verification_delivery || 'unknown', job: stagedJob,
-        tier: selectedTier, addVerifiedBadge: false, totalDueUsd: 0, approvalSnippet, emailMessageBody,
+        tier: selectedTier, addVerifiedBadge: false, totalDueUsd, approvalSnippet, emailMessageBody,
         submissionSaved: true, primaryPaypalUrl: null, secondaryAddonPaypalUrl: null,
       });
       resetFormFields();
@@ -775,16 +775,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                           key={tier.id}
                           type="button"
                           onClick={() => setSelectedTierId(tier.id)}
-                          disabled={tier.id !== 'free'}
+                          disabled={false}
                           aria-pressed={active}
                           className={`text-left rounded-xl border p-3 transition-all ${
                             active
                               ? tier.featured
                                 ? 'border-amber-400 bg-amber-950/35 ring-1 ring-amber-400/50'
                                 : 'border-cyan-400 bg-cyan-950/35 ring-1 ring-cyan-400/40'
-                              : tier.id !== 'free'
-                                ? 'border-slate-800 bg-slate-950/40 opacity-55 cursor-not-allowed'
-                                : 'border-slate-800 bg-slate-900/70 hover:border-slate-700'
+                              : 'border-slate-800 bg-slate-900/70 hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-center justify-between gap-1">
@@ -799,13 +797,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                             {tier.cadenceLabel}
                           </p>
                           <p className="mt-1 text-[11px] text-slate-400 leading-snug">
-                            {tier.id === 'free' ? tier.description : 'Coming soon — secure checkout is being prepared.'}
+                            {tier.description}
                           </p>
                         </button>
                       );
                     })}
                   </div>
 
+                  <p className="text-[11px] leading-5 text-slate-400">Paid upgrades are charged only after your listing passes moderation. Featured and Spotlight require a signed-in employer workspace.</p>
                 </div>
 
                 {/* 2. Company & Role Details */}
@@ -1170,7 +1169,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     >
                       {isSubmitting
                         ? 'Submitting...'
-                        : 'Submit Free Job for Review'}
+                        : `Submit ${selectedTier.name} for Review`}
                     </button>
                   </div>
                 </div>
