@@ -870,7 +870,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               onChange={(e) => setLearningQuery(e.target.value)}
               placeholder="Filter prep guides (e.g., RLHF, video, audio)..."
               aria-label="Filter interview prep guides"
-              className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+              className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
             />
 
             <div className="space-y-2">
