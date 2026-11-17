@@ -60,6 +60,62 @@ import {
 } from './utils/careerIntel';
 import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
 import {syncSeoMetadata} from './utils/seo';
+import {supabase} from './lib/supabase';
+
+function mapPublishedDatabaseJob(row: {
+  id: string; job_title: string; company_name: string; company_website: string | null;
+  company_logo_url: string | null; category: string; employment_type: string;
+  location: string; salary_min: number | string | null; salary_max: number | string | null;
+  pay_period: string | null; description: string; requirements: string[] | null;
+  tags: string[] | null; apply_url: string; featured: boolean; verified_employer: boolean;
+  published_at: string;
+}): JobListing {
+  const category = JOB_CATEGORIES.includes(row.category as JobCategory) && row.category !== 'All'
+    ? row.category as Exclude<JobCategory, 'All'> : 'Remote';
+  const workType: JobListing['workType'] = row.employment_type === 'Full-Time Remote' ||
+    row.employment_type === 'Part-Time Flexible' ? row.employment_type : 'Async Contract';
+  const payUnit: JobListing['payUnit'] = row.pay_period === 'yr' || row.pay_period === 'project'
+    ? row.pay_period : 'hr';
+  const initials = row.company_name.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  const publishedDate = new Date(row.published_at);
+  const ageDays = Number.isNaN(publishedDate.getTime()) ? 0 : Math.max(0, Math.floor((Date.now() - publishedDate.getTime()) / 86400000));
+  return {
+    id: `database-${row.id}`,
+    title: row.job_title,
+    company: row.company_name,
+    companyShort: initials || 'PA',
+    companyTier: 'Custom Partner',
+    companyWebsite: row.company_website || undefined,
+    companyLogoUrl: row.company_logo_url || undefined,
+    isCustomEmployerPost: true,
+    featured: Boolean(row.featured),
+    verified: Boolean(row.verified_employer),
+    marqueeSpotlight: false,
+    category,
+    payMinUsd: Number(row.salary_min || 0),
+    payMaxUsd: Number(row.salary_max || 0),
+    payUnit,
+    location: row.location,
+    workType,
+    postedAgo: ageDays === 0 ? 'Today' : ageDays === 1 ? '1 day ago' : `${ageDays} days ago`,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    applyUrl: row.apply_url,
+    description: row.description,
+    requirements: Array.isArray(row.requirements) ? row.requirements : [],
+    prepTips: [],
+  };
+}
+
+async function fetchPublishedDatabaseJobs(): Promise<JobListing[]> {
+  const { data, error } = await supabase.from('jobs')
+    .select('id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, salary_min, salary_max, pay_period, description, requirements, tags, apply_url, featured, verified_employer, published_at')
+    .eq('status', 'published')
+    .gt('expires_at', new Date().toISOString())
+    .order('published_at', { ascending: false })
+    .limit(100);
+  if (error) throw error;
+  return (data || []).map(row => mapPublishedDatabaseJob(row));
+}
 
 type SortOption = 'newest' | 'highest-pay' | 'urgent' | 'alphabetical';
 type TierFilter = 'All' | CompanyTier;
@@ -149,6 +205,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<AppTab>('jobs');
   const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>('saved');
   const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
+  const [databaseJobs, setDatabaseJobs] = useState<JobListing[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>(() =>
     readStorage<string[]>(STORAGE_KEYS.SAVED, [])
   );
@@ -184,6 +241,14 @@ export default function App() {
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchPublishedDatabaseJobs()
+      .then((jobs) => { if (active) setDatabaseJobs(jobs); })
+      .catch((error) => console.warn('Published PLANETAI listings could not be loaded.', error));
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     try {
@@ -245,8 +310,8 @@ export default function App() {
   };
 
   const allJobs = useMemo(
-    () => [...customJobs, ...INITIAL_JOBS],
-    [customJobs]
+    () => [...databaseJobs, ...customJobs, ...INITIAL_JOBS],
+    [databaseJobs, customJobs]
   );
 
   // Open deep-linked role on initial load if ?job=<id> is present
@@ -517,12 +582,17 @@ export default function App() {
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
-  const handleRefreshFeed = () => {
+  const handleRefreshFeed = async () => {
     setIsRefreshing(true);
-    window.setTimeout(() => {
+    try {
+      const publishedJobs = await fetchPublishedDatabaseJobs();
+      setDatabaseJobs(publishedJobs);
+      showToast(`Feed synced — ${publishedJobs.length + customJobs.length + INITIAL_JOBS.length} live roles ready.`);
+    } catch {
+      showToast('Feed refresh failed. Showing the latest available listings.');
+    } finally {
       setIsRefreshing(false);
-      showToast(`Feed synced — ${allJobs.length} live roles ready.`);
-    }, 450);
+    }
   };
 
   const handleShareApp = async () => {
