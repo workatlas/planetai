@@ -1,0 +1,1 @@
+grant update (company_logo_url, company_cover_image_url, updated_at) on table public.employer_accounts to service_role;
