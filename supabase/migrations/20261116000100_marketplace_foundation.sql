@@ -5,23 +5,31 @@
 
 create extension if not exists pgcrypto;
 
+-- Internal authorization helpers stay outside the exposed Data API schemas.
+create schema if not exists private;
+revoke all on schema private from public, anon, authenticated;
+grant usage on schema private to authenticated;
+
 create table if not exists public.admin_users (
   user_id uuid primary key references auth.users(id) on delete cascade,
   created_at timestamptz not null default now()
 );
 
-create or replace function public.is_planetai_admin()
+create or replace function private.is_planetai_admin()
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
-as $$
+set search_path = ''
+as $
   select exists (
     select 1 from public.admin_users
-    where user_id = auth.uid()
+    where user_id = (select auth.uid())
   );
-$$;
+$;
+
+revoke all on function private.is_planetai_admin() from public, anon;
+grant execute on function private.is_planetai_admin() to authenticated;
 
 create table if not exists public.job_submissions (
   id uuid primary key default gen_random_uuid(),
@@ -163,18 +171,18 @@ alter table public.marketplace_audit_events enable row level security;
 drop policy if exists "Admins can read admin roster" on public.admin_users;
 create policy "Admins can read admin roster"
   on public.admin_users for select to authenticated
-  using (public.is_planetai_admin());
+  using (private.is_planetai_admin());
 
 drop policy if exists "Admins can read submissions" on public.job_submissions;
 create policy "Admins can read submissions"
   on public.job_submissions for select to authenticated
-  using (public.is_planetai_admin());
+  using (private.is_planetai_admin());
 
 drop policy if exists "Admins can update submissions" on public.job_submissions;
 create policy "Admins can update submissions"
   on public.job_submissions for update to authenticated
-  using (public.is_planetai_admin())
-  with check (public.is_planetai_admin());
+  using (private.is_planetai_admin())
+  with check (private.is_planetai_admin());
 
 drop policy if exists "Public can read active published jobs" on public.jobs;
 create policy "Public can read active published jobs"
@@ -184,18 +192,18 @@ create policy "Public can read active published jobs"
 drop policy if exists "Admins can manage jobs" on public.jobs;
 create policy "Admins can manage jobs"
   on public.jobs for all to authenticated
-  using (public.is_planetai_admin())
-  with check (public.is_planetai_admin());
+  using (private.is_planetai_admin())
+  with check (private.is_planetai_admin());
 
 drop policy if exists "Admins can read payments" on public.job_payments;
 create policy "Admins can read payments"
   on public.job_payments for select to authenticated
-  using (public.is_planetai_admin());
+  using (private.is_planetai_admin());
 
 drop policy if exists "Admins can read audit events" on public.marketplace_audit_events;
 create policy "Admins can read audit events"
   on public.marketplace_audit_events for select to authenticated
-  using (public.is_planetai_admin());
+  using (private.is_planetai_admin());
 
 -- Intentionally no anon/authenticated INSERT policies for submissions or payments.
 -- Public submissions and payment updates must be validated by trusted server functions.
