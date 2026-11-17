@@ -35,20 +35,24 @@ create table if not exists public.employer_members (
 create index if not exists employer_members_user_idx
   on public.employer_members(user_id, employer_account_id);
 
-create or replace function public.is_employer_member(account_id uuid)
+create or replace function private.is_employer_member(p_account_id uuid)
 returns boolean
 language sql
 stable
 security definer
-set search_path = public
-as $$
-  select exists (
+set search_path = ''
+as $
+  select (select auth.uid()) is not null and exists (
     select 1
     from public.employer_members m
-    where m.employer_account_id = account_id
-      and m.user_id = auth.uid()
+    where m.employer_account_id = p_account_id
+      and m.user_id = (select auth.uid())
   );
-$$;
+$;
+
+revoke all on function private.is_employer_member(uuid) from public, anon;
+grant usage on schema private to authenticated;
+grant execute on function private.is_employer_member(uuid) to authenticated;
 
 create table if not exists public.employer_subscription_plans (
   id uuid primary key default gen_random_uuid(),
@@ -152,12 +156,12 @@ alter table public.employer_billing_events enable row level security;
 drop policy if exists "Employer members can read their account" on public.employer_accounts;
 create policy "Employer members can read their account"
   on public.employer_accounts for select to authenticated
-  using (public.is_employer_member(id) or public.is_planetai_admin());
+  using (private.is_employer_member(id) or private.is_planetai_admin());
 
 drop policy if exists "Employer members can read account membership" on public.employer_members;
 create policy "Employer members can read account membership"
   on public.employer_members for select to authenticated
-  using (public.is_employer_member(employer_account_id) or public.is_planetai_admin());
+  using (private.is_employer_member(employer_account_id) or private.is_planetai_admin());
 
 drop policy if exists "Public can read active employer plans" on public.employer_subscription_plans;
 create policy "Public can read active employer plans"
@@ -167,34 +171,29 @@ create policy "Public can read active employer plans"
 drop policy if exists "Employer members can read their subscriptions" on public.employer_subscriptions;
 create policy "Employer members can read their subscriptions"
   on public.employer_subscriptions for select to authenticated
-  using (public.is_employer_member(employer_account_id) or public.is_planetai_admin());
+  using (private.is_employer_member(employer_account_id) or private.is_planetai_admin());
 
 drop policy if exists "Employer members can read their billing events" on public.employer_billing_events;
 create policy "Employer members can read their billing events"
   on public.employer_billing_events for select to authenticated
-  using (public.is_employer_member(employer_account_id) or public.is_planetai_admin());
+  using (private.is_employer_member(employer_account_id) or private.is_planetai_admin());
 
 drop policy if exists "Employer members can read their submitted jobs" on public.job_submissions;
 create policy "Employer members can read their submitted jobs"
   on public.job_submissions for select to authenticated
   using (
-    (employer_account_id is not null and public.is_employer_member(employer_account_id))
-    or public.is_planetai_admin()
+    (employer_account_id is not null and private.is_employer_member(employer_account_id))
+    or private.is_planetai_admin()
   );
 
 drop policy if exists "Employer members can read their published jobs" on public.jobs;
 create policy "Employer members can read their published jobs"
   on public.jobs for select to authenticated
   using (
-    (employer_account_id is not null and public.is_employer_member(employer_account_id))
-    or public.is_planetai_admin()
+    (employer_account_id is not null and private.is_employer_member(employer_account_id))
+    or private.is_planetai_admin()
   );
 
--- The membership helper is only exposed to authenticated users. It is
--- SECURITY DEFINER so RLS can safely query the membership table.
-revoke all on function public.is_employer_member(uuid) from public;
-revoke all on function public.is_employer_member(uuid) from anon;
-grant execute on function public.is_employer_member(uuid) to authenticated;
 
 -- No client INSERT/UPDATE/DELETE policies are created for employer accounts,
 -- memberships, subscriptions or billing events. Trusted server functions
