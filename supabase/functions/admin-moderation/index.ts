@@ -83,8 +83,8 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ submission: updated });
   }
 
-  if (submission.package_tier !== "standard" && submission.package_tier !== "featured" && submission.package_tier !== "spotlight") {
-    return json({ error: "This listing has an unsupported package tier." }, 400);
+  if (submission.package_tier !== "standard" && submission.package_tier !== "featured") {
+    return json({ error: "This listing package is not available for approval yet." }, 400);
   }
 
   if (submission.package_tier !== "standard") {
