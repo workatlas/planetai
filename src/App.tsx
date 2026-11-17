@@ -698,8 +698,59 @@ export default function App() {
   const experience = new URLSearchParams(window.location.search).get('experience');
 
   if (experience === 'dashboard') return <AdminDashboardPreview />;
-  if (experience === 'premium') return <PremiumMarketplacePreview />;
   if (experience === 'toolkit') return <ToolkitPreview />;
+
+  const openCareerWorkspace = (tab: AppTab = 'ai-tools') => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('experience', 'legacy');
+    window.history.replaceState({}, '', url.pathname + url.search);
+    setActiveTab(tab);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  };
+
+  const marketplaceJobs = [...databaseJobs, ...INITIAL_JOBS];
+
+  if (experience === 'premium' || experience === null) {
+    return (
+      <PremiumMarketplacePreview
+        jobs={marketplaceJobs}
+        savedIds={savedIds}
+        onToggleSave={toggleSaveJob}
+        onOpenJob={setInspectedJob}
+        onPostJob={() => setIsAddJobOpen(true)}
+        onOpenWorkspace={openCareerWorkspace}
+        jobDetailModal={
+          <JobDetailModal
+            job={inspectedJob}
+            isSaved={inspectedJob ? savedIds.includes(inspectedJob.id) : false}
+            appliedRecord={inspectedJob ? appliedRecords[inspectedJob.id] : undefined}
+            userSkills={userSkills}
+            onToggleSave={toggleSaveJob}
+            onUpsertApplied={handleUpsertApplied}
+            onRemoveApplied={handleRemoveApplied}
+            onTailorResume={job => {
+              openCareerWorkspace('ai-tools');
+              handleTailorResumeForJob(job);
+            }}
+            onLaunchPrepTool={(tool, job) => {
+              openCareerWorkspace('ai-tools');
+              handleLaunchPrepTool(tool, job);
+            }}
+            onClose={() => setInspectedJob(null)}
+          />
+        }
+        postJobModal={
+          <AddJobModal
+            isOpen={isAddJobOpen}
+            onClose={() => setIsAddJobOpen(false)}
+            onPreviewLocalJob={handlePreviewLocalJob}
+            localPreviewJobs={customJobs}
+            onDeleteLocalPreview={handleDeleteCustomJob}
+          />
+        }
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
