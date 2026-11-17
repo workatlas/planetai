@@ -8,7 +8,7 @@ const corsHeaders = {
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { ...corsHeaders, "Content-Type": "application/json" },
 });
-const priceFor = (tier: string) => tier === "featured" ? "49.00" : tier === "spotlight" ? "149.00" : null;
+const priceFor = (tier: string) => tier === "featured" ? "49.00" : null;
 const paypalBase = () => Deno.env.get("PAYPAL_ENVIRONMENT") === "live"
   ? "https://api-m.paypal.com" : "https://api-m.sandbox.paypal.com";
 
