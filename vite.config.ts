@@ -5,12 +5,17 @@ import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const isNetlifyDeployPreview = process.env.CONTEXT === 'deploy-preview';
+
   return {
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        // Deploy previews must retire any previously installed worker instead
+        // of caching preview builds across commits. Production keeps its PWA.
+        selfDestroying: isNetlifyDeployPreview,
         manifestFilename: 'manifest.json',
         includeAssets: [
           'ads.txt',
