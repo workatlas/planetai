@@ -37,30 +37,36 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (body.action !== "update") return json({ error: "Unsupported profile action." }, 400);
 
   const input = body.profile ?? {};
-  const companyName = typeof input.company_name === "string" ? input.company_name.trim() : "";
-  const website = typeof input.company_website === "string" ? input.company_website.trim() : "";
-  const description = typeof input.company_description === "string" ? input.company_description.trim() : "";
-  const location = typeof input.company_location === "string" ? input.company_location.trim() : "";
+  const companyName = typeof input.company_name === "string" ? input.company_name.trim() : undefined;
+  const website = typeof input.company_website === "string" ? input.company_website.trim() : undefined;
+  const description = typeof input.company_description === "string" ? input.company_description.trim() : undefined;
+  const location = typeof input.company_location === "string" ? input.company_location.trim() : undefined;
   const contactEmail = typeof input.contact_email === "string" ? input.contact_email.trim() : undefined;
   const logoUrl = typeof input.company_logo_url === "string" ? input.company_logo_url.trim() : undefined;
   const coverUrl = typeof input.company_cover_image_url === "string" ? input.company_cover_image_url.trim() : undefined;
 
-  if (companyName.length < 2 || companyName.length > 100) return json({ error: "Company name must be between 2 and 100 characters." }, 400);
-  if (website.length > 255 || (website && !/^https?:\/\//i.test(website))) return json({ error: "Enter a valid company website beginning with https:// or http://." }, 400);
-  if (description.length > 2000) return json({ error: "Company description must be 2,000 characters or fewer." }, 400);
-  if (location.length > 120) return json({ error: "Location must be 120 characters or fewer." }, 400);
-  if (contactEmail.length > 254 || (contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail))) return json({ error: "Enter a valid contact email address." }, 400);
+  if (companyName !== undefined && (companyName.length < 2 || companyName.length > 100)) return json({ error: "Company name must be between 2 and 100 characters." }, 400);
+  if (website !== undefined && (website.length > 255 || (website && !/^https?:\\/\\//i.test(website)))) return json({ error: "Enter a valid company website beginning with https:// or http://." }, 400);
+  if (description !== undefined && description.length > 2000) return json({ error: "Company description must be 2,000 characters or fewer." }, 400);
+  if (location !== undefined && location.length > 120) return json({ error: "Location must be 120 characters or fewer." }, 400);
+  if (contactEmail !== undefined && (contactEmail.length > 254 || (contactEmail && !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(contactEmail)))) return json({ error: "Enter a valid contact email address." }, 400);
+
+  const storageBase = Deno.env.get("SUPABASE_URL") + "/storage/v1/object/public/employer-branding/" + userId + "/";
+  if (logoUrl !== undefined && logoUrl && !logoUrl.startsWith(storageBase + "logo-")) return json({ error: "Company logo must be uploaded to your verified company branding storage." }, 400);
+  if (coverUrl !== undefined && coverUrl && !coverUrl.startsWith(storageBase + "cover-")) return json({ error: "Company cover image must be uploaded to your verified company branding storage." }, 400);
+
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (companyName !== undefined) updates.company_name = companyName;
+  if (website !== undefined) updates.company_website = website || null;
+  if (description !== undefined) updates.company_description = description || null;
+  if (location !== undefined) updates.company_location = location || null;
+  if (contactEmail !== undefined) updates.contact_email = contactEmail || null;
+  if (logoUrl !== undefined) updates.company_logo_url = logoUrl || null;
+  if (coverUrl !== undefined) updates.company_cover_image_url = coverUrl || null;
 
   const { data: updated, error: updateError } = await admin
     .from("employer_accounts")
-    .update({
-      company_name: companyName,
-      company_website: website || null,
-      company_description: description || null,
-      company_location: location || null,
-      contact_email: contactEmail || null,
-      updated_at: new Date().toISOString(),
-    })
+    .update(updates)
     .eq("id", account.id)
     .eq("owner_user_id", userId)
     .select("id, company_name, company_website, company_logo_url, company_cover_image_url, company_description, company_location, contact_email")
