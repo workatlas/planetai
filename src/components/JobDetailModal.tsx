@@ -494,7 +494,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Optional note (e.g., Passed rubric quiz)"
                 aria-label="Application note"
-                className="flex-1 min-h-[40px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3 py-1.5 text-xs text-[#25372e] placeholder:text-[#1d3028]0 focus:border-[#54806b] focus:outline-none"
+                className="flex-1 min-h-[40px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3 py-1.5 text-xs text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
               />
 
               <button
