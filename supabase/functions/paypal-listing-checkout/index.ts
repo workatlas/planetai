@@ -63,91 +63,13 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const amount = priceFor(submission.package_tier);
   if (!amount) return json({ error: "This listing does not require a paid upgrade." }, 400);
 
-  if (body.action === "create-order") {
-    if (submission.status !== "approved_awaiting_payment") {
-      return json({ error: "This listing must pass moderation before payment can begin." }, 409);
-    }
-    const { data: existing } = await admin.from("job_payments")
-      .select("id, provider_order_id, status").eq("submission_id", submissionId)
-      .eq("status", "pending").order("created_at", { ascending: false }).limit(1).maybeSingle();
-    if (existing?.provider_order_id) return json({ order_id: existing.provider_order_id, amount, currency: "USD" });
-    const token = await paypalToken();
-    const order = await paypalRequest("/v2/checkout/orders", token, "POST", {
-      intent: "CAPTURE",
-      purchase_units: [{
-        reference_id: submission.reference_code,
-        custom_id: submission.id,
-        invoice_id: submission.reference_code,
-        description: `PLANETAI ${submission.package_tier} job listing promotion`,
-        amount: { currency_code: "USD", value: amount },
-      }],
-      payment_source: { paypal: { experience_context: { user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING" } } },
-    }, `planetai-order-${submission.id}`);
-    const { error: paymentError } = await admin.from("job_payments").insert({
-      submission_id: submission.id, provider: "paypal", provider_order_id: order.id,
-      amount: Number(amount), currency: "USD", status: "pending",
-    });
-    if (paymentError) {
-      console.error("Pending PayPal ledger insert failed", paymentError);
-      return json({ error: "The payment order was created but could not be recorded. Contact support before retrying." }, 500);
-    }
-    return json({ order_id: order.id, amount, currency: "USD", approve_url: order.links?.find((link: {rel:string}) => link.rel === "approve")?.href });
-  }
-
-  if (body.action === "capture-order") {
-    const orderId = typeof body.order_id === "string" ? body.order_id : "";
-    if (!orderId || submission.status !== "approved_awaiting_payment") {
-      return json({ error: "A valid approved listing and PayPal order are required." }, 409);
-    }
-    const { data: payment, error: paymentLookupError } = await admin.from("job_payments")
-      .select("id, provider_order_id, amount, currency, status, provider_capture_id")
-      .eq("submission_id", submissionId).eq("provider_order_id", orderId).maybeSingle();
-    if (paymentLookupError || !payment) return json({ error: "This PayPal order is not recorded for the selected listing." }, 404);
-    if (payment.status === "completed" && payment.provider_capture_id) {
-      return json({ paid: true, capture_id: payment.provider_capture_id, already_completed: true });
-    }
-    if (payment.status !== "pending" || Number(payment.amount).toFixed(2) !== amount || payment.currency.trim() !== "USD") {
-      return json({ error: "Payment record does not match the approved listing price." }, 409);
-    }
-    const token = await paypalToken();
-    const capture = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`, token, "POST", {}, `planetai-capture-${orderId}`);
-    const unit = capture.purchase_units?.[0];
-    const captured = unit?.payments?.captures?.[0];
-    const capturedValue = captured?.amount?.value;
-    if (capture.status !== "COMPLETED" || unit?.custom_id !== submission.id ||
-        captured?.status !== "COMPLETED" || captured?.amount?.currency_code !== "USD" ||
-        Number(capturedValue).toFixed(2) !== amount || !captured?.id) {
-      console.error("PayPal capture verification mismatch", { orderId, status: capture.status, captureStatus: captured?.status });
-      return json({ error: "PayPal did not return a verified payment matching this listing. No promotion was applied." }, 409);
-    }
-    const { data: completed, error: completeError } = await admin.from("job_payments")
-      .update({ provider_capture_id: captured.id, status: "completed", confirmed_at: new Date().toISOString() })
-      .eq("id", payment.id).eq("status", "pending").select("id").maybeSingle();
-    if (completeError || !completed) return json({ error: "The payment was captured but its ledger confirmation needs administrator attention. Do not retry payment." }, 500);
-
-    const slug = `${submission.job_title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70)}-${submission.reference_code.toLowerCase()}`;
-    const { error: jobError } = await admin.from("jobs").insert({
-      submission_id: submission.id, employer_account_id: submission.employer_account_id, slug,
-      job_title: submission.job_title, company_name: submission.company_name,
-      company_website: submission.company_website, company_logo_url: submission.company_logo_url,
-      category: submission.category, employment_type: submission.employment_type, location: submission.location,
-      remote_policy: submission.remote_policy, salary_min: submission.salary_min, salary_max: submission.salary_max,
-      salary_currency: submission.salary_currency, pay_period: submission.pay_period, description: submission.description,
-      requirements: submission.requirements, tags: submission.tags, apply_url: submission.apply_url,
-      featured: true, verified_employer: false, status: "published", published_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-    });
-    if (jobError) {
-      console.error("Verified payment recorded but listing publication failed", jobError);
-      return json({ paid: true, publication_pending: true, error: "Payment is verified. Publication needs administrator attention." }, 202);
-    }
-    const { error: statusError } = await admin.from("job_submissions")
-      .update({ status: "published" }).eq("id", submission.id).eq("status", "approved_awaiting_payment");
-    if (statusError) console.error("Submission status update failed after verified payment", statusError);
-    await admin.from("marketplace_audit_events").insert({
-      actor_user_id: userId, submission_id: submission.id, event_type: "paypal_payment_captured_and_listing_published",
-      details: { order_id: orderId, capture_id: captured.id, amount, currency: "USD", package_tier: submission.package_tier },
-    });
+  const ensurePublished = async (captureId: string, orderId: string) => {
+    const { data: existingJob, error: existingJobError } = await admin.from("jobs")
+      .select("id").eq("submission_id", submission.id).maybeSingle();
+    if (existingJobError) throw new Error("Payment is verified, but publication status could not be checked.");
+    if (!existingJob) {
+      const published = await ensurePublished(captured.id, orderId);
+    if (!published) return json({ paid: true, publication_pending: true, error: "Payment is verified. Publication needs administrator attention." }, 202);
     return json({ paid: true, published: true, capture_id: captured.id });
   }
   return json({ error: "Unsupported PayPal action." }, 400);
