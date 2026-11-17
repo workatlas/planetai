@@ -1145,7 +1145,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     className="flex items-start gap-2 rounded-xl border border-rose-500/40 bg-rose-950/30 p-3 text-xs text-rose-300"
                   >
                     <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span>{error}</span>
+                    <span>
+                      {error}
+                      {(error.toLowerCase().includes('employer account') || error.toLowerCase().includes('employer workspace')) && (
+                        <a href="/?experience=employer-auth" className="ml-1 inline-flex font-bold text-cyan-300 underline underline-offset-2">
+                          Sign in or create your free employer account
+                        </a>
+                      )}
+                    </span>
                   </div>
                 )}
 
