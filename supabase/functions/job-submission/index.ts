@@ -98,8 +98,8 @@ const handler = async (req: Request) => {
   // Paid listing requests are accepted for authenticated employer workspaces only.
   // They remain pending moderation; no paid visibility is granted at submission time.
   const requestedTier = clean(body.package_tier, 30) || "standard";
-  if (!["standard", "free", "featured", "spotlight"].includes(requestedTier)) {
-    return json({ error: "Choose a valid listing package." }, 400);
+  if (!["standard", "free", "featured"].includes(requestedTier)) {
+    return json({ error: "Choose an available listing package. Spotlight is not available yet." }, 400);
   }
   if (body.verified_employer_addon === true || body.verified === true) {
     return json({ error: "Employer verification is based on review and cannot be purchased." }, 400);
@@ -148,12 +148,15 @@ const handler = async (req: Request) => {
     }
   }
 
-  if (requestedTier !== "standard" && requestedTier !== "free" && (!userId || !employerAccountId)) {
-    return json({ error: "Featured and Spotlight listings require a signed-in employer with a verified PLANETAI workspace. Free Standard remains available to everyone." }, 403);
+  if (!employerAccountId) {
+    return json({ error: "Create your free employer workspace before submitting a job listing." }, 403);
+  }
+  if (requestedTier !== "standard" && requestedTier !== "free" && !employerAccountId) {
+    return json({ error: "Paid listing upgrades require a verified PLANETAI employer workspace." }, 403);
   }
 
   const referenceCode = `PAI-${crypto.randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
-  const status = userId ? "pending_review" : "email_verification_pending";
+  const status = "pending_review";
 
   const { data: submission, error: insertError } = await admin
     .from("job_submissions")
@@ -196,7 +199,7 @@ const handler = async (req: Request) => {
     event_type: "job_submission_created",
     details: {
       reference_code: referenceCode,
-      channel: userId ? "authenticated_employer" : "guest",
+      channel: "authenticated_employer",
       package_tier: requestedTier === "free" ? "standard" : requestedTier,
       status,
     },
@@ -209,10 +212,8 @@ const handler = async (req: Request) => {
       status: submission.status,
       submitted_at: submission.submitted_at,
     },
-    next_step: userId
-      ? "Your submission is saved and awaiting moderation."
-      : "Your submission is saved. Email verification must be completed before moderation.",
-    email_verification_delivery: userId ? "not_required_for_authenticated_submission" : "email_provider_not_configured",
+    next_step: "Your submission is saved and awaiting moderation.",
+    email_verification_delivery: "not_required_verified_employer_session",
   }, 201);
 };
 
