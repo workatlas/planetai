@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Bookmark, Check, Globe2, MapPin, Menu,
+  ArrowRight, ArrowUpRight, Bookmark, Check, MapPin, Menu,
   Search, ShieldCheck, X,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -110,7 +110,7 @@ export default function PremiumMarketplacePreview({
       <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
           <a href="#top" className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><Globe2 size={21}/></span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
             <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Global careers, with clarity</span></span>
           </a>
           <nav className="hidden items-center gap-7 text-[13px] font-semibold text-[#52615a] lg:flex">
