@@ -83,17 +83,22 @@ export default function EmployerPayments() {
         body: { action: 'capture-order', submission_id: submissionId, order_id: orderId },
       }).then(async ({ data, error: captureError }) => {
         if (!active) return;
+        let nextError = '';
+        let nextNotice = '';
         if (captureError || !data?.paid) {
-          setError(data?.error || captureError?.message || 'We could not confirm this payment. Please contact support before trying again.');
+          nextError = data?.error || captureError?.message || 'We could not confirm this payment. Please contact support before trying again.';
         } else if (data.publication_pending) {
-          setNotice('Payment verified. Your listing is awaiting publication recovery.');
+          nextNotice = 'Payment verified. Your listing is awaiting publication recovery.';
         } else {
-          setNotice('Payment confirmed! Your promoted listing is now published.');
+          nextNotice = 'Payment confirmed! Your promoted listing is now published.';
         }
         const clean = new URL(window.location.href);
         ['payment', 'submission_id', 'token', 'PayerID'].forEach(key => clean.searchParams.delete(key));
         window.history.replaceState({}, '', clean.pathname + clean.search);
         await loadListings();
+        if (!active) return;
+        setError(nextError);
+        setNotice(nextNotice);
         setBusyId('');
       });
       return () => { active = false; };
@@ -135,12 +140,13 @@ export default function EmployerPayments() {
         order_id: listing.payment.provider_order_id,
       },
     });
-    if (requestError || !data?.paid || !data?.published) {
-      setError(data?.error || requestError?.message || 'Payment is confirmed, but publication still needs attention. Please try again shortly.');
-    } else {
-      setNotice('Your verified payment has been reconciled and the listing is published.');
-    }
+    const nextError = requestError || !data?.paid || !data?.published
+      ? data?.error || requestError?.message || 'Payment is confirmed, but publication still needs attention. Please try again shortly.'
+      : '';
+    const nextNotice = nextError ? '' : 'Your verified payment has been reconciled and the listing is published.';
     await loadListings();
+    setError(nextError);
+    setNotice(nextNotice);
     setBusyId('');
   }
 
