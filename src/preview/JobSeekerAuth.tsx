@@ -4,10 +4,14 @@ import type { Session } from '@supabase/supabase-js';
 import { ArrowLeft, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, Globe2, LoaderCircle, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
-type Mode = 'signup' | 'signin' | 'forgot';
+type Mode = 'signup' | 'signin' | 'forgot' | 'reset';
 
 export default function JobSeekerAuth() {
-  const [mode, setMode] = useState<Mode>('signup');
+  const [mode, setMode] = useState<Mode>(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('experience') === 'job-seeker-reset') return 'reset';
+    return params.get('mode') === 'signin' ? 'signin' : 'signup';
+  });
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -55,6 +59,18 @@ export default function JobSeekerAuth() {
     setError('');
     setMessage('');
     try {
+      if (mode === 'reset') {
+        if (password.length < 8) throw new Error('Use at least 8 characters for your password.');
+        if (password !== confirmPassword) throw new Error('Your passwords do not match.');
+        const { error: updateError } = await supabase.auth.updateUser({ password });
+        if (updateError) throw updateError;
+        setMessage('Your password has been updated. You can now continue to your career dashboard.');
+        setPassword('');
+        setConfirmPassword('');
+        switchMode('signin');
+        return;
+      }
+
       if (mode === 'forgot') {
         const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
           redirectTo: window.location.origin + '/?experience=job-seeker-reset',
@@ -113,7 +129,7 @@ export default function JobSeekerAuth() {
   );
 
   return (
-    <div className="min-h-screen bg-[#f4f7fb] text-[#17243a]">
+    <div className="planetai-nexora min-h-screen bg-[#f4f7fb] text-[#17243a]">
       <header className="border-b border-[#e4eaf2] bg-white">
         <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
           <a href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><Globe2 size={20}/></span><span><b className="block text-sm tracking-[-.05em]">PLANETAI</b><small className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Your next opportunity starts here</small></span></a>
@@ -136,19 +152,19 @@ export default function JobSeekerAuth() {
             <div className="py-8 text-center"><span className="mx-auto grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-700"><CheckCircle2 size={23}/></span><h2 className="mt-5 text-2xl font-semibold">You're signed in.</h2><p className="mt-2 text-sm text-[#718096]">Opening your private career dashboard…</p><button onClick={signOut} disabled={busy} className="mt-6 text-xs font-bold text-[#315a91]">Sign out</button></div>
           ) : (
             <>
-              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">{mode === 'signup' ? 'Job seeker registration' : mode === 'signin' ? 'Job seeker sign in' : 'Account recovery'}</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">{mode === 'signup' ? 'Create your free account' : mode === 'signin' ? 'Welcome back' : 'Reset your password'}</h2>
-              <p className="mt-2 text-xs leading-6 text-[#8795aa]">{mode === 'signup' ? 'Build your career profile and access your personal PLANETAI space.' : mode === 'signin' ? 'Sign in to continue to your career dashboard.' : 'Enter your account email and we will send a secure password reset link if an account is registered.'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#315a91]">{mode === 'signup' ? 'Job seeker registration' : mode === 'signin' ? 'Job seeker sign in' : mode === 'reset' ? 'Choose a new password' : 'Account recovery'}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">{mode === 'signup' ? 'Create your free account' : mode === 'signin' ? 'Welcome back' : mode === 'reset' ? 'Set a new password' : 'Reset your password'}</h2>
+              <p className="mt-2 text-xs leading-6 text-[#8795aa]">{mode === 'signup' ? 'Build your career profile and access your personal PLANETAI space.' : mode === 'signin' ? 'Sign in to continue to your career dashboard.' : mode === 'reset' ? 'Choose a new password for your PLANETAI account.' : 'Enter your account email and we will send a secure password reset link if an account is registered.'}</p>
               <form onSubmit={submit} className="mt-7 space-y-4">
                 {mode === 'signup' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Full name</span><input value={fullName} onChange={e=>setFullName(e.target.value)} required minLength={2} maxLength={100} autoComplete="name" placeholder="Your name" className="w-full rounded-xl border border-[#dce5f0] bg-white px-4 py-3 text-xs outline-none transition focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/></label>}
                 <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Email address</span><span className="relative block"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa8ba]" size={15}/><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254} placeholder="you@example.com" className="w-full rounded-xl border border-[#dce5f0] bg-white py-3 pl-11 pr-4 text-xs outline-none transition focus:border-[#5277aa] focus:ring-4 focus:ring-[#5277aa]/10"/></span></label>
                 {mode !== 'forgot' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Password</span>{passwordField(password,setPassword,showPassword,()=>setShowPassword(v=>!v),mode==='signup'?'new-password':'current-password')}</label>}
-                {mode === 'signup' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Confirm password</span>{passwordField(confirmPassword,setConfirmPassword,showConfirmPassword,()=>setShowConfirmPassword(v=>!v),'new-password','Re-enter your password')}{confirmPassword && password !== confirmPassword && <span className="mt-2 block text-[10px] text-rose-600">Passwords do not match yet.</span>}</label>}
+                {(mode === 'signup' || mode === 'reset') && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65748b]">Confirm password</span>{passwordField(confirmPassword,setConfirmPassword,showConfirmPassword,()=>setShowConfirmPassword(v=>!v),'new-password','Re-enter your password')}{confirmPassword && password !== confirmPassword && <span className="mt-2 block text-[10px] text-rose-600">Passwords do not match yet.</span>}</label>}
                 {mode === 'signin' && <div className="-mt-1 text-right"><button type="button" onClick={()=>switchMode('forgot')} className="text-[11px] font-semibold text-[#315a91] hover:underline">Forgot password?</button></div>}
                 {mode === 'signup' && <p className="text-[10px] leading-5 text-[#8795aa]">Use at least 8 characters. Your password and confirmation must match.</p>}
-                <button type="submit" disabled={busy || (mode==='signup' && password!==confirmPassword)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#172b49] px-4 py-3.5 text-xs font-bold text-white transition hover:bg-[#24446e] disabled:cursor-not-allowed disabled:opacity-60">{busy&&<LoaderCircle className="animate-spin" size={15}/>} {busy?'Please wait…':mode==='signup'?'Create free job seeker account':mode==='signin'?'Sign in securely':'Send password reset link'}</button>
+                <button type="submit" disabled={busy || ((mode==='signup' || mode==='reset') && password!==confirmPassword)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#172b49] px-4 py-3.5 text-xs font-bold text-white transition hover:bg-[#24446e] disabled:cursor-not-allowed disabled:opacity-60">{busy&&<LoaderCircle className="animate-spin" size={15}/>} {busy?'Please wait…':mode==='signup'?'Create free job seeker account':mode==='signin'?'Sign in securely':mode==='reset'?'Update password':'Send password reset link'}</button>
               </form>
-              <p className="mt-6 text-center text-xs text-[#8795aa]">{mode==='signup'?'Already have an account?':mode==='signin'?'New to PLANETAI?':'Remembered your password?'} <button onClick={()=>switchMode(mode==='signup'?'signin':'signin')} className="font-bold text-[#315a91] hover:underline">{mode==='signup'?'Sign in':'Back to sign in'}</button></p>
+              <p className="mt-6 text-center text-xs text-[#8795aa]">{mode==='signup'?'Already have an account?':mode==='signin'?'New to PLANETAI?':mode==='reset'?'Back to sign in':'Remembered your password?'} <button onClick={()=>switchMode(mode==='signup'?'signin':'signin')} className="font-bold text-[#315a91] hover:underline">{mode==='signup'?'Sign in':'Back to sign in'}</button></p>
               {mode==='forgot' && <p className="mt-3 text-center"><button onClick={()=>switchMode('signup')} className="text-[11px] font-semibold text-[#315a91] hover:underline">Create a free account</button></p>}
             </>
           )}
