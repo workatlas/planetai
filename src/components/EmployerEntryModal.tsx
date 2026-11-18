@@ -5,13 +5,11 @@ import {PlanetAILogo} from './PlanetAILogo';
 interface EmployerEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onContinueWithoutAccount: () => void;
 }
 
 export const EmployerEntryModal: React.FC<EmployerEntryModalProps> = ({
   isOpen,
   onClose,
-  onContinueWithoutAccount,
 }) => {
   if (!isOpen) return null;
 
@@ -49,7 +47,7 @@ export const EmployerEntryModal: React.FC<EmployerEntryModalProps> = ({
             Bring the right people into your next chapter.
           </h2>
           <p className="mt-3 max-w-xl text-sm leading-6 text-[#c5d9cb]">
-            Choose how you want to manage your hiring. Create a secure company workspace, return to an existing one, or submit a standard role without an account.
+            Create a secure company workspace or sign in to manage your hiring. Every listing is reviewed before publication.
           </p>
         </div>
 
@@ -60,10 +58,9 @@ export const EmployerEntryModal: React.FC<EmployerEntryModalProps> = ({
           >
             <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#eaf2eb] text-[#315f46]"><BriefcaseBusiness size={19}/></span>
             <span className="mt-4 text-base font-bold tracking-tight text-[#20372a]">Create an employer account</span>
-            <span className="mt-1 text-xs leading-5 text-[#7d8b81]">Set up your company workspace and manage your hiring activity.</span>
+            <span className="mt-1 text-xs leading-5 text-[#7d8b81]">Set up your secure company workspace to submit and manage listings.</span>
             <span className="mt-auto flex items-center gap-2 pt-5 text-xs font-bold text-[#315f46]">Create account <ArrowRight size={14} className="transition group-hover:translate-x-1"/></span>
           </a>
-
           <a
             href="/?experience=employer-auth&mode=signin"
             className="group flex min-h-[174px] flex-col rounded-2xl border border-[#dce5dc] bg-white p-5 shadow-[0_8px_24px_rgba(27,55,38,.035)] transition hover:-translate-y-0.5 hover:border-[#a9bcae] hover:shadow-[0_14px_32px_rgba(27,55,38,.075)] sm:p-6"
@@ -73,26 +70,17 @@ export const EmployerEntryModal: React.FC<EmployerEntryModalProps> = ({
             <span className="mt-1 text-xs leading-5 text-[#7d8b81]">Continue managing company details, listings and payments.</span>
             <span className="mt-auto flex items-center gap-2 pt-5 text-xs font-bold text-[#52685a]">Employer sign in <ArrowRight size={14} className="transition group-hover:translate-x-1"/></span>
           </a>
-
-          <div className="rounded-2xl border border-dashed border-[#cbd8cc] bg-[#f1f5f0] p-5 sm:col-span-2 sm:flex sm:items-center sm:justify-between sm:gap-6 sm:px-6">
+          <div className="rounded-2xl border border-[#dce5dc] bg-[#f1f5f0] p-5 sm:col-span-2 sm:px-6">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 text-[#6a8973]"><CheckCircle2 size={18}/></span>
               <div>
-                <p className="text-sm font-bold text-[#31463a]">Just want to submit a job?</p>
-                <p className="mt-1 text-xs leading-5 text-[#7d8b81]">A standard listing can still be submitted without creating an account. Every submission is reviewed before publication.</p>
+                <p className="text-sm font-bold text-[#31463a]">Why an employer account?</p>
+                <p className="mt-1 text-xs leading-5 text-[#7d8b81]">A verified sign-in connects every listing to its company workspace, protects employer contact details, and lets you track moderation and payment status. Standard listings remain free and all jobs are reviewed before publication.</p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onContinueWithoutAccount}
-              className="mt-4 inline-flex min-h-[42px] shrink-0 items-center justify-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#285c4b] sm:mt-0"
-            >
-              Continue without account <ArrowRight size={14}/>
-            </button>
           </div>
-
           <p className="px-1 text-[10px] leading-5 text-[#89958c] sm:col-span-2">
-            New accounts are verified by email. Job submissions remain subject to PlanetAI review and approval before publication.
+            New accounts are verified by email. Your listing stays private until it passes PLANETAI review.
           </p>
         </div>
       </section>
