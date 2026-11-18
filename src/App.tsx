@@ -355,7 +355,7 @@ export default function App() {
       } else {
         url.searchParams.delete('job');
       }
-      window.history.replaceState({}, '', url.pathname + url.search);
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     } catch {
       // Ignore history API restrictions
     }
