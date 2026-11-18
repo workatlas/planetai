@@ -669,6 +669,16 @@ export default function App() {
     setSearchQuery('');
   };
 
+  const handleOpenPostJob = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    const isEmployer = data.session?.user.user_metadata?.account_type === 'employer';
+    if (!error && data.session && isEmployer) {
+      setIsAddJobOpen(true);
+      return;
+    }
+    setIsEmployerEntryOpen(true);
+  };
+
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('All');
@@ -776,7 +786,7 @@ export default function App() {
         savedIds={savedIds}
         onToggleSave={toggleSaveJob}
         onOpenJob={setInspectedJob}
-        onPostJob={() => setIsEmployerEntryOpen(true)}
+        onPostJob={handleOpenPostJob}
         onShareApp={handleShareApp}
         copied={copied}
         onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
