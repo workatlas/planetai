@@ -95,7 +95,7 @@ export default function AdminModeration() {
     payment:rows.filter(r=>r.status==="approved_awaiting_payment").length,
     published:rows.filter(r=>r.status==="published").length,
   };
-  if(!email&&!loading) return <div className="min-h-screen bg-slate-50 px-5 py-10 text-slate-900">
+  if(!email&&!loading) return <div className="planetai-nexora min-h-screen bg-slate-50 px-5 py-10 text-slate-900">
     <div className="mx-auto max-w-md">
       <div className="rounded-2xl border border-slate-200 bg-white p-7 shadow-sm sm:p-9">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-700"><ShieldCheck size={25}/></div>
@@ -122,7 +122,7 @@ export default function AdminModeration() {
     </div>
   </div>;
 
-  return <div className="min-h-screen bg-slate-50 text-slate-900">
+  return <div className="planetai-nexora min-h-screen bg-slate-50 text-slate-900">
     <header className="border-b border-slate-200 bg-white px-5 py-4 sm:px-8">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
         <div><div className="flex items-center gap-2 text-sm font-black tracking-tight"><ShieldCheck className="text-blue-700"/> PLANETAI · ADMIN MODERATION</div><p className="mt-1 text-xs text-slate-500">{email ?? "Administrator authentication required"}</p></div>
