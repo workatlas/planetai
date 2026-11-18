@@ -7,6 +7,7 @@ import {
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
 import type {JobCategory, JobListing} from '../data/jobs';
 import {CompanyLogo} from '../components/JobCard';
+import {getCompanyLogoUrl} from '../data/jobs';
 import {CompanyRevealCard} from '../components/CompanyRevealCard';
 import {PlanetAILogo} from '../components/PlanetAILogo';
 import {PWAInstallButton} from '../components/PWAInstallButton';
@@ -30,6 +31,23 @@ interface PremiumMarketplacePreviewProps {
 
 const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
+
+
+const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
+  const [failed, setFailed] = useState(false);
+  const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
+  const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  return (
+    <div className="planetai-company-logo-tile flex h-[88px] w-[112px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#dce5dc] px-3 py-2 shadow-sm sm:h-[96px] sm:w-[124px]">
+      {logoUrl && !failed ? (
+        <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
+      ) : (
+        <span aria-hidden="true" className="grid h-12 w-12 place-items-center rounded-xl bg-[#edf4ee] text-sm font-extrabold text-[#285c4b] sm:h-14 sm:w-14">{initials || 'CO'}</span>
+      )}
+      <span className="max-w-full truncate text-[9px] font-bold tracking-wide text-[#52685a]">{job.company}</span>
+    </div>
+  );
+};
 
 export default function PremiumMarketplacePreview({
   jobs,
@@ -70,6 +88,15 @@ export default function PremiumMarketplacePreview({
   }, [jobs, query, category, sort]);
 
   const spotlight = filtered.find(job => job.featured) || filtered[0] || jobs[0] || null;
+  const marqueeCompanies = useMemo(() => {
+    const seen = new Set<string>();
+    return jobs.filter(job => {
+      const key = job.company.trim().toLowerCase();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    }).slice(0, 12);
+  }, [jobs]);
 
   if (showCareerTools) {
     return (
@@ -104,37 +131,14 @@ export default function PremiumMarketplacePreview({
 
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
-      <div
-        role="region"
-        aria-label="Employer listing options"
-        className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]"
-      >
-        <p className="sr-only">For employers: free standard listings and optional Featured Boost placement for additional listing visibility. All listings are reviewed before publication. Paid upgrades do not bypass moderation.</p>
-        <div className="marquee-container mx-auto max-w-[1320px] overflow-hidden px-4 sm:px-8">
-          <div className="marquee-track min-h-10 items-center text-[10px] font-semibold tracking-[.08em] sm:text-[11px]">
-            <div className="flex items-center">
-              <span className="px-5 text-[#a9c9b4]">FOR EMPLOYERS</span>
-              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
-              <span className="px-5">FREE STANDARD LISTINGS</span>
-              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-white">FEATURED BOOST · EXTRA VISIBILITY</span>
-              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
-              <span className="px-5">EXTRA LISTING VISIBILITY</span>
-              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-[#a9c9b4]">EVERY LISTING REVIEWED BEFORE PUBLICATION</span>
-              <span aria-hidden="true" className="px-5 text-[#6d9680]">✦</span>
-            </div>
-            <div className="flex items-center" aria-hidden="true">
-              <span className="px-5 text-[#a9c9b4]">FOR EMPLOYERS</span>
-              <span className="text-[#6d9680]">✦</span>
-              <span className="px-5">FREE STANDARD LISTINGS</span>
-              <span className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-white">FEATURED BOOST · EXTRA VISIBILITY</span>
-              <span className="text-[#6d9680]">✦</span>
-              <span className="px-5">EXTRA LISTING VISIBILITY</span>
-              <span className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-[#a9c9b4]">EVERY LISTING REVIEWED BEFORE PUBLICATION</span>
-              <span className="px-5 text-[#6d9680]">✦</span>
+      <div role="region" aria-label="Companies with opportunities on PLANETAI" className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]">
+        <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
+        <div className="mx-auto flex max-w-[1320px] items-center gap-5 px-4 py-3 sm:px-8 sm:py-4">
+          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.2em] text-[#a9c9b4] lg:block">Companies to explore</span>
+          <div className="marquee-container min-w-0 flex-1 overflow-hidden">
+            <div className="marquee-track items-center gap-4">
+              <div className="flex items-center gap-4 pr-4">{'{'}marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>) {'}'}</div>
+              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{'{'}marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>) {'}'}</div>
             </div>
           </div>
         </div>
