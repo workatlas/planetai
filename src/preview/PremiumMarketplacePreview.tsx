@@ -126,7 +126,7 @@ export default function PremiumMarketplacePreview({
             <a className="transition hover:text-[#183c32]" href="#employers">For employers</a>
           </nav>
           <div className="hidden items-center gap-2 sm:flex">
-            <a href="/?experience=job-seeker-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Candidate sign in</a>
+            <a href="/?experience=job-seeker-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Candidate sign in</a><a href="/?experience=job-seeker-auth&mode=signup" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Create free account</a>
             <button onClick={() => onOpenWorkspace('ai-tools')} className="px-3 py-2 text-[12px] font-bold text-[#40534a] hover:text-[#183c32]">Career tools</button>
             <PWAInstallButton compact /><a href="/?experience=employer-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Employer sign in</a><button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
           </div>
