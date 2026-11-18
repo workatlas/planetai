@@ -137,8 +137,8 @@ export default function PremiumMarketplacePreview({
           <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.2em] text-[#a9c9b4] lg:block">Companies to explore</span>
           <div className="marquee-container min-w-0 flex-1 overflow-hidden">
             <div className="marquee-track items-center gap-4">
-              <div className="flex items-center gap-4 pr-4">{'{'}marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>) {'}'}</div>
-              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{'{'}marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>) {'}'}</div>
+              <div className="flex items-center gap-4 pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
+              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
             </div>
           </div>
         </div>
