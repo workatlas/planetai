@@ -200,3 +200,17 @@
 .planetai-nexora [class*="text-gray-600"] { color: #c1cce0 !important; }
 .planetai-nexora [class*="text-slate-500"],
 .planetai-nexora [class*="text-gray-500"] { color: var(--pn-muted) !important; }
+
+
+/* Keep the resume page itself white while the surrounding workspace follows the dark theme. */
+.planetai-nexora .planetai-resume-paper {
+  background-color: #ffffff !important;
+  color: #26332c !important;
+  color-scheme: light;
+}
+
+/* Logo tiles remain crisp white against the employer marquee. */
+.planetai-nexora .planetai-company-logo-tile {
+  background-color: #ffffff !important;
+  border-color: rgba(220,229,220,.9) !important;
+}
