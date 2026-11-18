@@ -186,8 +186,21 @@ export default function PremiumMarketplacePreview({
           {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-dashed border-[#d7e0d7] bg-white p-12 text-center"><Search className="mx-auto text-[#8b9a8f]"/><p className="mt-3 font-bold text-[#344a3d]">No matching opportunities</p><p className="mt-1 text-xs text-[#87938b]">Try a different search or category.</p></div>}
         </section>
 
-        <section id="how-it-works" className="border-y border-[#e3e9e2] bg-white">
-          <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20"><div className="max-w-xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Simple by design</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Less friction. More possibility.</h2></div><div className="mt-10 grid gap-8 md:grid-cols-3">{[{n:'01',title:'Explore freely',body:'Browse roles and company information without creating a candidate account.'},{n:'02',title:'Know what to expect',body:'Review responsibilities, compensation, location, eligibility and requirements.'},{n:'03',title:'Apply directly',body:'Continue to the employer’s official application destination when you are ready.'}].map(item => <div key={item.n} className="border-t border-[#dce5dc] pt-5"><p className="text-xs font-bold text-[#71917b]">{item.n}</p><h3 className="mt-5 text-lg font-bold tracking-tight text-[#263b30]">{item.title}</h3><p className="mt-2 text-sm leading-6 text-[#7a887f]">{item.body}</p></div>)}</div></div>
+        <section id="how-it-works" className="border-y border-white/[0.07] bg-[#0d1425]">
+          <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#8d7aff]">Simple by design</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-white sm:text-4xl">Less friction. More possibility.</h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#9ba9c1]">A straightforward path from discovering an opportunity to taking your next career step.</p>
+            </div>
+            <div className="mt-10 grid grid-cols-1 items-stretch gap-4 md:grid-cols-3 md:gap-5">
+              {[{n:'01',title:'Explore freely',body:'Browse roles and company information without creating a candidate account.'},{n:'02',title:'Know what to expect',body:'Review responsibilities, compensation, location, eligibility and requirements.'},{n:'03',title:'Apply directly',body:'Continue to the employer’s official application destination when you are ready.'}].map(item => <article key={item.n} className="flex h-full min-h-[220px] flex-col rounded-[22px] border border-white/[0.09] bg-[#111b30] p-6 shadow-[0_16px_44px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-1 hover:border-[#8265ff]/35 sm:p-7">
+                <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#8265ff]/25 bg-[#292044] text-xs font-extrabold tracking-wide text-[#bcaaff]">{item.n}</span>
+                <h3 className="mt-6 text-lg font-bold tracking-tight text-white">{item.title}</h3>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-[#aebbd0]">{item.body}</p>
+              </article>)}
+            </div>
+          </div>
         </section>
         <section aria-label="Sponsored information" className="border-b border-[#e3e9e2] bg-[#f7f8f6] py-7"><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><AdBanner placement="bottom-suite" /></div></section>
 
