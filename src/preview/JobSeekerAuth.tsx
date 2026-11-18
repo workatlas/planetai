@@ -40,8 +40,8 @@ export default function JobSeekerAuth() {
   }, []);
 
   useEffect(() => {
-    if (session) window.location.replace('/?experience=job-seeker-dashboard');
-  }, [session]);
+    if (session && mode !== 'reset') window.location.replace('/?experience=job-seeker-dashboard');
+  }, [session, mode]);
 
   function switchMode(next: Mode) {
     setMode(next);
