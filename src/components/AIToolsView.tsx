@@ -274,6 +274,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
     if (!requestedTool) return;
     setActiveTool(requestedTool.tool);
     if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
+    if (requestedTool.tool === 'learning') setSelectedGuideId('role-specific');
     if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
     if (requestedTool.skills) setSkillsInput(sanitizeText(requestedTool.skills, 200));
     if (requestedTool.description) setJobDescInput(sanitizeText(requestedTool.description, 600));
@@ -449,21 +450,52 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
     return `Subject: ${subject}\n\n${greeting}\n\n${body}\n\nBest regards,\n[Your Name]`;
   }, [emailTemplate, emailTone, recruiterName, emailRole, emailNotes]);
 
+  const roleSpecificGuide = useMemo<LearningGuide>(() => {
+    const role = sanitizeText(targetRole, 120) || 'Selected opportunity';
+    const company = sanitizeText(targetCompany, 80);
+    const skills = skillsInput
+      .split(',')
+      .map((skill) => sanitizeText(skill, 48))
+      .filter(Boolean)
+      .slice(0, 6);
+    const roleContext = sanitizeText(jobDescInput, 500);
+    const skillChecklist = skills.length
+      ? skills.map((skill) => `Prepare a concise, real example showing how you have used ${skill} to solve a practical problem.`)
+      : ['Identify the core tools and responsibilities named in the role description, then prepare one relevant example for each.'];
+
+    return {
+      id: 'role-specific',
+      prompt: `${role} — Interview Preparation`,
+      category: company ? `Tailored for ${company}` : 'Tailored to selected opportunity',
+      summary: roleContext
+        ? `Use this preparation plan for ${role}${company ? ` at ${company}` : ''}. It is based on the published role description: ${roleContext}`
+        : `Use this preparation plan to organize examples and questions for the ${role} opportunity.`,
+      checklist: [
+        'Prepare a 60–90 second introduction connecting your experience to this role.',
+        ...skillChecklist,
+        'Walk through one relevant project from problem to approach, trade-offs, testing and outcome.',
+        'Prepare a thoughtful question about the team, success measures and the next stage of the hiring process.',
+      ],
+      avoid: 'Do not assume a particular interview format, assessment rubric or employer process unless the listing or recruiter explicitly confirms it. Use examples from your own experience and be ready to explain your decisions.',
+    };
+  }, [targetRole, targetCompany, skillsInput, jobDescInput]);
+
   const filteredGuides = useMemo(() => {
+    const guides = [roleSpecificGuide, ...LEARNING_GUIDES];
     const q = sanitizeText(learningQuery, 80).toLowerCase();
-    if (!q) return LEARNING_GUIDES;
-    return LEARNING_GUIDES.filter(
+    if (!q) return guides;
+    return guides.filter(
       (g) =>
         g.prompt.toLowerCase().includes(q) ||
         g.category.toLowerCase().includes(q) ||
         g.summary.toLowerCase().includes(q)
     );
-  }, [learningQuery]);
+  }, [learningQuery, roleSpecificGuide]);
 
   const activeGuide =
     filteredGuides.find((g) => g.id === selectedGuideId) ||
     filteredGuides[0] ||
-    LEARNING_GUIDES[0];
+    roleSpecificGuide;
 
   const handleCopyResume = async () => {
     const ok = await copyToClipboard(generatedResumeDoc);
