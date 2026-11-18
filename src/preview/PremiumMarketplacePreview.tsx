@@ -135,18 +135,6 @@ export default function PremiumMarketplacePreview({
 
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
-      <div role="region" aria-label="Companies with opportunities on PLANETAI" className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]">
-        <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
-        <div className="mx-auto flex max-w-[1320px] items-center gap-5 px-4 py-3 sm:px-8 sm:py-4">
-          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.2em] text-[#a9c9b4] lg:block">Companies to explore</span>
-          <div className="marquee-container min-w-0 flex-1 overflow-hidden">
-            <div className="marquee-track items-center gap-4">
-              <div className="flex items-center gap-4 pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
-              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
-            </div>
-          </div>
-        </div>
-      </div>
       <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
         <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8">
           <div className="flex h-[76px] items-center justify-between gap-4">
@@ -211,6 +199,18 @@ export default function PremiumMarketplacePreview({
         </div>
       </header>
 
+      <div role="region" aria-label="Companies with opportunities on PLANETAI" className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]">
+        <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
+        <div className="mx-auto flex max-w-[1320px] items-center gap-5 px-4 py-3 sm:px-8 sm:py-4">
+          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.2em] text-[#a9c9b4] lg:block">Companies to explore</span>
+          <div className="marquee-container min-w-0 flex-1 overflow-hidden">
+            <div className="marquee-track items-center gap-4">
+              <div className="flex items-center gap-4 pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
+              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
       <main id="top">
         <section className="relative overflow-hidden bg-[#e9eee8]">
           <div className="pointer-events-none absolute -right-28 -top-40 h-[560px] w-[560px] rounded-full border border-[#d3ddd3] opacity-70"/>
