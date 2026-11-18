@@ -24,6 +24,9 @@ import {
 import {AddJobModal} from './components/AddJobModal';
 import {EmployerEntryModal} from './components/EmployerEntryModal';
 import EmployerAuth from './preview/EmployerAuth';
+import EmployerProfile from './preview/EmployerProfile';
+import EmployerPayments from './preview/EmployerPayments';
+import AdminModeration from './preview/AdminModeration';
 import JobSeekerAuth from './preview/JobSeekerAuth';
 import JobSeekerDashboard from './preview/JobSeekerDashboard';
 import {
@@ -663,6 +666,9 @@ export default function App() {
   const experience = new URLSearchParams(window.location.search).get('experience');
 
   if (experience === 'employer-auth') return <EmployerAuth />;
+  if (experience === 'employer-profile') return <EmployerProfile />;
+  if (experience === 'employer-payments') return <EmployerPayments />;
+  if (experience === 'admin-moderation') return <AdminModeration />;
   if (experience === 'job-seeker-auth' || experience === 'job-seeker-reset') return <JobSeekerAuth />;
   if (experience === 'job-seeker-dashboard') return <JobSeekerDashboard />;
   if (experience === 'dashboard') return <AdminDashboardPreview />;
