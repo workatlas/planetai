@@ -43,7 +43,6 @@ import {
   JobCard,
 } from './components/JobCard';
 import {JobDetailModal} from './components/JobDetailModal';
-import {MarqueeTicker} from './components/MarqueeTicker';
 import {MobileBottomNav} from './components/MobileBottomNav';
 import {NewsDevToolsView} from './components/NewsDevToolsView';
 import {OfflineIndicator} from './components/OfflineIndicator';
@@ -782,12 +781,6 @@ export default function App() {
         savedCount={savedJobs.length}
         onShareApp={handleShareApp}
         copied={copied}
-      />
-
-      {/* Live Marquee Ticker (Global USD) */}
-      <MarqueeTicker
-        onSelectPlatform={handleSelectPlatformFromTicker}
-        spotlightJobs={allJobs}
       />
 
       {/* Main Content */}
