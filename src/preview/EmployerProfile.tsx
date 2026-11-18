@@ -124,7 +124,7 @@ export default function EmployerProfile() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8f6] text-[#17243a]">
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17243a]">
       <header className="border-b border-[#e2e8e1] bg-white">
         <div className="mx-auto flex h-[76px] max-w-6xl items-center justify-between px-5 sm:px-8">
           <a href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><Globe2 size={20}/></span><span><b className="block text-sm tracking-[-.05em]">PLANETAI</b><small className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Employer workspace</small></span></a>
