@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Bookmark, Check, Menu,
+  ArrowRight, ArrowUpRight, Bookmark, Check, Menu, Share2,
   Search, ShieldCheck, X,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -19,6 +19,8 @@ interface PremiumMarketplacePreviewProps {
   onToggleSave: (id: string) => void;
   onOpenJob: (job: JobListing) => void;
   onPostJob: () => void;
+  onShareApp: () => void;
+  copied: boolean;
   onOpenPrivacyPolicy: () => void;
   privacyPolicyModal: ReactNode;
   onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app') => void;
@@ -38,13 +40,13 @@ const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
   const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
   const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
-    <div className="planetai-company-logo-tile flex h-[88px] w-[112px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#dce5dc] px-3 py-2 shadow-sm sm:h-[96px] sm:w-[124px]">
+    <div className="planetai-company-logo-tile flex h-[96px] w-[128px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#dce5dc] px-3 py-2 shadow-sm sm:h-[104px] sm:w-[140px]">
       {logoUrl && !failed ? (
         <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
       ) : (
         <span aria-hidden="true" className="grid h-12 w-12 place-items-center rounded-xl bg-[#edf4ee] text-sm font-extrabold text-[#285c4b] sm:h-14 sm:w-14">{initials || 'CO'}</span>
       )}
-      <span className="max-w-full truncate text-[9px] font-bold tracking-wide text-[#52685a]">{job.company}</span>
+      <span className="max-w-full truncate text-[10px] font-extrabold tracking-[.01em] text-[#40584a] sm:text-[11px]">{job.company}</span>
     </div>
   );
 };
@@ -55,6 +57,8 @@ export default function PremiumMarketplacePreview({
   onToggleSave,
   onOpenJob,
   onPostJob,
+  onShareApp,
+  copied,
   onOpenPrivacyPolicy,
   privacyPolicyModal,
   onOpenWorkspace,
@@ -151,6 +155,7 @@ export default function PremiumMarketplacePreview({
               <span className="min-w-0 leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Global careers, with clarity</span></span>
             </a>
             <div className="flex shrink-0 items-center gap-2">
+              <button type="button" onClick={onShareApp} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[#dce5dc] bg-white px-3 py-3 text-[11px] font-bold text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:px-4 sm:text-xs" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"}><Share2 size={14}/><span>{copied ? 'Copied' : 'Share'}</span></button>
               <button onClick={onPostJob} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#183c32] px-4 py-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:px-5 sm:text-xs">Post a job <ArrowUpRight className="inline" size={14}/></button>
               <button
                 type="button"
