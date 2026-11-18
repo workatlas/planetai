@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Bookmark, Check, MapPin, Menu,
+  ArrowRight, ArrowUpRight, Bookmark, Check, Menu,
   Search, ShieldCheck, X,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -27,14 +27,6 @@ interface PremiumMarketplacePreviewProps {
   careerToolsContent: ReactNode;
   onReturnToMarketplace: () => void;
 }
-
-const categoryTones: Record<string, {card: string; badge: string}> = {
-  'AI Training': {card: 'border-l-[#7d8cff] bg-[#111b30]', badge: 'border border-[#6478ff]/25 bg-[#1b2850] text-[#b8c5ff]'},
-  'Coding': {card: 'border-l-[#b79aff] bg-[#111b30]', badge: 'border border-[#9b7cff]/25 bg-[#292044] text-[#d0bdff]'},
-  'Audio/Voice': {card: 'border-l-[#c08cff] bg-[#111b30]', badge: 'border border-[#bd8cff]/25 bg-[#2a1e42] text-[#e0c5ff]'},
-  'Data Annotation': {card: 'border-l-[#48d9b0] bg-[#111b30]', badge: 'border border-[#48d9b0]/25 bg-[#12372f] text-[#8be9ce]'},
-  'Remote': {card: 'border-l-[#38c8ff] bg-[#111b30]', badge: 'border border-[#38c8ff]/25 bg-[#123044] text-[#8bdcff]'},
-};
 
 const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
