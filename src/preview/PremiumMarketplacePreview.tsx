@@ -80,7 +80,7 @@ export default function PremiumMarketplacePreview({
 
   if (showCareerTools) {
     return (
-      <div className="min-h-screen bg-[#f7f8f6] text-[#172b24]">
+      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24]">
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
           <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
             <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
@@ -110,7 +110,7 @@ export default function PremiumMarketplacePreview({
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8f6] text-[#17231f]">
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
       <div className="bg-[#142c26] px-4 py-2 text-center text-[11px] font-medium tracking-wide text-[#d6e7df] sm:text-xs">
         A clearer way to find meaningful work <span className="mx-2 text-[#88a99a]">·</span> Curated opportunities and employer-published roles
       </div>
