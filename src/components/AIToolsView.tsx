@@ -276,8 +276,8 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
     if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
     if (requestedTool.tool === 'learning') setSelectedGuideId('role-specific');
     if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
-    if (requestedTool.skills) setSkillsInput(sanitizeText(requestedTool.skills, 200));
-    if (requestedTool.description) setJobDescInput(sanitizeText(requestedTool.description, 600));
+    if (requestedTool.skills !== undefined) setSkillsInput(sanitizeText(requestedTool.skills, 200));
+    if (requestedTool.description !== undefined) setJobDescInput(sanitizeText(requestedTool.description, 600));
   }, [requestedTool]);
 
   // Keep the selected job context available when users move between workspaces.
