@@ -1545,8 +1545,7 @@ export default function App() {
         )}
 
         {activeTab === 'app' && (
-          <AppReadinessView
-          />
+          <AppReadinessView onShareApp={handleShareApp}/>
         )}
       </main>
 
