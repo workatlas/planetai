@@ -24,6 +24,8 @@ import {
 import {AddJobModal} from './components/AddJobModal';
 import {EmployerEntryModal} from './components/EmployerEntryModal';
 import EmployerAuth from './preview/EmployerAuth';
+import JobSeekerAuth from './preview/JobSeekerAuth';
+import JobSeekerDashboard from './preview/JobSeekerDashboard';
 import {
   AIToolsView,
   RequestedAITool,
@@ -700,6 +702,8 @@ export default function App() {
   const experience = new URLSearchParams(window.location.search).get('experience');
 
   if (experience === 'employer-auth') return <EmployerAuth />;
+  if (experience === 'job-seeker-auth' || experience === 'job-seeker-reset') return <JobSeekerAuth />;
+  if (experience === 'job-seeker-dashboard') return <JobSeekerDashboard />;
   if (experience === 'dashboard') return <AdminDashboardPreview />;
   if (experience === 'toolkit') return <ToolkitPreview />;
 
