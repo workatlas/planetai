@@ -15,8 +15,12 @@ import './index.css';
 // Deploy previews must never be controlled by an older cached app shell.
 // Clean registrations and Cache Storage before mounting React. A one-time
 // reload guard prevents a browser that refuses unregister() from looping.
-const isNetlifyPreview = window.location.hostname.startsWith('deploy-preview-')
-  && window.location.hostname.endsWith('--planetai-global.netlify.app');
+// Treat every Netlify Deploy Preview for this project as disposable preview
+// state. Do not install a persistent PWA worker on preview domains; production
+// keeps its normal service-worker registration and offline behavior.
+const previewHostname = window.location.hostname;
+const isNetlifyPreview = previewHostname.startsWith('deploy-preview-')
+  && previewHostname.endsWith('.netlify.app');
 
 const mountApplication = () => {
   if ('serviceWorker' in navigator && !isNetlifyPreview) {
