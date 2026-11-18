@@ -51,9 +51,9 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
           <div className="mt-auto pt-5">
             <p className="text-lg font-extrabold tracking-wide text-[#38c8ff]">{formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)}</p>
             <p className="mt-1 text-[10px] text-[#9ba9c1]">{job.location} · {job.workType}</p>
-            <div className="mt-5 flex items-center justify-between border-t border-white/[0.09] pt-4">
-              <span className="text-[9px] font-medium text-[#8393ad]">{job.postedAgo}</span>
-              <button type="button" tabIndex={revealed ? -1 : 0} aria-expanded={revealed} onClick={() => setRevealed(true)} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#8265ff]/35 bg-[#292044] px-4 py-2 text-[10px] font-bold text-[#c7b8ff] transition hover:border-[#a18aff]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8265ff]">
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.09] pt-4">
+              <span className="shrink-0 text-[9px] font-medium text-[#8393ad]">{job.postedAgo}</span>
+              <button type="button" tabIndex={revealed ? -1 : 0} aria-expanded={revealed} onClick={() => setRevealed(true)} className="ml-auto inline-flex min-h-10 max-w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full border border-[#8265ff]/35 bg-[#292044] px-4 py-2 text-[10px] font-bold text-[#c7b8ff] transition hover:border-[#a18aff]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8265ff]">
                 Reveal company details <ArrowUpRight size={14}/>
               </button>
             </div>
