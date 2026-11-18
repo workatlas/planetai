@@ -25,9 +25,9 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
   const tone = TONES[job.category] || TONES.Remote;
 
   return (
-    <article className="group relative min-h-[390px] [perspective:1200px]">
-      <div className={`relative grid min-h-[390px] rounded-[22px] [transform-style:preserve-3d] transition-transform duration-500 motion-reduce:transition-none [&>*]:[grid-area:1/1] ${revealed ? '[transform:rotateY(180deg)]' : ''}`}>
-        <section aria-label={`${job.company} job preview`} aria-hidden={revealed} className={`flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-white/[0.09] border-l-[3px] ${tone.border} bg-[#111b30] p-5 shadow-[0_18px_55px_rgba(0,0,0,.18)] [backface-visibility:hidden] sm:p-6`}>
+    <article className="group relative h-full min-h-[390px] [perspective:1200px]">
+      <div className={`relative grid h-full min-h-[390px] rounded-[22px] [transform-style:preserve-3d] transition-transform duration-500 motion-reduce:transition-none [&>*]:[grid-area:1/1] ${revealed ? '[transform:rotateY(180deg)]' : ''}`}>
+        <section aria-label={`${job.company} job preview`} aria-hidden={revealed} className={`flex h-full min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-white/[0.09] border-l-[3px] ${tone.border} bg-[#111b30] p-5 shadow-[0_18px_55px_rgba(0,0,0,.18)] [backface-visibility:hidden] sm:p-6`}>
           <div className="flex items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-3">
               <CompanyLogo company={job.company} short={job.companyShort} explicitLogoUrl={job.companyLogoUrl} websiteOrApplyUrl={job.companyWebsite || job.applyUrl} size="lg" lazy={false}/>
@@ -45,7 +45,7 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
           </div>
           <div className="mt-6">
             <span className={`inline-flex rounded-full border px-3 py-1.5 text-[9px] font-bold tracking-wide ${tone.badge}`}>{job.category}</span>
-            <h3 className="mt-4 min-h-[56px] text-xl font-bold leading-7 tracking-[-.035em] text-white">{job.title}</h3>
+            <h3 className="mt-4 h-[84px] min-h-[84px] line-clamp-3 text-xl font-bold leading-7 tracking-[-.035em] text-white">{job.title}</h3>
             <p className="mt-3 line-clamp-3 text-xs leading-6 text-[#b7c3d8]">{job.description}</p>
           </div>
           <div className="mt-auto pt-5">
@@ -60,7 +60,7 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
           </div>
         </section>
 
-        <section aria-label={`${job.company} additional job details`} aria-hidden={!revealed} className="flex min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#8265ff]/25 border-l-[3px] bg-[#111b30] p-5 shadow-[0_18px_55px_rgba(0,0,0,.22)] [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-6">
+        <section aria-label={`${job.company} additional job details`} aria-hidden={!revealed} className="flex h-full min-h-[390px] flex-col overflow-hidden rounded-[22px] border border-[#8265ff]/25 border-l-[3px] bg-[#111b30] p-5 shadow-[0_18px_55px_rgba(0,0,0,.22)] [backface-visibility:hidden] [transform:rotateY(180deg)] sm:p-6">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-white">{job.company}</p>
