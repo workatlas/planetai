@@ -460,7 +460,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                 Employer &amp; Recruiter Portal
               </h2>
               <p className="text-xs text-[#77847b]">
-                Submit for review without an account · Existing employers can sign in
+                Create or sign in to your secure employer workspace before submitting a listing
               </p>
               <a href="/?experience=employer-auth" className="mt-1 inline-flex items-center gap-1 text-[11px] font-bold text-[#47745c] underline underline-offset-2 hover:text-[#285c4b]">Employer sign in / create account <ArrowUpRight className="h-3 w-3" /></a>
               <button type="button" onClick={onOpenPrivacyPolicy} className="mt-1 w-fit text-[11px] font-semibold text-[#77847b] underline underline-offset-2 hover:text-[#315b47]">Privacy Policy</button>
