@@ -196,7 +196,12 @@ function hydrateCustomJobs(): JobListing[] {
 }
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<AppTab>('jobs');
+  const [activeTab, setActiveTab] = useState<AppTab>(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    return requestedTab === 'ai-tools' || requestedTab === 'news' || requestedTab === 'saved' || requestedTab === 'platforms' || requestedTab === 'app'
+      ? requestedTab
+      : 'jobs';
+  });
   const [isCareerToolsOpen, setIsCareerToolsOpen] = useState(() => new URLSearchParams(window.location.search).get('experience') === 'career-tools');
   const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>('saved');
   const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
@@ -729,7 +734,7 @@ export default function App() {
 
   const marketplaceJobs = [...databaseJobs, ...INITIAL_JOBS];
 
-  if (experience === 'premium' || experience === null || experience === 'career-tools' || experience === 'legacy') {
+  if (experience === 'premium' || experience === null || experience === 'career-tools') {
     return (
       <PremiumMarketplacePreview
         jobs={marketplaceJobs}
