@@ -671,8 +671,9 @@ export default function App() {
 
   const handleOpenPostJob = async () => {
     const { data, error } = await supabase.auth.getSession();
-    const isEmployer = data.session?.user.user_metadata?.account_type === 'employer';
-    if (!error && data.session && isEmployer) {
+    if (!error && data.session) {
+      // The server verifies actual employer membership; user-editable metadata
+      // must never be used as the authorization source.
       setIsAddJobOpen(true);
       return;
     }
