@@ -18,9 +18,14 @@ import './index.css';
 // Treat every Netlify Deploy Preview for this project as disposable preview
 // state. Do not install a persistent PWA worker on preview domains; production
 // keeps its normal service-worker registration and offline behavior.
-const previewHostname = window.location.hostname;
-const isNetlifyPreview = previewHostname.startsWith('deploy-preview-')
-  && previewHostname.endsWith('.netlify.app');
+const previewHostname = window.location.hostname.toLowerCase();
+const productionHostname = 'planetai-global.netlify.app';
+// Netlify has two preview URL formats:
+//   deploy-preview-123--planetai-global.netlify.app
+//   <deploy-hash>--planetai-global.netlify.app
+// Clear both, but never disable the production PWA on the canonical hostname.
+const isNetlifyPreview = previewHostname !== productionHostname
+  && previewHostname.endsWith('--planetai-global.netlify.app');
 
 const mountApplication = () => {
   if ('serviceWorker' in navigator && !isNetlifyPreview) {
@@ -42,11 +47,13 @@ const mountApplication = () => {
   createRoot(document.getElementById('root')!).render(<StrictMode>{preview}</StrictMode>);
 };
 
-if ('serviceWorker' in navigator && isNetlifyPreview) {
+if (isNetlifyPreview) {
   void (async () => {
-    const registrations = await navigator.serviceWorker.getRegistrations().catch(() => []);
+    const registrations = 'serviceWorker' in navigator
+      ? await navigator.serviceWorker.getRegistrations().catch(() => [])
+      : [];
     const cacheNames = 'caches' in window ? await caches.keys().catch(() => []) : [];
-    const hadStaleState = Boolean(navigator.serviceWorker.controller)
+    const hadStaleState = ('serviceWorker' in navigator && Boolean(navigator.serviceWorker.controller))
       || registrations.length > 0
       || cacheNames.length > 0;
 
@@ -58,7 +65,7 @@ if ('serviceWorker' in navigator && isNetlifyPreview) {
     if (hadStaleState) {
       let shouldReload = true;
       try {
-        const reloadKey = 'planetai_preview_cache_cleanup_v2';
+        const reloadKey = 'planetai_preview_cache_cleanup_v3';
         shouldReload = window.sessionStorage.getItem(reloadKey) !== '1';
         if (shouldReload) window.sessionStorage.setItem(reloadKey, '1');
       } catch {
@@ -71,7 +78,7 @@ if ('serviceWorker' in navigator && isNetlifyPreview) {
     }
 
     try {
-      window.sessionStorage.removeItem('planetai_preview_cache_cleanup_v2');
+      window.sessionStorage.removeItem('planetai_preview_cache_cleanup_v3');
     } catch {
       // Ignore storage restrictions; the application can still start.
     }
