@@ -104,8 +104,40 @@ export default function PremiumMarketplacePreview({
 
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
-      <div className="bg-[#142c26] px-4 py-2 text-center text-[11px] font-medium tracking-wide text-[#d6e7df] sm:text-xs">
-        A clearer way to find meaningful work <span className="mx-2 text-[#88a99a]">·</span> Curated opportunities and employer-published roles
+      <div
+        role="region"
+        aria-label="Employer listing options"
+        className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]"
+      >
+        <p className="sr-only">For employers: free standard listings and Featured Boost at 49 US dollars for 30 days of additional visibility. All listings are reviewed before publication. Paid upgrades do not bypass moderation.</p>
+        <div className="marquee-container mx-auto max-w-[1320px] overflow-hidden px-4 sm:px-8">
+          <div className="marquee-track min-h-10 items-center text-[10px] font-semibold tracking-[.08em] sm:text-[11px]">
+            <div className="flex items-center">
+              <span className="px-5 text-[#a9c9b4]">FOR EMPLOYERS</span>
+              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
+              <span className="px-5">FREE STANDARD LISTINGS</span>
+              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
+              <span className="px-5 text-white">FEATURED BOOST · $49 / 30 DAYS</span>
+              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
+              <span className="px-5">EXTRA LISTING VISIBILITY</span>
+              <span aria-hidden="true" className="text-[#6d9680]">✦</span>
+              <span className="px-5 text-[#a9c9b4]">EVERY LISTING REVIEWED BEFORE PUBLICATION</span>
+              <span aria-hidden="true" className="px-5 text-[#6d9680]">✦</span>
+            </div>
+            <div className="flex items-center" aria-hidden="true">
+              <span className="px-5 text-[#a9c9b4]">FOR EMPLOYERS</span>
+              <span className="text-[#6d9680]">✦</span>
+              <span className="px-5">FREE STANDARD LISTINGS</span>
+              <span className="text-[#6d9680]">✦</span>
+              <span className="px-5 text-white">FEATURED BOOST · $49 / 30 DAYS</span>
+              <span className="text-[#6d9680]">✦</span>
+              <span className="px-5">EXTRA LISTING VISIBILITY</span>
+              <span className="text-[#6d9680]">✦</span>
+              <span className="px-5 text-[#a9c9b4]">EVERY LISTING REVIEWED BEFORE PUBLICATION</span>
+              <span className="px-5 text-[#6d9680]">✦</span>
+            </div>
+          </div>
+        </div>
       </div>
       <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
         <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8">
