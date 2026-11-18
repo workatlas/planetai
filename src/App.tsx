@@ -578,6 +578,19 @@ export default function App() {
 
   const handleShareApp = async () => {
     const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'PLANETAI | Global Careers',
+          text: 'Discover global career opportunities with PLANETAI.',
+          url,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+      }
+    }
+
     let didCopy = false;
 
     if (navigator.clipboard && window.isSecureContext) {
@@ -724,6 +737,8 @@ export default function App() {
         onToggleSave={toggleSaveJob}
         onOpenJob={setInspectedJob}
         onPostJob={() => setIsEmployerEntryOpen(true)}
+        onShareApp={handleShareApp}
+        copied={copied}
         onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
         privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
         onOpenWorkspace={openCareerWorkspace}
