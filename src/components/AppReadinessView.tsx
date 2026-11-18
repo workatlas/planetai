@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {
-  Bell,
   CheckCircle2,
   Share2,
   Smartphone,
@@ -12,15 +11,11 @@ import {usePWAInstall} from '../hooks/usePWAInstall';
 import {PWAInstallButton} from './PWAInstallButton';
 
 interface AppReadinessViewProps {
-  onOpenAlerts: () => void;
   onShareApp: () => void;
-  alertsActive: boolean;
 }
 
 export const AppReadinessView: React.FC<AppReadinessViewProps> = ({
-  onOpenAlerts,
   onShareApp,
-  alertsActive,
 }) => {
   const isOnline = useOnlineStatus();
   const {isInstalled} = usePWAInstall();
@@ -69,7 +64,7 @@ export const AppReadinessView: React.FC<AppReadinessViewProps> = ({
           PlanetAI Mobile App & PWA
         </h1>
         <p className="mt-1.5 text-sm text-slate-400 max-w-2xl">
-          Install PlanetAI directly to your Android, iOS, or desktop home screen for instant offline access and real-time job alerts.
+          Install PlanetAI directly to your Android, iOS, or desktop home screen for quick access and offline support.
         </p>
       </div>
 
@@ -122,14 +117,6 @@ export const AppReadinessView: React.FC<AppReadinessViewProps> = ({
 
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800/80">
             <PWAInstallButton />
-            <button
-              type="button"
-              onClick={onOpenAlerts}
-              className="inline-flex items-center justify-center gap-2 min-h-[44px] px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-sm font-medium text-slate-100 hover:bg-slate-800 transition-colors"
-            >
-              <Bell className="w-4 h-4 text-cyan-400" />
-              <span>{alertsActive ? 'Manage Alerts' : 'Enable Job Alerts'}</span>
-            </button>
             <button
               type="button"
               onClick={onShareApp}
