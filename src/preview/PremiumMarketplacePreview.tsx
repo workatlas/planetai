@@ -109,7 +109,7 @@ export default function PremiumMarketplacePreview({
         aria-label="Employer listing options"
         className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]"
       >
-        <p className="sr-only">For employers: free standard listings and Featured Boost at 49 US dollars for 30 days of additional visibility. All listings are reviewed before publication. Paid upgrades do not bypass moderation.</p>
+        <p className="sr-only">For employers: free standard listings and optional Featured Boost placement for additional listing visibility. All listings are reviewed before publication. Paid upgrades do not bypass moderation.</p>
         <div className="marquee-container mx-auto max-w-[1320px] overflow-hidden px-4 sm:px-8">
           <div className="marquee-track min-h-10 items-center text-[10px] font-semibold tracking-[.08em] sm:text-[11px]">
             <div className="flex items-center">
@@ -117,7 +117,7 @@ export default function PremiumMarketplacePreview({
               <span aria-hidden="true" className="text-[#6d9680]">✦</span>
               <span className="px-5">FREE STANDARD LISTINGS</span>
               <span aria-hidden="true" className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-white">FEATURED BOOST · $49 / 30 DAYS</span>
+              <span className="px-5 text-white">FEATURED BOOST · EXTRA VISIBILITY</span>
               <span aria-hidden="true" className="text-[#6d9680]">✦</span>
               <span className="px-5">EXTRA LISTING VISIBILITY</span>
               <span aria-hidden="true" className="text-[#6d9680]">✦</span>
@@ -129,7 +129,7 @@ export default function PremiumMarketplacePreview({
               <span className="text-[#6d9680]">✦</span>
               <span className="px-5">FREE STANDARD LISTINGS</span>
               <span className="text-[#6d9680]">✦</span>
-              <span className="px-5 text-white">FEATURED BOOST · $49 / 30 DAYS</span>
+              <span className="px-5 text-white">FEATURED BOOST · EXTRA VISIBILITY</span>
               <span className="text-[#6d9680]">✦</span>
               <span className="px-5">EXTRA LISTING VISIBILITY</span>
               <span className="text-[#6d9680]">✦</span>
