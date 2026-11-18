@@ -115,7 +115,7 @@ export default function EmployerAuth() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7f8f6] text-[#17243a]">
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17243a]">
       <header className="border-b border-[#e2e8e1] bg-white">
         <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
           <a href="/" className="flex items-center gap-3">
