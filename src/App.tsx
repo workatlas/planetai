@@ -807,7 +807,6 @@ export default function App() {
             <EmployerEntryModal
               isOpen={isEmployerEntryOpen}
               onClose={() => setIsEmployerEntryOpen(false)}
-              onContinueWithoutAccount={() => { setIsEmployerEntryOpen(false); setIsAddJobOpen(true); }}
             />
             <AddJobModal
               isOpen={isAddJobOpen}
