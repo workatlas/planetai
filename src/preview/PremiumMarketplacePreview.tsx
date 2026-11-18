@@ -49,7 +49,7 @@ export default function PremiumMarketplacePreview({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<JobCategory>('All');
   const [sort, setSort] = useState('recommended');
-  const [mobileMenu, setMobileMenu] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -108,24 +108,66 @@ export default function PremiumMarketplacePreview({
         A clearer way to find meaningful work <span className="mx-2 text-[#88a99a]">·</span> Curated opportunities and employer-published roles
       </div>
       <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
-          <a href="#top" className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
-            <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Global careers, with clarity</span></span>
-          </a>
-          <nav className="hidden items-center gap-7 text-[13px] font-semibold text-[#52615a] lg:flex">
-            <a className="text-[#183c32]" href="#opportunities">Find opportunities</a>
-            <a className="transition hover:text-[#183c32]" href="#how-it-works">How it works</a>
-            <a className="transition hover:text-[#183c32]" href="#employers">For employers</a>
-          </nav>
-          <div className="hidden items-center gap-2 sm:flex">
-            <a href="/?experience=job-seeker-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Candidate sign in</a><a href="/?experience=job-seeker-auth&mode=signup" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Create free account</a>
-            <button onClick={() => onOpenWorkspace('ai-tools')} className="px-3 py-2 text-[12px] font-bold text-[#40534a] hover:text-[#183c32]">Career tools</button>
-            <PWAInstallButton compact /><a href="/?experience=employer-auth&mode=signin" className="rounded-full border border-[#dce5dc] bg-white px-4 py-3 text-[12px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Employer sign in</a><button onClick={onPostJob} className="rounded-full bg-[#183c32] px-5 py-3 text-[12px] font-bold text-white shadow-sm transition hover:bg-[#285c4b]">Post a job <ArrowUpRight className="ml-1 inline" size={14}/></button>
+        <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8">
+          <div className="flex h-[76px] items-center justify-between gap-4">
+            <a href="#top" className="flex min-w-0 items-center gap-3" aria-label="PLANETAI marketplace home">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
+              <span className="min-w-0 leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Global careers, with clarity</span></span>
+            </a>
+            <div className="flex shrink-0 items-center gap-2">
+              <button onClick={onPostJob} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#183c32] px-4 py-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:px-5 sm:text-xs">Post a job <ArrowUpRight className="inline" size={14}/></button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(value => !value)}
+                aria-label={menuOpen ? "Close main menu" : "Open main menu"}
+                aria-expanded={menuOpen}
+                aria-controls="planetai-main-menu"
+                className="grid h-11 w-11 place-items-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b]"
+              >
+                {menuOpen ? <X size={19}/> : <Menu size={19}/>}
+              </button>
+            </div>
           </div>
-          <button onClick={() => setMobileMenu(v => !v)} className="grid h-10 w-10 place-items-center rounded-full border border-[#e0e6e0] lg:hidden" aria-label="Toggle navigation">{mobileMenu ? <X size={19}/> : <Menu size={19}/>}</button>
+          {menuOpen && (
+            <nav
+              id="planetai-main-menu"
+              aria-label="Main navigation"
+              onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false); }}
+              className="absolute right-5 top-[calc(100%-0.25rem)] z-50 max-h-[calc(100vh-110px)] w-[min(92vw,420px)] overflow-y-auto rounded-2xl border border-[#e2e8e1] bg-white p-4 shadow-[0_24px_70px_rgba(20,44,38,.18)] sm:right-8 sm:p-5"
+            >
+              <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-6">
+                <section>
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">Explore</p>
+                  <div className="flex flex-col gap-1">
+                    <a href="#opportunities" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Find opportunities</a>
+                    <a href="#how-it-works" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">How it works</a>
+                    <button onClick={() => { setMenuOpen(false); onOpenWorkspace('ai-tools'); }} className="rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Career tools</button>
+                  </div>
+                </section>
+                <section>
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For candidates</p>
+                  <div className="flex flex-col gap-1">
+                    <a href="/?experience=job-seeker-auth&mode=signin" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Candidate sign in</a>
+                    <a href="/?experience=job-seeker-auth&mode=signup" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Create free account</a>
+                  </div>
+                </section>
+                <section>
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For employers</p>
+                  <div className="flex flex-col gap-1">
+                    <a href="#employers" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Employer information</a>
+                    <a href="/?experience=employer-auth&mode=signin" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Employer sign in</a>
+                  </div>
+                </section>
+                <section>
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">More</p>
+                  <div className="px-2">
+                    <PWAInstallButton compact/>
+                  </div>
+                </section>
+              </div>
+            </nav>
+          )}
         </div>
-        {mobileMenu && <div className="border-t border-[#e5e9e5] bg-white px-6 py-4 lg:hidden"><div className="flex flex-col gap-4 text-sm font-semibold"><a href="#opportunities" onClick={() => setMobileMenu(false)}>Find opportunities</a><a href="#how-it-works" onClick={() => setMobileMenu(false)}>How it works</a><button className="text-left" onClick={() => {setMobileMenu(false); onOpenWorkspace('ai-tools');}}>Career tools</button><a href="/?experience=job-seeker-auth&mode=signin" onClick={() => setMobileMenu(false)}>Candidate sign in</a><a href="/?experience=employer-auth&mode=signin" onClick={() => setMobileMenu(false)}>Employer sign in</a><a href="/?experience=job-seeker-auth&mode=signup" onClick={() => setMobileMenu(false)}>Create free candidate account</a><button className="text-left" onClick={() => {setMobileMenu(false); onPostJob();}}>Post a job</button><PWAInstallButton /></div></div>}
       </header>
 
       <main id="top">
