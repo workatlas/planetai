@@ -177,3 +177,26 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+
+/* Shared workspace surfaces: employer, applicant and moderation areas */
+.planetai-nexora [class*="bg-[#f4f7fb]"],
+.planetai-nexora [class*="bg-slate-50"],
+.planetai-nexora [class*="bg-gray-50"] { background-color: var(--pn-bg) !important; }
+.planetai-nexora [class*="bg-slate-100"],
+.planetai-nexora [class*="bg-gray-100"],
+.planetai-nexora [class*="bg-slate-200"] { background-color: var(--pn-surface) !important; }
+.planetai-nexora [class*="border-slate-100"],
+.planetai-nexora [class*="border-slate-200"],
+.planetai-nexora [class*="border-gray-100"],
+.planetai-nexora [class*="border-gray-200"] { border-color: var(--pn-border) !important; }
+.planetai-nexora [class*="text-slate-900"],
+.planetai-nexora [class*="text-slate-800"],
+.planetai-nexora [class*="text-gray-900"],
+.planetai-nexora [class*="text-gray-800"] { color: #f4f7ff !important; }
+.planetai-nexora [class*="text-slate-700"],
+.planetai-nexora [class*="text-slate-600"],
+.planetai-nexora [class*="text-gray-700"],
+.planetai-nexora [class*="text-gray-600"] { color: #c1cce0 !important; }
+.planetai-nexora [class*="text-slate-500"],
+.planetai-nexora [class*="text-gray-500"] { color: var(--pn-muted) !important; }
