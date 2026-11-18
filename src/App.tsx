@@ -33,7 +33,6 @@ import {
 } from './components/AIToolsView';
 import {AppReadinessView} from './components/AppReadinessView';
 import {AppTab, Header} from './components/Header';
-import {AlertPreferences, JobAlertModal} from './components/JobAlertModal';
 import {
   ApplicationStatus,
   AppliedRecord,
@@ -129,16 +128,7 @@ const STORAGE_KEYS = {
   SAVED: 'planetai_saved_jobs_v1',
   APPLIED: 'planetai_applied_jobs_v1',
   CUSTOM_JOBS: 'planetai_custom_jobs_v1',
-  ALERTS: 'planetai_alerts_v1',
   SKILLS: 'planetai_user_skills_v1',
-};
-
-const DEFAULT_ALERTS: AlertPreferences = {
-  email: '',
-  emailEnabled: true,
-  pushEnabled: false,
-  categories: ['AI Training', 'Coding', 'Audio/Voice', 'Data Annotation', 'Remote'],
-  updatedAt: '',
 };
 
 const PARTNER_SPOTLIGHT_COMPANIES = [
@@ -215,9 +205,6 @@ export default function App() {
   const [appliedRecords, setAppliedRecords] = useState<
     Record<string, AppliedRecord>
   >(() => readStorage<Record<string, AppliedRecord>>(STORAGE_KEYS.APPLIED, {}));
-  const [alertPrefs, setAlertPrefs] = useState<AlertPreferences>(() =>
-    readStorage<AlertPreferences>(STORAGE_KEYS.ALERTS, DEFAULT_ALERTS)
-  );
   const [userSkills, setUserSkills] = useState<string>(() =>
     readStorage<string>(STORAGE_KEYS.SKILLS, '')
   );
@@ -232,7 +219,6 @@ export default function App() {
   const [visibleCount, setVisibleCount] = useState<number>(JOBS_PER_PAGE);
   const [isFiltersBarOpen, setIsFiltersBarOpen] = useState(false);
 
-  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
   const [isEmployerEntryOpen, setIsEmployerEntryOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
@@ -283,17 +269,6 @@ export default function App() {
       // Ignore storage quota errors
     }
   }, [appliedRecords]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.ALERTS,
-        JSON.stringify(alertPrefs)
-      );
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, [alertPrefs]);
 
   useEffect(() => {
     try {
@@ -671,20 +646,6 @@ export default function App() {
     showToast('Removed temporary local preview.');
   };
 
-  const handleSaveAlerts = (prefs: AlertPreferences) => {
-    setAlertPrefs(prefs);
-    showToast('Instant job alerts updated.');
-  };
-
-  const activeAlertsCount =
-    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
-      ? alertPrefs.categories.length
-      : 1;
-
-  const hasActiveAlerts = Boolean(
-    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
-  );
-
   const isDefaultUnfiltered =
     !searchQuery.trim() &&
     selectedCategory === 'All' &&
@@ -813,8 +774,6 @@ export default function App() {
         }
         totalJobCount={allJobs.length}
         savedCount={savedJobs.length}
-        alertCount={activeAlertsCount}
-        onOpenAlerts={() => setIsAlertsOpen(true)}
         onShareApp={handleShareApp}
         copied={copied}
       />
@@ -1587,9 +1546,6 @@ export default function App() {
 
         {activeTab === 'app' && (
           <AppReadinessView
-            onOpenAlerts={() => setIsAlertsOpen(true)}
-            onShareApp={handleShareApp}
-            alertsActive={hasActiveAlerts}
           />
         )}
       </main>
@@ -1621,13 +1577,6 @@ export default function App() {
             >
               Focus Toolkit
             </a>
-            <button
-              type="button"
-              onClick={() => setIsAlertsOpen(true)}
-              className="hover:text-slate-300 transition-colors"
-            >
-              Job Alerts
-            </button>
             <button
               type="button"
               onClick={() => setActiveTab('app')}
@@ -1669,13 +1618,6 @@ export default function App() {
       )}
 
       {/* Modals */}
-      <JobAlertModal
-        isOpen={isAlertsOpen}
-        onClose={() => setIsAlertsOpen(false)}
-        preferences={alertPrefs}
-        onSavePreferences={handleSaveAlerts}
-      />
-
       <JobDetailModal
         job={inspectedJob}
         isSaved={inspectedJob ? savedIds.includes(inspectedJob.id) : false}
