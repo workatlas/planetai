@@ -17,7 +17,7 @@ export const EmployerEntryModal: React.FC<EmployerEntryModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-[75] flex items-end justify-center bg-[#10271f]/65 p-0 backdrop-blur-md sm:items-center sm:p-5"
+      className="planetai-nexora-modal fixed inset-0 z-[75] flex items-end justify-center bg-[#10271f]/65 p-0 backdrop-blur-md sm:items-center sm:p-5"
       role="dialog"
       aria-modal="true"
       aria-labelledby="employer-entry-title"
