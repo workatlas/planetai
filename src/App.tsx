@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
 import PremiumMarketplacePreview from './preview/PremiumMarketplacePreview';
 import AdminDashboardPreview from './preview/AdminDashboardPreview';
 import ToolkitPreview from './preview/ToolkitPreview';
@@ -232,15 +232,47 @@ export default function App() {
 
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastJobsSyncAt, setLastJobsSyncAt] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const refreshInFlightRef = useRef(false);
+
+  const refreshPublishedJobs = useCallback(async (): Promise<JobListing[] | null> => {
+    if (refreshInFlightRef.current) return null;
+    refreshInFlightRef.current = true;
+    setIsRefreshing(true);
+    try {
+      const publishedJobs = await fetchPublishedDatabaseJobs();
+      setDatabaseJobs(publishedJobs);
+      setLastJobsSyncAt(new Date().toISOString());
+      return publishedJobs;
+    } finally {
+      refreshInFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
     let active = true;
-    fetchPublishedDatabaseJobs()
-      .then((jobs) => { if (active) setDatabaseJobs(jobs); })
-      .catch((error) => console.warn('Published PLANETAI listings could not be loaded.', error));
-    return () => { active = false; };
-  }, []);
+    const syncPublishedJobs = async () => {
+      if (!active || document.visibilityState !== 'visible') return;
+      try {
+        await refreshPublishedJobs();
+      } catch (error) {
+        console.warn('Published PLANETAI listings could not be refreshed.', error);
+      }
+    };
+    void syncPublishedJobs();
+    const interval = window.setInterval(syncPublishedJobs, 5 * 60 * 1000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void syncPublishedJobs();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshPublishedJobs]);
 
   useEffect(() => {
     try {
@@ -564,15 +596,15 @@ export default function App() {
   };
 
   const handleRefreshFeed = async () => {
-    setIsRefreshing(true);
     try {
-      const publishedJobs = await fetchPublishedDatabaseJobs();
-      setDatabaseJobs(publishedJobs);
-      showToast(`Feed synced — ${publishedJobs.length + customJobs.length + INITIAL_JOBS.length} live roles ready.`);
+      const publishedJobs = await refreshPublishedJobs();
+      if (!publishedJobs) {
+        showToast('A job-feed refresh is already in progress.');
+        return;
+      }
+      showToast(`Employer listings refreshed — ${publishedJobs.length} published roles checked.`);
     } catch {
       showToast('Feed refresh failed. Showing the latest available listings.');
-    } finally {
-      setIsRefreshing(false);
     }
   };
 
@@ -701,6 +733,9 @@ export default function App() {
     return (
       <PremiumMarketplacePreview
         jobs={marketplaceJobs}
+        onRefreshJobs={handleRefreshFeed}
+        isRefreshing={isRefreshing}
+        lastSyncedAt={lastJobsSyncAt}
         showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
         careerToolsContent={
           <div className="space-y-16">
