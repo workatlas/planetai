@@ -139,8 +139,8 @@ Deno.serve(async (req) => {
           provider_event_id: eventId,
           event_type: eventType,
           event_status: "received",
-          amount_minor: 4900,
-          currency: "USD",
+          amount_minor: Math.round(Number(payment.amount) * 100),
+          currency: payment.currency,
           payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId },
         })
         .select("id")
@@ -163,6 +163,22 @@ Deno.serve(async (req) => {
         .update({ event_status: "received", payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId } })
         .eq("id", eventRowId);
       if (retryEventError) throw new Error("Webhook retry could not be recorded.");
+    }
+
+    if (["PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED", "PAYMENT.CAPTURE.DENIED"].includes(eventType)) {
+      // Provider-side reversals are recorded for manual reconciliation. A
+      // partial refund must never silently cancel a whole listing or be
+      // represented as a full refund in the payment ledger.
+      await admin.from("employer_billing_events")
+        .update({
+          event_status: "failed",
+          payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, manual_reconciliation_required: true },
+        })
+        .eq("id", eventRowId);
+      console.error("PayPal refund/reversal/denial requires administrator reconciliation.", {
+        eventId, eventType, orderId: captureReference.orderId, captureId: captureReference.captureId,
+      });
+      return json({ received: true, reconciliation_required: true });
     }
 
     const expectedAmount = priceFor(submission.package_tier);
