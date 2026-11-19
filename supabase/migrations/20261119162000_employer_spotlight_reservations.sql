@@ -250,3 +250,53 @@ grant usage on schema private to service_role;
 grant execute on function private.next_employer_spotlight_slot() to service_role;
 grant execute on function private.reserve_next_employer_spotlight_slot(uuid, uuid, uuid) to service_role;
 grant execute on function private.process_employer_spotlight_queue() to service_role;
+
+
+-- PostgREST exposes the public schema to service-role clients. These narrow
+-- wrappers keep the implementation private while allowing trusted Edge
+-- Functions and the scheduled worker to invoke it through the supported API.
+create or replace function public.next_employer_spotlight_slot()
+returns date
+language sql
+security definer
+set search_path = ''
+as $$
+  select private.next_employer_spotlight_slot();
+$$;
+
+create or replace function public.reserve_next_employer_spotlight_slot(
+  p_submission_id uuid,
+  p_employer_account_id uuid,
+  p_user_id uuid
+)
+returns table (
+  id uuid,
+  slot_start date,
+  slot_end date,
+  status text,
+  hold_expires_at timestamptz
+)
+language sql
+security definer
+set search_path = ''
+as $$
+  select * from private.reserve_next_employer_spotlight_slot(
+    p_submission_id, p_employer_account_id, p_user_id
+  );
+$$;
+
+create or replace function public.process_employer_spotlight_queue()
+returns integer
+language sql
+security definer
+set search_path = ''
+as $$
+  select private.process_employer_spotlight_queue();
+$$;
+
+revoke all on function public.next_employer_spotlight_slot() from public, anon, authenticated;
+revoke all on function public.reserve_next_employer_spotlight_slot(uuid, uuid, uuid) from public, anon, authenticated;
+revoke all on function public.process_employer_spotlight_queue() from public, anon, authenticated;
+grant execute on function public.next_employer_spotlight_slot() to service_role;
+grant execute on function public.reserve_next_employer_spotlight_slot(uuid, uuid, uuid) to service_role;
+grant execute on function public.process_employer_spotlight_queue() to service_role;
