@@ -201,7 +201,7 @@ export default function PremiumMarketplacePreview({
                   </div>
                 </section>
                 <section>
-                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">More</p>
+                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">App installation</p>
                   <div className="px-2">
                     <PWAInstallButton />
                   </div>
