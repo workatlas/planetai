@@ -112,10 +112,17 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       });
       if (jobError) {
-        console.error("Verified payment recorded but listing publication failed", jobError);
-        return false;
+        // A concurrent recovery request may have inserted the unique listing
+        // after our initial lookup. Treat that exact submission as recovered.
+        const { data: recoveredJob, error: recoveryError } = await admin.from("jobs")
+          .select("id").eq("submission_id", submission.id).maybeSingle();
+        if (recoveryError || !recoveredJob) {
+          console.error("Verified payment recorded but listing publication failed", jobError);
+          return false;
+        }
+      } else {
+        createdJob = true;
       }
-      createdJob = true;
     }
 
     const { error: statusError } = await admin.from("job_submissions")
@@ -142,9 +149,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       return json({ error: "This listing must pass moderation before payment can begin." }, 409);
     }
     const origin = req.headers.get("Origin") || "";
-    const allowedOrigin = origin === "https://planetai-global.netlify.app" ||
-      /^https:\/\/deploy-preview-\d+--planetai-global\.netlify\.app$/.test(origin);
-    if (!allowedOrigin) return json({ error: "Checkout must be started from an authorized PLANETAI site." }, 400);
+    if (!origin || !isAllowedOrigin(req)) {
+      return json({ error: "Checkout must be started from an authorized PLANETAI site." }, 400);
+    }
 
     const returnUrl = `${origin}/?experience=employer-payments&payment=success&submission_id=${encodeURIComponent(submission.id)}`;
     const cancelUrl = `${origin}/?experience=employer-payments&payment=cancelled&submission_id=${encodeURIComponent(submission.id)}`;
@@ -159,6 +166,34 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const token = await paypalToken();
     if (existing?.provider_order_id) {
       const savedOrder = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(existing.provider_order_id)}`, token, "GET");
+      if (savedOrder.status === "COMPLETED") {
+        const unit = savedOrder.purchase_units?.[0];
+        const captured = unit?.payments?.captures?.find((item: { status: string }) => item.status === "COMPLETED");
+        if (unit?.custom_id !== submission.id || captured?.status !== "COMPLETED" ||
+            captured?.amount?.currency_code !== "USD" ||
+            Number(captured?.amount?.value).toFixed(2) !== amount || !captured?.id) {
+          console.error("Completed PayPal order did not match its pending listing", { orderId: existing.provider_order_id });
+          return json({ error: "PayPal reports a completed order, but its details need administrator reconciliation. No additional payment will be requested." }, 409);
+        }
+        const { data: recovered, error: recoveryError } = await admin.from("job_payments")
+          .update({ provider_capture_id: captured.id, status: "completed", confirmed_at: new Date().toISOString() })
+          .eq("id", existing.id).eq("status", "pending").select("id").maybeSingle();
+        if (recoveryError) {
+          console.error("Completed PayPal order ledger recovery failed", recoveryError);
+          return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
+        }
+        if (!recovered) {
+          const { data: currentPayment, error: currentPaymentError } = await admin.from("job_payments")
+            .select("status, provider_capture_id").eq("id", existing.id).maybeSingle();
+          if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== captured.id) {
+            return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
+          }
+        }
+        const published = await ensurePublished(captured.id, existing.provider_order_id);
+        return published
+          ? json({ paid: true, published: true, already_completed: true, capture_id: captured.id })
+          : json({ paid: true, publication_pending: true, already_completed: true, capture_id: captured.id, error: "Payment is verified. Publication still needs attention." }, 202);
+      }
       const approveUrl = savedOrder.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
       if (!approveUrl) return json({ error: "The existing PayPal order is no longer available. Contact support before creating another payment." }, 409);
       return json({ order_id: existing.provider_order_id, amount, currency: "USD", approve_url: approveUrl });
@@ -229,13 +264,25 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     }
 
     const token = await paypalToken();
-    const capture = await paypalRequest(
-      `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
+    // Re-read PayPal first: a previous capture may have succeeded even if our
+    // browser, function, or database connection failed before recording it.
+    let capture = await paypalRequest(
+      `/v2/checkout/orders/${encodeURIComponent(orderId)}`,
       token,
-      "POST",
-      {},
-      `planetai-capture-${orderId}`,
+      "GET",
     );
+    if (capture.status !== "COMPLETED") {
+      if (capture.status !== "APPROVED") {
+        return json({ error: "This PayPal order has not been approved yet. Return to PayPal and complete approval before retrying." }, 409);
+      }
+      capture = await paypalRequest(
+        `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
+        token,
+        "POST",
+        {},
+        `planetai-capture-${orderId}`,
+      );
+    }
     const unit = capture.purchase_units?.[0];
     const captured = unit?.payments?.captures?.[0];
     if (capture.status !== "COMPLETED" || unit?.custom_id !== submission.id ||
@@ -251,8 +298,18 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       .eq("status", "pending")
       .select("id")
       .maybeSingle();
-    if (completeError || !completed) {
-      return json({ error: "The payment was captured but its ledger confirmation needs administrator attention. Do not retry payment." }, 500);
+    if (completeError) {
+      console.error("PayPal capture succeeded but payment ledger update failed", completeError);
+      return json({ error: "PayPal confirms payment, but its ledger confirmation needs administrator attention. Do not pay again." }, 202);
+    }
+    if (!completed) {
+      // Another request may have won the same capture race. Accept only the
+      // exact same completed capture; never overwrite a different transaction.
+      const { data: currentPayment, error: currentPaymentError } = await admin.from("job_payments")
+        .select("status, provider_capture_id").eq("id", payment.id).maybeSingle();
+      if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== captured.id) {
+        return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
+      }
     }
 
     const published = await ensurePublished(captured.id, orderId);
