@@ -43,12 +43,13 @@ const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
   const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
   const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
-    <div className="planetai-company-logo-tile flex h-[68px] w-[104px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-[#dce5dc] px-2 py-1.5 shadow-sm sm:h-[72px] sm:w-[116px]">
+    <div className={`planetai-company-logo-tile flex h-[68px] w-[104px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-[#dce5dc] px-2 py-1.5 shadow-sm sm:h-[72px] sm:w-[116px] ${job.marqueeSpotlight ? 'border-[#c79b50] ring-1 ring-[#c79b50]/50' : ''}`}>
       {logoUrl && !failed ? (
         <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
       ) : (
         <span aria-hidden="true" className="grid h-7 w-7 place-items-center rounded-lg bg-[#edf4ee] text-xs font-extrabold text-[#285c4b] sm:h-8 sm:w-8">{initials || 'CO'}</span>
       )}
+      {job.marqueeSpotlight && <span className="text-[7px] font-extrabold uppercase tracking-[.16em] text-[#a87928]">Spotlight</span>}
       <span className="max-w-full truncate text-[9px] font-extrabold tracking-[.01em] text-[#40584a] sm:text-[10px]">{job.company}</span>
     </div>
   );
@@ -100,7 +101,10 @@ export default function PremiumMarketplacePreview({
   const spotlight = filtered.find(job => job.featured) || filtered[0] || jobs[0] || null;
   const marqueeCompanies = useMemo(() => {
     const seen = new Set<string>();
-    return jobs.filter(job => {
+    const priorityOrderedJobs = [...jobs].sort(
+      (a, b) => Number(Boolean(b.marqueeSpotlight)) - Number(Boolean(a.marqueeSpotlight))
+    );
+    return priorityOrderedJobs.filter(job => {
       const key = job.company.trim().toLowerCase();
       if (!key || seen.has(key)) return false;
       seen.add(key);
