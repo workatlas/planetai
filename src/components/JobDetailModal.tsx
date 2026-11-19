@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import {
   formatPayRate,
+  hasValidPayRange,
   JobListing,
   resolveApplyUrl,
 } from '../data/jobs';
@@ -124,6 +125,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const intel = getAssessmentAndPayoutInfo(job);
   const skillMatch = computeSkillMatch(job, userSkills);
 
+  const hasDisclosedPay = hasValidPayRange(job.payMinUsd, job.payMaxUsd);
   const weeklyMinUsd = Math.round(job.payMinUsd * weeklyHours);
   const weeklyMaxUsd = Math.round(job.payMaxUsd * weeklyHours);
   const monthlyMinUsd = Math.round(weeklyMinUsd * 4.33);
@@ -351,7 +353,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         )}
 
         {/* Income estimates are shown only for employer-submitted listings with stated pay. */}
-        {!isCuratedGuide && job.payUnit === 'hr' && (
+        {!isCuratedGuide && hasDisclosedPay && job.payUnit === 'hr' && (
           <div className="mt-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#40534a]">

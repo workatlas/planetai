@@ -187,22 +187,45 @@ export function resolveApplyUrl(company: string, fallbackUrl: string): string {
   return fallbackUrl;
 }
 
+export function hasValidPayRange(
+  minUsd: number,
+  maxUsd: number
+): boolean {
+  return (
+    Number.isFinite(minUsd) &&
+    Number.isFinite(maxUsd) &&
+    minUsd > 0 &&
+    maxUsd > 0 &&
+    maxUsd >= minUsd
+  );
+}
+
 export function formatPayRate(
   minUsd: number,
   maxUsd: number,
   unit: PayUnit
 ): string {
+  if (!hasValidPayRange(minUsd, maxUsd)) {
+    return 'Salary not disclosed';
+  }
+
   const suffix = unit === 'hr' ? '/hr' : unit === 'yr' ? '/yr' : '/task';
 
   if (unit === 'yr') {
-    const minK = Math.round(minUsd / 1000);
-    const maxK = Math.round(maxUsd / 1000);
-    return minK === maxK ? `$${minK}k${suffix}` : `$${minK}k-$${maxK}k${suffix}`;
+    const formatAnnual = (amount: number) =>
+      amount >= 1000
+        ? `${Math.round(amount / 1000)}k`
+        : `${Math.round(amount).toLocaleString('en-US')}`;
+    const minLabel = formatAnnual(minUsd);
+    const maxLabel = formatAnnual(maxUsd);
+    return minUsd === maxUsd
+      ? `${minLabel}${suffix}`
+      : `${minLabel}-${maxLabel}${suffix}`;
   }
 
   return minUsd === maxUsd
-    ? `$${minUsd}${suffix}`
-    : `$${minUsd}-$${maxUsd}${suffix}`;
+    ? `${minUsd.toLocaleString('en-US')}${suffix}`
+    : `${minUsd.toLocaleString('en-US')}-${maxUsd.toLocaleString('en-US')}${suffix}`;
 }
 
 const BASE_INITIAL_JOBS: JobListing[] = [
