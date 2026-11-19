@@ -5,12 +5,16 @@ import { ArrowLeft, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, LoaderCircle, 
 import {PlanetAILogo} from '../components/PlanetAILogo';
 import { supabase } from '../lib/supabase';
 
-type Mode = 'signin' | 'signup';
+type Mode = 'signin' | 'signup' | 'forgot' | 'reset';
 
 export default function EmployerAuth() {
-  const [mode, setMode] = useState<Mode>(() => new URLSearchParams(window.location.search).get('mode') === 'signin' ? 'signin' : 'signup');
+  const [mode, setMode] = useState<Mode>(() => {
+    const requestedMode = new URLSearchParams(window.location.search).get('mode');
+    return requestedMode === 'signin' || requestedMode === 'reset' ? requestedMode : 'signup';
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [company, setCompany] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -35,7 +39,7 @@ export default function EmployerAuth() {
   }, []);
 
   useEffect(() => {
-    if (!session) {
+    if (!session || mode === 'reset') {
       setWorkspaceName('');
       return;
     }
@@ -62,7 +66,7 @@ export default function EmployerAuth() {
     }
     loadWorkspace();
     return () => { active = false; };
-  }, [session]);
+  }, [session, mode]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,7 +74,31 @@ export default function EmployerAuth() {
     setError('');
     setMessage('');
     try {
+      if (mode === 'reset') {
+        if (password.length < 8) throw new Error('Use at least 8 characters for your new password.');
+        if (password !== confirmPassword) throw new Error('Your passwords do not match.');
+        const { error: updateError } = await supabase.auth.updateUser({ password });
+        if (updateError) throw updateError;
+        const { error: signOutError } = await supabase.auth.signOut();
+        if (signOutError) throw signOutError;
+        setSession(null);
+        setPassword('');
+        setConfirmPassword('');
+        setMode('signin');
+        setMessage('Your password has been updated. Sign in with your new password to continue.');
+        return;
+      }
+      if (mode === 'forgot') {
+        const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+          redirectTo: window.location.origin + '/?experience=employer-auth&mode=reset',
+        });
+        if (resetError) throw resetError;
+        setMessage('If an account exists for that email, a secure password reset link is on its way. Please check your inbox and spam folder.');
+        return;
+      }
       if (mode === 'signup') {
+        if (password.length < 8) throw new Error('Use at least 8 characters for your password.');
+        if (password !== confirmPassword) throw new Error('Your passwords do not match.');
         const { data, error: authError } = await supabase.auth.signUp({
           email: email.trim(),
           password,
@@ -138,7 +166,7 @@ export default function EmployerAuth() {
         </section>
 
         <section className="mx-auto w-full max-w-md rounded-3xl border border-[#e2e8e1] bg-white p-6 shadow-[0_24px_80px_rgba(28,52,84,.08)] sm:p-8">
-          {session ? (
+          {session && mode !== 'reset' ? (
             <>
               <span className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-700"><CheckCircle2 size={23}/></span>
               <p className="mt-6 text-[10px] font-bold uppercase tracking-[.16em] text-[#47745c]">Authenticated employer</p>
@@ -154,16 +182,19 @@ export default function EmployerAuth() {
             </>
           ) : (
             <>
-              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#47745c]">{mode === 'signup' ? 'Employer registration' : 'Employer sign in'}</p>
-              <h2 className="mt-2 text-2xl font-semibold tracking-tight">{mode === 'signup' ? 'Create your account' : 'Welcome back'}</h2>
-              <p className="mt-2 text-xs leading-6 text-[#8b978e]">{mode === 'signup' ? 'Start with a secure account. We will create your private company workspace after email verification.' : 'Sign in to continue to your employer workspace.'}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.16em] text-[#47745c]">{mode === 'signup' ? 'Employer registration' : mode === 'signin' ? 'Employer sign in' : mode === 'forgot' ? 'Account recovery' : 'Choose a new password'}</p>
+              <h2 className="mt-2 text-2xl font-semibold tracking-tight">{mode === 'signup' ? 'Create your account' : mode === 'signin' ? 'Welcome back' : mode === 'forgot' ? 'Reset your password' : 'Set a new password'}</h2>
+              <p className="mt-2 text-xs leading-6 text-[#8b978e]">{mode === 'signup' ? 'Start with a secure account. We will create your private company workspace after email verification.' : mode === 'signin' ? 'Sign in to continue to your employer workspace.' : mode === 'forgot' ? 'Enter your work email and we will send a secure reset link if an account is registered.' : 'Choose a new password for your employer account.'}</p>
               <form onSubmit={submit} className="mt-7 space-y-4">
                 {mode === 'signup' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65736b]">Company name</span><input value={company} onChange={e=>setCompany(e.target.value)} required minLength={2} maxLength={100} placeholder="Your company" className="w-full rounded-xl border border-[#d7e0d7] bg-white px-4 py-3 text-xs outline-none transition focus:border-[#54806b] focus:ring-4 focus:ring-[#54806b]/10"/></label>}
                 <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65736b]">Work email</span><span className="relative block"><Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa49d]" size={15}/><input type="email" autoComplete="email" value={email} onChange={e=>setEmail(e.target.value)} required maxLength={254} placeholder="you@company.com" className="w-full rounded-xl border border-[#d7e0d7] bg-white py-3 pl-11 pr-4 text-xs outline-none transition focus:border-[#54806b] focus:ring-4 focus:ring-[#54806b]/10"/></span></label>
-                <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65736b]">Password</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa49d]" size={15}/><input type={showPassword?'text':'password'} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} maxLength={72} placeholder="At least 8 characters" className="w-full rounded-xl border border-[#d7e0d7] bg-white py-3 pl-11 pr-12 text-xs outline-none transition focus:border-[#54806b] focus:ring-4 focus:ring-[#54806b]/10"/><button type="button" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?'Hide password':'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8b978e]">{showPassword?<EyeOff size={15}/>:<Eye size={15}/>}</button></span></label>
-                <button type="submit" disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#183c32] px-4 py-3.5 text-xs font-bold text-white transition hover:bg-[#285c4b] disabled:cursor-not-allowed disabled:opacity-60">{busy&&<LoaderCircle className="animate-spin" size={15}/>} {busy?'Please wait…':mode==='signup'?'Create employer account':'Sign in securely'}</button>
+                {mode !== 'forgot' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65736b]">{mode === 'reset' ? 'New password' : 'Password'}</span><span className="relative block"><LockKeyhole className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9aa49d]" size={15}/><input type={showPassword?'text':'password'} autoComplete={mode==='signup'?'new-password':'current-password'} value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} maxLength={72} placeholder="At least 8 characters" className="w-full rounded-xl border border-[#d7e0d7] bg-white py-3 pl-11 pr-12 text-xs outline-none transition focus:border-[#54806b] focus:ring-4 focus:ring-[#54806b]/10"/><button type="button" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?'Hide password':'Show password'} className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-[#8b978e]">{showPassword?<EyeOff size={15}/>:<Eye size={15}/>}</button></span></label>}
+                {mode === 'reset' && <label className="block"><span className="mb-2 block text-[10px] font-bold text-[#65736b]">Confirm new password</span><input type="password" autoComplete="new-password" value={confirmPassword} onChange={e=>setConfirmPassword(e.target.value)} required minLength={8} maxLength={72} placeholder="Re-enter your new password" className="w-full rounded-xl border border-[#d7e0d7] bg-white px-4 py-3 text-xs outline-none transition focus:border-[#54806b] focus:ring-4 focus:ring-[#54806b]/10"/>{confirmPassword && password !== confirmPassword && <span className="mt-2 block text-[10px] text-rose-600">Passwords do not match yet.</span>}</label>}
+                {mode === 'signin' && <div className="-mt-1 text-right"><button type="button" onClick={()=>{setMode('forgot');setError('');setMessage('')}} className="text-[11px] font-semibold text-[#47745c] hover:underline">Forgot password?</button></div>}
+                <button type="submit" disabled={busy || ((mode === 'signup' || mode === 'reset') && password !== confirmPassword)} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#183c32] px-4 py-3.5 text-xs font-bold text-white transition hover:bg-[#285c4b] disabled:cursor-not-allowed disabled:opacity-60">{busy&&<LoaderCircle className="animate-spin" size={15}/>} {busy?'Please wait…':mode==='signup'?'Create employer account':mode==='signin'?'Sign in securely':mode==='forgot'?'Send password reset link':'Update password securely'}</button>
               </form>
-              <p className="mt-6 text-center text-xs text-[#8b978e]">{mode==='signup'?'Already have an account?':'New to PLANETAI?'} <button onClick={()=>{setMode(mode==='signup'?'signin':'signup');setError('');setMessage('')}} className="font-bold text-[#47745c] hover:underline">{mode==='signup'?'Sign in':'Create an account'}</button></p>
+              {mode !== 'reset' && <p className="mt-6 text-center text-xs text-[#8b978e]">{mode==='signup'?'Already have an account?':mode==='signin'?'New to PLANETAI?': 'Remembered your password?'} <button onClick={()=>{setMode(mode==='signup'?'signin':'signup');setError('');setMessage('')}} className="font-bold text-[#47745c] hover:underline">{mode==='signup'?'Sign in':mode==='signin'?'Create an account':'Back to sign in'}</button></p>}
+              {mode === 'forgot' && <p className="mt-3 text-center"><button type="button" onClick={()=>{setMode('signup');setError('');setMessage('')}} className="text-[11px] font-semibold text-[#47745c] hover:underline">Create an employer account</button></p>}
             </>
           )}
           {error&&<p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs leading-5 text-rose-700">{error}</p>}
