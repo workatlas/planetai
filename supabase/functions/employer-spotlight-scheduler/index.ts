@@ -38,24 +38,27 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (limited === null) return json({ error: "Scheduling protection is temporarily unavailable. Please try again shortly." }, 503);
   if (!limited) return json({ error: "Too many scheduling requests. Please wait before trying again." }, 429);
 
-  const { data: membership, error: membershipError } = await admin
-    .from("employer_members")
-    .select("employer_account_id, member_role")
-    .eq("user_id", userId)
-    .in("member_role", ["owner", "admin"])
-    .limit(1)
-    .maybeSingle();
-  if (membershipError || !membership) {
-    return json({ error: "Employer owner or administrator access is required." }, 403);
-  }
-
   const { data: submission, error: submissionError } = await admin
     .from("job_submissions")
     .select("id, employer_account_id, package_tier, status")
     .eq("id", submissionId)
-    .eq("employer_account_id", membership.employer_account_id)
     .maybeSingle();
-  if (submissionError || !submission) return json({ error: "Listing not found in your employer workspace." }, 404);
+  if (submissionError || !submission?.employer_account_id) {
+    return json({ error: "Listing not found in your employer workspace." }, 404);
+  }
+
+  // Match membership to this listing's employer account. A user may belong
+  // to multiple companies; selecting an arbitrary first membership is unsafe.
+  const { data: membership, error: membershipError } = await admin
+    .from("employer_members")
+    .select("employer_account_id, member_role")
+    .eq("employer_account_id", submission.employer_account_id)
+    .eq("user_id", userId)
+    .in("member_role", ["owner", "admin"])
+    .maybeSingle();
+  if (membershipError || !membership) {
+    return json({ error: "Employer owner or administrator access is required." }, 403);
+  }
   if (submission.package_tier !== "spotlight" || submission.status !== "approved_awaiting_payment") {
     return json({ error: "Only an approved Spotlight listing can reserve a placement." }, 409);
   }
@@ -83,8 +86,8 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     payment_required: true,
     amount: "149.00",
     currency: "USD",
-    checkout_enabled: false,
-    message: "Your 15-minute slot hold is created. Checkout remains disabled until payment reconciliation and the scheduled activation worker are enabled.",
+    checkout_enabled: true,
+    message: "Your 15-minute slot hold is ready for secure PayPal checkout.",
   }, 202);
 });
 
