@@ -43,7 +43,9 @@ export function getPayPalCaptureOrderId(event: unknown): { orderId: string; capt
   const orderId = value.resource?.supplementary_data?.related_ids?.order_id;
   const resourceId = value.resource?.id;
   const relatedCaptureId = value.resource?.supplementary_data?.related_ids?.capture_id;
-  const captureId = value.event_type === "PAYMENT.CAPTURE.COMPLETED" ? resourceId : relatedCaptureId;
+  const captureId = value.event_type === "PAYMENT.CAPTURE.COMPLETED" || value.event_type === "PAYMENT.CAPTURE.DENIED"
+    ? resourceId
+    : relatedCaptureId;
   if (typeof orderId !== "string" || !orderId.trim() ||
       typeof captureId !== "string" || !captureId.trim() ||
       typeof resourceId !== "string" || !resourceId.trim()) return null;
