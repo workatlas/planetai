@@ -8,6 +8,11 @@ export default defineConfig(() => {
   const isNetlifyDeployPreview = process.env.CONTEXT === 'deploy-preview';
 
   return {
+    // Expose the Netlify build context so the browser client can fail closed
+    // when sandbox Deploy Preview credentials are absent.
+    define: {
+      'import.meta.env.VITE_NETLIFY_CONTEXT': JSON.stringify(process.env.CONTEXT || ''),
+    },
     plugins: [
       react(),
       tailwindcss(),
