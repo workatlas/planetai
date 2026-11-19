@@ -142,7 +142,31 @@ Do not call the employer/payment journey launch-ready until:
 
 - Source implementation and CI are not a substitute for these live tests.
 - The branch contains the payment recovery and webhook implementation, but those latest Edge Function changes have not been deployed.
-- The exclusive Spotlight reservation migration and authenticated scheduler Edge Function are branch-only; the reservation-to-PayPal checkout association, scheduled worker, and employer-facing booking UI remain unimplemented. The $149 tier is disabled.
+- The exclusive Spotlight reservation migration, authenticated scheduler, employer booking interface, PayPal order association, capture confirmation RPC, and database Cron activation job are implemented on the feature branch only. They have not been applied or deployed; the $149 tier remains unavailable in production until the full Sandbox plan passes.
 - The project has no test submissions or payment ledger records yet.
 - Supabase Auth dashboard settings have not been independently verified or changed through the available project connection.
 - PayPal remains Sandbox. No real charge, production deployment, merge, paid provider, or domain purchase is authorized.
+
+
+## 9. Exclusive Spotlight reservation and payment scenarios
+
+The feature branch now connects the employer booking flow to a 15-minute reservation hold and a $149 USD PayPal order. A verified capture is associated with the exact reservation, and a database RPC changes the reservation to scheduled only while the hold is still valid. The listing is published after verified payment but remains unfeatured until its reserved start date. A database Cron job invokes the queue processor every minute to activate the exclusive placement and expire it after 30 days.
+
+| ID | Scenario | Expected result |
+|---|---|---|
+| S13 | Approved Spotlight employer opens booking | Next available 30-day start date is returned |
+| S14 | Employer reserves next slot | One 15-minute hold is created for the correct employer and submission |
+| S15 | Employer alters reservation ID or listing ID | Checkout is rejected; no PayPal order or payment row is created |
+| S16 | Employer alters amount or currency | Server enforces exactly $149.00 USD |
+| S17 | Employer retries checkout for the same valid hold | Existing PayPal order is reused; no duplicate charge |
+| S18 | PayPal capture is verified before hold expiry | Payment ledger and reservation are linked; reservation becomes scheduled |
+| S19 | Capture arrives after hold expiry | Payment is not assigned a slot or published as Spotlight; manual reconciliation required |
+| S20 | Duplicate capture request or signed webhook | Same reservation remains scheduled; no duplicate slot or placement |
+| S21 | Two employers reserve concurrently | Database exclusion constraint permits no overlapping live reservations |
+| S22 | Scheduled start date arrives | Cron processor activates the reservation and sets the job Spotlight flag |
+| S23 | Scheduled placement reaches day 30 | Cron processor completes the reservation and clears the active job flag |
+| S24 | Scheduler runs repeatedly for same reservation | Activation and expiry remain idempotent |
+| S25 | User belongs to multiple employer accounts | Scheduler authorizes only membership in the account that owns the submitted listing |
+| S26 | Refund, reversal, denial or dispute occurs | Event is flagged for manual reconciliation; placement is not silently reallocated |
+
+Do not mark S13–S26 passed until executed against a dedicated test environment with the migration applied and PayPal Sandbox configured. Confirm Cron job creation and inspect cron.job_run_details for successful processor runs.
