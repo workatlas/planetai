@@ -209,18 +209,24 @@ export default function PremiumMarketplacePreview({
         </div>
       </header>
 
-      <div role="region" aria-label="Companies with opportunities on PLANETAI" className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]">
-        <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
-        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 items-center gap-2 px-5 py-2.5 sm:px-8 sm:py-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-5">
-          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.18em] text-[#a9c9b4] lg:block">Companies to explore</span>
-          <div className="marquee-container min-w-0 w-full overflow-hidden">
-            <div className="marquee-track items-center gap-3 sm:gap-4">
-              <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
-              <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
+      <section className="mx-auto my-4 w-full max-w-[1320px] px-5 sm:px-8">
+        <div
+          role="region"
+          aria-label="Companies with opportunities on PLANETAI"
+          className="overflow-hidden rounded-2xl border border-[#9b8cff]/35 bg-gradient-to-r from-[#5636b8] via-[#5c45c9] to-[#2563c7] text-white shadow-[0_12px_32px_rgba(54,45,130,.16)]"
+        >
+          <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
+          <div className="grid grid-cols-1 items-center gap-2 px-6 py-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5">
+            <span className="shrink-0 text-[9px] font-bold uppercase tracking-[.18em] text-white/90">Companies to explore</span>
+            <div className="marquee-container marquee-fade-mask min-w-0 w-full overflow-hidden">
+              <div className="marquee-track items-center gap-3 sm:gap-4">
+                <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
+                <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
       <main id="top">
         <section className="relative overflow-hidden bg-[#e9eee8]">
           <div className="pointer-events-none absolute -right-28 -top-40 h-[560px] w-[560px] rounded-full border border-[#d3ddd3] opacity-70"/>
