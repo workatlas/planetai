@@ -2,6 +2,7 @@ import { withSupabase } from "npm:@supabase/server@1";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
+import { verifyCompletedPayPalOrder } from "../_shared/paypal-validation.ts";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
@@ -179,17 +180,13 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (existing?.provider_order_id) {
       const savedOrder = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(existing.provider_order_id)}`, token, "GET");
       if (savedOrder.status === "COMPLETED") {
-        const unit = savedOrder.purchase_units?.[0];
-        const captured = unit?.payments?.captures?.find((item: { status: string }) => item.status === "COMPLETED");
-        if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" ||
-            unit?.custom_id !== submission.id || captured?.status !== "COMPLETED" ||
-            captured?.amount?.currency_code !== "USD" ||
-            Number(captured?.amount?.value).toFixed(2) !== amount || !captured?.id) {
+        const verifiedCapture = verifyCompletedPayPalOrder(savedOrder, submission.id, amount);
+        if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" || !verifiedCapture) {
           console.error("Completed PayPal order did not match its pending listing", { orderId: existing.provider_order_id });
           return json({ error: "PayPal reports a completed order, but its details need administrator reconciliation. No additional payment will be requested." }, 409);
         }
         const { data: recovered, error: recoveryError } = await admin.from("job_payments")
-          .update({ provider_capture_id: captured.id, status: "completed", confirmed_at: new Date().toISOString() })
+          .update({ provider_capture_id: verifiedCapture.id, status: "completed", confirmed_at: new Date().toISOString() })
           .eq("id", existing.id).eq("status", "pending").select("id").maybeSingle();
         if (recoveryError) {
           console.error("Completed PayPal order ledger recovery failed", recoveryError);
@@ -198,14 +195,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         if (!recovered) {
           const { data: currentPayment, error: currentPaymentError } = await admin.from("job_payments")
             .select("status, provider_capture_id").eq("id", existing.id).maybeSingle();
-          if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== captured.id) {
+          if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== verifiedCapture.id) {
             return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
           }
         }
-        const published = await ensurePublished(captured.id, existing.provider_order_id);
+        const published = await ensurePublished(verifiedCapture.id, existing.provider_order_id);
         return published
-          ? json({ paid: true, published: true, already_completed: true, capture_id: captured.id })
-          : json({ paid: true, publication_pending: true, already_completed: true, capture_id: captured.id, error: "Payment is verified. Publication still needs attention." }, 202);
+          ? json({ paid: true, published: true, already_completed: true, capture_id: verifiedCapture.id })
+          : json({ paid: true, publication_pending: true, already_completed: true, capture_id: verifiedCapture.id, error: "Payment is verified. Publication still needs attention." }, 202);
       }
       const approveUrl = savedOrder.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
       if (!approveUrl) return json({ error: "The existing PayPal order is no longer available. Contact support before creating another payment." }, 409);
@@ -299,17 +296,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         `planetai-capture-${orderId}`,
       );
     }
-    const unit = capture.purchase_units?.[0];
-    const captured = unit?.payments?.captures?.[0];
-    if (capture.status !== "COMPLETED" || unit?.custom_id !== submission.id ||
-        captured?.status !== "COMPLETED" || captured?.amount?.currency_code !== "USD" ||
-        Number(captured?.amount?.value).toFixed(2) !== amount || !captured?.id) {
-      console.error("PayPal capture verification mismatch", { orderId, status: capture.status, captureStatus: captured?.status });
+    const verifiedCapture = verifyCompletedPayPalOrder(capture, submission.id, amount);
+    if (!verifiedCapture) {
+      console.error("PayPal capture verification mismatch", { orderId, status: capture.status });
       return json({ error: "PayPal did not return a verified payment matching this listing. No promotion was applied." }, 409);
     }
 
     const { data: completed, error: completeError } = await admin.from("job_payments")
-      .update({ provider_capture_id: captured.id, status: "completed", confirmed_at: new Date().toISOString() })
+      .update({ provider_capture_id: verifiedCapture.id, status: "completed", confirmed_at: new Date().toISOString() })
       .eq("id", payment.id)
       .eq("status", "pending")
       .select("id")
@@ -323,14 +317,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       // exact same completed capture; never overwrite a different transaction.
       const { data: currentPayment, error: currentPaymentError } = await admin.from("job_payments")
         .select("status, provider_capture_id").eq("id", payment.id).maybeSingle();
-      if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== captured.id) {
+      if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== verifiedCapture.id) {
         return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
       }
     }
 
-    const published = await ensurePublished(captured.id, orderId);
+    const published = await ensurePublished(verifiedCapture.id, orderId);
     if (!published) return json({ paid: true, publication_pending: true, error: "Payment is verified. Publication needs administrator attention." }, 202);
-    return json({ paid: true, published: true, capture_id: captured.id });
+    return json({ paid: true, published: true, capture_id: verifiedCapture.id });
   }
   return json({ error: "Unsupported PayPal action." }, 400);
 });
