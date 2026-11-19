@@ -13,7 +13,7 @@ create table if not exists public.employer_spotlight_reservations (
   slot_start date not null,
   slot_end date not null,
   status text not null default 'payment_pending'
-    check (status in ('payment_pending', 'scheduled', 'active', 'completed', 'cancelled', 'expired')),
+    check (status in ('payment_pending', 'scheduled', 'active', 'payment_review', 'completed', 'cancelled', 'expired')),
   hold_expires_at timestamptz,
   payment_id uuid references public.job_payments(id) on delete restrict,
   amount numeric(10,2) not null default 149.00 check (amount = 149.00),
@@ -33,14 +33,14 @@ create index if not exists employer_spotlight_reservations_submission_idx
   on public.employer_spotlight_reservations(submission_id, created_at desc);
 create unique index if not exists employer_spotlight_one_live_reservation_per_submission
   on public.employer_spotlight_reservations(submission_id)
-  where status in ('payment_pending', 'scheduled', 'active');
+  where status in ('payment_pending', 'scheduled', 'active', 'payment_review');
 
 -- A GiST exclusion constraint is the final database-level guard against
 -- overlapping exclusive Spotlight slots, including concurrent reservations.
 alter table public.employer_spotlight_reservations
   add constraint employer_spotlight_no_overlapping_slots
   exclude using gist (daterange(slot_start, slot_end, '[)') with &&)
-  where (status in ('payment_pending', 'scheduled', 'active'));
+  where (status in ('payment_pending', 'scheduled', 'active', 'payment_review'));
 
 alter table public.employer_spotlight_reservations enable row level security;
 revoke all on table public.employer_spotlight_reservations from public, anon, authenticated;
@@ -84,7 +84,7 @@ begin
     if not exists (
       select 1
       from public.employer_spotlight_reservations r
-      where r.status in ('payment_pending', 'scheduled', 'active')
+      where r.status in ('payment_pending', 'scheduled', 'active', 'payment_review')
         and daterange(r.slot_start, r.slot_end, '[)')
             && daterange(v_candidate, v_candidate + 30, '[)')
     ) then
@@ -161,7 +161,7 @@ begin
   select r.* into v_existing
   from public.employer_spotlight_reservations r
   where r.submission_id = p_submission_id
-    and r.status in ('payment_pending', 'scheduled', 'active')
+    and r.status in ('payment_pending', 'scheduled', 'active', 'payment_review')
   order by r.created_at desc
   limit 1;
 
