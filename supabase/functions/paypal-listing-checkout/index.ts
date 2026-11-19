@@ -50,7 +50,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const userId = ctx.userClaims?.id;
   if (!userId) return json({ error: "Authentication required." }, 401);
 
-  let body: { action?: string; submission_id?: string; order_id?: string };
+  let body: { action?: string; submission_id?: string; order_id?: string; reservation_id?: string };
   try { body = await req.json(); } catch { return json({ error: "A valid JSON body is required." }, 400); }
   const submissionId = typeof body.submission_id === "string" ? body.submission_id : "";
   if (!/^[0-9a-f-]{36}$/i.test(submissionId)) return json({ error: "A valid submission is required." }, 400);
@@ -75,8 +75,22 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ error: "Only an employer workspace owner or administrator can authorize listing payments." }, 403);
   }
 
-  const amount = priceFor(submission.package_tier);
+  const isSpotlight = submission.package_tier === "spotlight";
+  const amount = isSpotlight ? "149.00" : priceFor(submission.package_tier);
   if (!amount) return json({ error: "This listing does not require a paid upgrade." }, 400);
+
+  const confirmSpotlightPayment = async (reservationId: string, paymentId: string, captureId: string) => {
+    const { data, error } = await admin.rpc("confirm_employer_spotlight_payment", {
+      p_reservation_id: reservationId,
+      p_payment_id: paymentId,
+      p_capture_id: captureId,
+    });
+    if (error || data !== true) {
+      console.error("Verified Spotlight capture requires reservation reconciliation.", error);
+      return false;
+    }
+    return true;
+  };
 
   const ensurePublished = async (captureId: string, orderId: string) => {
     const { data: existingJob, error: existingJobError } = await admin.from("jobs")
@@ -106,7 +120,8 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         requirements: submission.requirements,
         tags: submission.tags,
         apply_url: submission.apply_url,
-        featured: true,
+        featured: !isSpotlight,
+        ...(isSpotlight ? { spotlight_active: false, spotlight_reservation_id: null } : {}),
         verified_employer: false,
         status: "published",
         published_at: new Date().toISOString(),
@@ -156,8 +171,22 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     const returnUrl = `${origin}/?experience=employer-payments&payment=success&submission_id=${encodeURIComponent(submission.id)}`;
     const cancelUrl = `${origin}/?experience=employer-payments&payment=cancelled&submission_id=${encodeURIComponent(submission.id)}`;
+    const reservationId = typeof body.reservation_id === "string" ? body.reservation_id : "";
+    if (isSpotlight) {
+      if (!/^[0-9a-f-]{36}$/i.test(reservationId)) return json({ error: "Reserve a Spotlight date before checkout." }, 400);
+      const { data: reservation, error: reservationError } = await admin.from("employer_spotlight_reservations")
+        .select("id, submission_id, employer_account_id, status, hold_expires_at, amount, currency")
+        .eq("id", reservationId).eq("submission_id", submission.id)
+        .eq("employer_account_id", submission.employer_account_id).maybeSingle();
+      if (reservationError || !reservation || reservation.status !== "payment_pending" ||
+          !reservation.hold_expires_at || new Date(reservation.hold_expires_at).getTime() <= Date.now() ||
+          Number(reservation.amount).toFixed(2) !== "149.00" || reservation.currency.trim() !== "USD") {
+        return json({ error: "This Spotlight reservation is no longer valid. Refresh the available dates and reserve again." }, 409);
+      }
+    }
+
     const { data: existing, error: existingPaymentError } = await admin.from("job_payments")
-      .select("id, provider_order_id, provider_capture_id, amount, currency, status")
+      .select("id, provider_order_id, provider_capture_id, amount, currency, status, spotlight_reservation_id")
       .eq("submission_id", submissionId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -167,8 +196,12 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       return json({ error: "We could not verify the previous payment attempt. Please try again shortly." }, 503);
     }
     if (existing?.status === "completed") {
+      if (isSpotlight && existing.spotlight_reservation_id !== reservationId) return json({ error: "A different Spotlight reservation already has a completed payment. Contact support before paying again." }, 409);
       if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" || !existing.provider_capture_id) {
         return json({ error: "The completed payment record does not match the approved price or capture reference. Administrator reconciliation is required; do not pay again." }, 409);
+      }
+      if (isSpotlight && (!existing.spotlight_reservation_id || !await confirmSpotlightPayment(existing.spotlight_reservation_id, existing.id, existing.provider_capture_id))) {
+        return json({ paid: true, reconciliation_required: true, error: "Payment is recorded, but the Spotlight slot needs administrator reconciliation. Do not pay again." }, 202);
       }
       const published = await ensurePublished(existing.provider_capture_id, existing.provider_order_id || "");
       return published
@@ -178,6 +211,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     const token = await paypalToken();
     if (existing?.provider_order_id) {
+      if (isSpotlight && existing.spotlight_reservation_id !== reservationId) return json({ error: "A different Spotlight reservation already has a pending payment. Resume that checkout or contact support." }, 409);
       const savedOrder = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(existing.provider_order_id)}`, token, "GET");
       if (savedOrder.status === "COMPLETED") {
         const verifiedCapture = verifyCompletedPayPalOrder(savedOrder, submission.id, amount);
@@ -198,6 +232,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
           if (currentPaymentError || currentPayment?.status !== "completed" || currentPayment.provider_capture_id !== verifiedCapture.id) {
             return json({ error: "PayPal confirms payment, but the payment ledger needs administrator reconciliation. Do not pay again." }, 202);
           }
+        }
+        if (isSpotlight && (!existing.spotlight_reservation_id || !await confirmSpotlightPayment(existing.spotlight_reservation_id, existing.id, verifiedCapture.id))) {
+          return json({ paid: true, reconciliation_required: true, error: "PayPal confirms payment, but the Spotlight slot needs administrator reconciliation. Do not pay again." }, 202);
         }
         const published = await ensurePublished(verifiedCapture.id, existing.provider_order_id);
         return published
@@ -232,6 +269,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     const { error: paymentError } = await admin.from("job_payments").insert({
       submission_id: submission.id,
+      ...(isSpotlight ? { spotlight_reservation_id: reservationId } : {}),
       provider: "paypal",
       provider_order_id: order.id,
       amount: Number(amount),
@@ -256,7 +294,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const orderId = typeof body.order_id === "string" ? body.order_id : "";
     if (!orderId) return json({ error: "A valid PayPal order is required." }, 400);
     const { data: payment, error: paymentLookupError } = await admin.from("job_payments")
-      .select("id, provider_order_id, amount, currency, status, provider_capture_id")
+      .select("id, provider_order_id, amount, currency, status, provider_capture_id, spotlight_reservation_id")
       .eq("submission_id", submissionId)
       .eq("provider_order_id", orderId)
       .maybeSingle();
@@ -265,6 +303,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (payment.status === "completed" && payment.provider_capture_id) {
       if (Number(payment.amount).toFixed(2) !== amount || payment.currency.trim() !== "USD") {
         return json({ error: "The completed payment ledger does not match the approved listing price. Administrator reconciliation is required." }, 409);
+      }
+      if (isSpotlight && (!payment.spotlight_reservation_id || !await confirmSpotlightPayment(payment.spotlight_reservation_id, payment.id, payment.provider_capture_id))) {
+        return json({ paid: true, reconciliation_required: true, error: "Payment is recorded, but the Spotlight slot needs administrator reconciliation. Do not pay again." }, 202);
       }
       const published = await ensurePublished(payment.provider_capture_id, orderId);
       return published
@@ -322,6 +363,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       }
     }
 
+    if (isSpotlight && (!payment.spotlight_reservation_id || !await confirmSpotlightPayment(payment.spotlight_reservation_id, payment.id, verifiedCapture.id))) {
+      return json({ paid: true, reconciliation_required: true, error: "PayPal confirms payment, but the Spotlight slot needs administrator reconciliation. Do not pay again." }, 202);
+    }
     const published = await ensurePublished(verifiedCapture.id, orderId);
     if (!published) return json({ paid: true, publication_pending: true, error: "Payment is verified. Publication needs administrator attention." }, 202);
     return json({ paid: true, published: true, capture_id: verifiedCapture.id });
