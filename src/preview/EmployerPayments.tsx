@@ -19,6 +19,14 @@ type Listing = {
   status: string;
   submitted_at: string;
   payment: Payment | null;
+  reservation?: {
+    id: string;
+    slot_start: string;
+    slot_end: string;
+    status: string;
+    paid_at: string | null;
+    activated_at: string | null;
+  } | null;
 };
 
 const tierName = (tier: string) =>
@@ -275,7 +283,18 @@ export default function EmployerPayments() {
                   <div className="flex items-center gap-2 text-xs font-semibold text-[#52627a]"><Clock3 size={15}/>{statusLabel(listing.status)}</div>
                   {listing.payment?.status === 'completed' ? (
                     listing.status === 'published' ? (
-                      <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700"><CheckCircle2 size={15}/> Payment confirmed · Published</span>
+                      listing.package_tier === 'spotlight' && listing.reservation ? (
+                        <span className="inline-flex flex-wrap items-center gap-2 text-xs font-bold text-emerald-700">
+                          <CheckCircle2 size={15}/>
+                          {listing.reservation.status === 'active'
+                            ? 'Spotlight is live · through ' + new Date(listing.reservation.slot_end + 'T00:00:00').toLocaleDateString()
+                            : listing.reservation.status === 'scheduled'
+                              ? 'Spotlight scheduled · starts ' + new Date(listing.reservation.slot_start + 'T00:00:00').toLocaleDateString()
+                              : 'Spotlight payment recorded · ' + listing.reservation.status.replaceAll('_', ' ')}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-2 text-xs font-bold text-emerald-700"><CheckCircle2 size={15}/> Payment confirmed · Published</span>
+                      )
                     ) : (
                       <button onClick={() => retryPublication(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-bold text-emerald-800 disabled:opacity-60">
                         {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <RefreshCw size={14}/>} Retry publication
