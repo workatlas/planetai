@@ -879,7 +879,7 @@ export default function App() {
                 <div className="flex items-center gap-2.5 shrink-0">
                   <div className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2 text-xs font-medium text-slate-200">
                     <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>Global Remote Rates (USD) • 100% Free</span>
+                    <span>Global Opportunities • Free Discovery</span>
                   </div>
                   <button
                     type="button"
