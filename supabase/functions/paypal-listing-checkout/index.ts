@@ -227,7 +227,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       }
       const published = await ensurePublished(existing.provider_capture_id, existing.provider_order_id || "");
       return published
-        ? json({ paid: true, published: true, already_completed: true, capture_id: existing.provider_capture_id })
+        ? json({ paid: true, published: true, spotlight_scheduled: isSpotlight, already_completed: true, capture_id: existing.provider_capture_id })
         : json({ paid: true, publication_pending: true, already_completed: true, capture_id: existing.provider_capture_id, error: "Payment is verified. Publication still needs attention." }, 202);
     }
 
@@ -260,7 +260,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         }
         const published = await ensurePublished(verifiedCapture.id, existing.provider_order_id);
         return published
-          ? json({ paid: true, published: true, already_completed: true, capture_id: verifiedCapture.id })
+          ? json({ paid: true, published: true, spotlight_scheduled: isSpotlight, already_completed: true, capture_id: verifiedCapture.id })
           : json({ paid: true, publication_pending: true, already_completed: true, capture_id: verifiedCapture.id, error: "Payment is verified. Publication still needs attention." }, 202);
       }
       const approveUrl = savedOrder.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
@@ -331,7 +331,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       }
       const published = await ensurePublished(payment.provider_capture_id, orderId);
       return published
-        ? json({ paid: true, published: true, capture_id: payment.provider_capture_id, already_completed: true })
+        ? json({ paid: true, published: true, spotlight_scheduled: isSpotlight, capture_id: payment.provider_capture_id, already_completed: true })
         : json({ paid: true, publication_pending: true, capture_id: payment.provider_capture_id, error: "Payment is verified. Publication still needs attention." }, 202);
     }
     if (submission.status !== "approved_awaiting_payment" || payment.status !== "pending" ||
@@ -390,7 +390,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     }
     const published = await ensurePublished(verifiedCapture.id, orderId);
     if (!published) return json({ paid: true, publication_pending: true, error: "Payment is verified. Publication needs administrator attention." }, 202);
-    return json({ paid: true, published: true, capture_id: verifiedCapture.id });
+    return json({ paid: true, published: true, spotlight_scheduled: isSpotlight, capture_id: verifiedCapture.id });
   }
   return json({ error: "Unsupported PayPal action." }, 400);
 });
