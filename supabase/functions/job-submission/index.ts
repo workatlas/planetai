@@ -124,6 +124,9 @@ const handler = async (req: Request) => {
   if (bearer) {
     const { data, error } = await supabase.auth.getUser(bearer);
     if (error || !data.user) return json({ error: "Your sign-in session could not be verified. Please sign in again." }, 401);
+    if (!data.user.email_confirmed_at) {
+      return json({ error: "Confirm your email address before submitting a job listing." }, 403);
+    }
     userId = data.user.id;
   }
 
