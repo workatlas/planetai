@@ -94,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium text-emerald-300 whitespace-nowrap shrink-0" title="Curated guides and employer-submitted listings matching current filters">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
             <span className="font-mono tabular-nums font-semibold">{countLabel}</span>
-            <span className="hidden 2xl:inline text-emerald-300/90">Available</span>
+            <span className="hidden 2xl:inline text-emerald-300/90">Guides &amp; listings</span>
           </div>
 
           <button type="button" onClick={onShareApp} aria-label="Share PlanetAI app link" className="inline-flex items-center justify-center gap-2 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] px-2.5 sm:px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-100 text-xs sm:text-sm font-medium hover:border-slate-700 hover:bg-slate-800 active:scale-[0.98] transition-all whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
