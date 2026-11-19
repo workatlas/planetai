@@ -116,7 +116,7 @@ Never treat a browser redirect or success query parameter as proof of payment. N
 
 The new `paypal-webhook` function verifies the PayPal transmission signature through PayPal's official verify-webhook-signature API using the configured `PAYPAL_WEBHOOK_ID`. It accepts only `PAYMENT.CAPTURE.COMPLETED` for automatic payment reconciliation, fetches the order directly from PayPal, validates the submission reference, exact USD amount and capture ID, then idempotently updates the existing payment ledger and publishes the already-approved listing. Event IDs are deduplicated in `employer_billing_events.provider_event_id`.
 
-Before deploying, create a webhook in the matching PayPal Sandbox app, subscribe it to `PAYMENT.CAPTURE.COMPLETED`, set `PAYPAL_WEBHOOK_ID` as an Edge Function secret, and deploy this endpoint with JWT verification disabled **for this function only**. Keep PayPal in Sandbox. This branch change does not create or configure a PayPal webhook, set secrets, or deploy any function. Refunds/reversals/disputes remain manual reconciliation items and block live-payment readiness.
+Before deploying, create a webhook in the matching PayPal Sandbox app, subscribe it to `PAYMENT.CAPTURE.COMPLETED`, set `PAYPAL_WEBHOOK_ID` as an Edge Function secret, and deploy this endpoint with JWT verification disabled **for this function only**. Keep PayPal in Sandbox. This branch change does not create or configure a PayPal webhook, set secrets, or deploy any function. Refunds, reversals, denials and disputes are recorded for manual reconciliation. Affected Spotlight placements are paused and their reservation slots remain blocked until an administrator resolves the case.
 
 ## Rate limiting and request protection
 
@@ -169,3 +169,8 @@ The current source review and CI checks do not replace the real-account browser 
 - Paid Spotlight listings are published without featured=true; the database queue processor activates the Spotlight flag only on the scheduled start date.
 - The migration enables pg_cron and schedules private.process_employer_spotlight_queue() once per minute. The function is private and does not expose a service key or public endpoint.
 - The migration, scheduler, checkout integration, webhook integration, and employer UI are branch-only. No migration has been applied and no Edge Function has been deployed.
+
+
+## PayPal dispute and reversal handling
+
+The webhook subscribes to capture refund/reversal/denial events and dispute created/updated/resolved events. Dispute events are matched using the seller-side transaction ID to the recorded PayPal capture. If the payment belongs to a Spotlight reservation, the reservation moves to payment_review, an active placement is paused, and the reserved date range remains blocked. A dispute resolution does not automatically reactivate or reallocate the slot; an administrator must reconcile the case.
