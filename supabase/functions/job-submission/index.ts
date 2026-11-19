@@ -222,6 +222,6 @@ Deno.serve(async (req) => {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
     console.error("Unhandled job submission error", error);
-    return json({ error: "An unexpected error occurred while submitting your job." }, 500);
+    return new Response(JSON.stringify({ error: "An unexpected error occurred while submitting your job." }), { status: 500, headers: { ...corsHeadersFor(req), "Content-Type": "application/json" } });
   }
 });
