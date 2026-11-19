@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import {useOnlineStatus} from '../hooks/useOnlineStatus';
 import {usePWAInstall} from '../hooks/usePWAInstall';
-import {PWAInstallButton} from './PWAInstallButton';
 
 interface AppReadinessViewProps {
   onShareApp: () => void;
@@ -116,7 +115,6 @@ export const AppReadinessView: React.FC<AppReadinessViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800/80">
-            <PWAInstallButton />
             <button
               type="button"
               onClick={onShareApp}
