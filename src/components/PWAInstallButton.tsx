@@ -60,12 +60,12 @@ export const PWAInstallButton: React.FC = () => {
             {isIOS ? (
               <ol className="mt-5 space-y-3 text-sm leading-6 text-slate-300">
                 <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-cyan-300">01</span><span>Tap the <strong>Share</strong> icon in Safari.</span></li>
-                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-[#71917b]">02</span><span>Choose <strong>Add to Home Screen</strong>, then confirm.</span></li>
+                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-cyan-300">02</span><span>Choose <strong>Add to Home Screen</strong>, then confirm.</span></li>
               </ol>
             ) : (
-              <ol className="mt-5 space-y-3 text-sm leading-6 text-[#52635a]">
-                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-[#71917b]">01</span><span>Open your browser menu (usually <strong>⋮</strong> on mobile or <strong>⋯</strong> on desktop).</span></li>
-                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-[#71917b]">02</span><span>Look for <strong>Install PlanetAI</strong> or <strong>Add to Home Screen</strong>.</span></li>
+              <ol className="mt-5 space-y-3 text-sm leading-6 text-slate-300">
+                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-cyan-300">01</span><span>Open your browser menu (usually <strong>⋮</strong> on mobile or <strong>⋯</strong> on desktop).</span></li>
+                <li className="flex items-start gap-3"><span className="font-mono text-xs font-bold text-cyan-300">02</span><span>Look for <strong>Install PlanetAI</strong> or <strong>Add to Home Screen</strong>.</span></li>
               </ol>
             )}
             <p className="mt-4 text-[11px] leading-5 text-slate-500">
