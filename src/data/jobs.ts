@@ -1789,10 +1789,12 @@ function generateExpandedJobs(): JobListing[] {
   return generated;
 }
 
-export const INITIAL_JOBS: JobListing[] = [
-  ...BASE_INITIAL_JOBS,
-  ...generateExpandedJobs(),
-];
+export const INITIAL_JOBS: JobListing[] = BASE_INITIAL_JOBS.map((job) => ({
+  ...job,
+  // Compensation is not sourced from a live vacancy; never display it as an advertised rate.
+  payMinUsd: 0,
+  payMaxUsd: 0,
+}));
 
 export interface PlatformSummary {
   name: string;
