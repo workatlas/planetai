@@ -1,117 +1,140 @@
-# PLANETAI Marketplace Backend Setup
+# PLANETAI Marketplace Backend
 
-## Current implementation status
+## Current status
 
-The existing public marketplace remains the production experience. The employer and applicant dashboard routes are still previews until their data workflows are connected and tested.
+The production site remains untouched. Development work is isolated on `planetai-premium-refresh` in draft PR #1.
 
-Implemented on the development branch `planetai-premium-refresh`:
+- The Supabase project contains the marketplace schema, employer workspace data, job submission/payment tables, and the security migrations listed below.
+- The five Edge Functions already exist in Supabase, but the latest hardening and payment-recovery code on this branch has **not** been deployed.
+- PayPal is configured for Sandbox. No live charges have been enabled.
+- The employer registration, profile, listing, moderation, and payment screens are implemented in the frontend. A complete real-account browser test is still required before release.
 
-- Supabase project and marketplace database foundation.
-- Employer account, membership, subscription-plan, subscription, and billing-event tables with RLS.
-- Employer registration and password sign-in UI at `/?experience=employer-auth`.
-- Supabase browser client using the project's public publishable key.
-- Authenticated `employer-workspace` Edge Function. It verifies a user session with `@supabase/server`, creates or finds the employer's workspace, and ensures owner membership.
-- Database hardening for the RLS event-trigger function and timestamp trigger search path.
+## Supabase project
 
-The workspace function is deployed to the Supabase project. Its gateway-level JWT check is disabled because the project uses the newer opaque publishable API key; the function itself validates the user session with `withSupabase({ auth: "user" })`. Never remove that in-function authentication.
+- Project ref: `lfccdqvwpfohfuhlijso`
+- Region: `ap-northeast-1`
+- Project URL: `https://lfccdqvwpfohfuhlijso.supabase.co`
 
-Not yet complete:
+The browser client uses only the publishable key. Never put a Supabase secret/service-role key or PayPal credential in a `VITE_*` variable or commit one to Git.
 
-- End-to-end signup and email-confirmation test in the Netlify preview.
-- Real employer job creation, candidate pipeline, and dashboard data.
-- Owner/admin authentication and workflows.
-- Approved subscription package names, prices, billing intervals, and job limits.
-- PayPal subscription creation, webhook signature verification, billing reconciliation, and cancellation handling.
-- Expiry automation and full end-to-end marketplace tests.
+## Applied database migrations
 
-Do not advertise the employer subscription workflow as live until these pieces have been deployed and tested.
+The shared Supabase project currently records these migrations:
 
-## 1. Supabase project
+- Marketplace foundation and submission security
+- Employer subscriptions and workspace onboarding
+- Security/query hardening and server-side onboarding grants
+- Employer profile and branding storage
+- Job-seeker profiles
+- PayPal order/capture uniqueness
+- Admin moderation and payment-write grants
+- Public read access to active published jobs (still constrained by RLS)
+- Unique employer account owner constraint
+- Atomic Edge Function rate-limit storage and RPC
 
-Project ref: `lfccdqvwpfohfuhlijso`
+The employer account owner index was applied after verifying there were no duplicate owner records. The rate-limit RPC was tested for allowed and rejected requests, and its private table is accessible only to the service role.
 
-Project URL: `https://lfccdqvwpfohfuhlijso.supabase.co`
+## Edge Function deployment boundary
 
-The browser uses the public publishable key only. See `.env.example` for the Vite variable names. The publishable key is safe for browser use when RLS is enabled. Never put a Supabase secret key or legacy service-role key in `VITE_*` variables.
+The following functions are present in Supabase: `employer-workspace`, `employer-profile`, `job-submission`, `admin-moderation`, and `paypal-listing-checkout`.
 
-## 2. Authentication configuration
+The latest branch versions include:
+- Exact-origin CORS allowlisting, with `APP_ALLOWED_ORIGINS` for future approved domains
+- Per-user rate limits backed by the atomic database RPC
+- A 32 KB job-submission body limit and explicit authentication checks
+- Concurrent employer workspace setup recovery
+- Payment order/capture recovery and publication retry logic
 
-The employer auth route is:
+These versions remain branch-only. Do not deploy or merge them until the preview journey and Sandbox payment test pass. When a custom domain is selected, add its exact origin to `APP_ALLOWED_ORIGINS` before deploying the functions.
 
-```text
-/?experience=employer-auth
-```
+## Authentication and authorization
 
-Supabase Auth email confirmation should remain enabled. In **Authentication → URL Configuration → Redirect URLs**, allow the exact Netlify deploy-preview origin used for testing, for example:
+Employer route: `/?experience=employer-auth`
 
-```text
-https://deploy-preview-1--planetai-global.netlify.app/**
-```
+1. Employer signs up and confirms their email if confirmation is enabled.
+2. After sign-in, the authenticated workspace function derives the user ID from the verified JWT.
+3. The function creates or loads the employer account and ensures owner membership.
+4. The employer can edit the company profile, upload branding, and manage submitted listings.
 
-Also keep the production site's correct URL in the Site URL setting. Do not add broad wildcard domains. Confirm the current preview URL before adding it if Netlify assigns a different deploy-preview number.
+Authorization rules:
+- User-editable Auth metadata is used only for initial display/default values, never as proof of employer or admin authority.
+- Job submission requires an authenticated employer membership with an allowed role.
+- Employer profile writes are scoped to the authenticated workspace owner.
+- Admin moderation checks the verified user ID against the protected `admin_users` roster on the server.
+- The admin roster has no browser write privileges. Admin actions are not authorized merely because a user can sign in.
 
-The signup form stores only the company name and account type as Auth user metadata. After a user confirms their email and signs in, the frontend calls the authenticated `employer-workspace` Edge Function. The function derives the user ID and email from the verified JWT; it never trusts a user ID supplied by the browser.
+## Employer branding storage
 
-## 3. Edge Function secrets
+The `employer-branding` bucket is public-read because logos and cover images are intended to appear on public employer/job pages. Anyone with an asset URL can read those images.
 
-The project has the following custom PayPal Sandbox secrets configured:
+Upload and delete operations are restricted by Storage RLS to authenticated users whose first object-path folder matches their own Auth user ID. The bucket has a 5 MB limit and permits JPEG, PNG, and WebP. The current frontend uses unique filenames and `upsert: false`, so an UPDATE policy is not required for its upload path.
+
+Do not store resumes, identity documents, private candidate data, or other sensitive files in this public bucket.
+
+## Job submission and moderation
+
+1. Employer submits through the frontend.
+2. The Edge Function validates the authenticated membership, required fields, HTTPS links, salary bounds, and package tier.
+3. The server creates a `pending_review` submission and records an audit event.
+4. Admin moderation approves or rejects the submission.
+5. Standard listings publish after approval. Featured listings move to `approved_awaiting_payment` and remain unpublished until the server verifies payment.
+6. Spotlight + Marquee remains unavailable until that product placement is implemented and tested.
+
+The public jobs table exposes only published, unexpired listings through its RLS policy. Employer contact details, moderation notes, and payment records are not part of the public job record.
+
+## PayPal listing payment recovery
+
+- PayPal remains in Sandbox.
+- Featured Boost is a fixed `$49.00 USD` one-time payment for 30 days.
+- Payment can begin only after moderation approval.
+- The server checks employer membership and owner/admin role, creates the order, and records a pending ledger row.
+- Order creation and capture use stable `PayPal-Request-Id` values.
+- Before capturing, the server retrieves the order. If PayPal already reports it as completed, the server verifies the listing `custom_id`, completed capture, amount, and USD currency rather than charging again.
+- If a capture succeeds but the ledger write or publication step is interrupted, a subsequent employer retry can reconcile the completed PayPal order, confirm the ledger, and safely retry publication.
+- Unique provider order/capture IDs and the unique job submission link prevent duplicate payment records and duplicate published jobs.
+
+Still required before live payments:
+- PayPal webhook endpoint with signature verification and event de-duplication
+- Refund/dispute handling and reconciliation for provider-side changes
+- A monitored operational process for payments that cannot be reconciled automatically
+- Full Sandbox test using a real test employer account and PayPal buyer account
+
+Never treat a browser redirect or success query parameter as proof of payment. Never apply paid visibility without server-side verification.
+
+## Rate limiting and request protection
+
+The current branch applies these per-user limits through the atomic database RPC:
+
+- Job submissions: 5 per 15 minutes
+- Employer workspace: 60 per minute
+- Employer profile: 30 per minute
+- PayPal checkout: 12 per 10 minutes
+- Admin moderation: 120 per minute
+
+The job submission endpoint also enforces a 32 KB request-body limit. If the rate-limit database call fails, the branch functions fail closed.
+
+## Required environment configuration
+
+Supabase Edge Functions provide the Supabase project credentials at runtime. PayPal Sandbox secrets are configured in the Supabase project:
 
 - `PAYPAL_CLIENT_ID`
 - `PAYPAL_CLIENT_SECRET`
 - `PAYPAL_ENVIRONMENT=sandbox`
 
-Supabase automatically provides `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS`, and `SUPABASE_JWKS` to Edge Functions. Use the named `default` entry in the key dictionaries when an admin client is required. Never expose a secret key to the browser or commit secret values to Git.
+The shared CORS helper includes the existing Netlify production/preview origins and supports a comma-separated `APP_ALLOWED_ORIGINS` secret for future exact origins. Do not use wildcard origins.
 
-The employer workspace Edge Function uses `@supabase/server` user authentication and a server-side admin client for its tightly scoped onboarding writes.
+## Release checklist
 
-## 4. Database migrations
+Before any production release:
 
-The following migrations have been applied to the Supabase project:
+1. Confirm leaked-password protection is enabled in Supabase Auth settings.
+2. Confirm the final approved domain and update Auth redirect URLs, CORS origins, canonical metadata, and sitemap.
+3. Deploy the branch Edge Functions only to the approved test environment, then verify CORS, authentication, rate limits, and all endpoint responses.
+4. Complete the real employer journey: signup/email confirmation → workspace creation → profile edit and branding upload → job submission → admin approval → Sandbox checkout → capture verification → publication → public listing visibility.
+5. Test interruption/retry cases: duplicate create-order, capture response lost, ledger update failure, publication failure, and repeat publication.
+6. Verify unauthorized users cannot access another employer's workspace, files, submissions, or admin actions.
+7. Implement and test PayPal webhook signature verification, refund handling, and operational reconciliation before enabling live PayPal.
+8. Re-run database security/performance advisors and confirm CI type-check and frontend build pass on the final PR head.
+9. Only then request explicit approval to merge and deploy.
 
-1. `marketplace_foundation`
-2. `submission_security`
-3. `employer_subscriptions`
-4. `employer_workspace_onboarding`
-5. `move_employer_onboarding_to_edge_function`
-6. `security_and_query_hardening`
-
-The temporary public onboarding RPC was removed. Employer workspace creation is handled only by the authenticated Edge Function.
-
-## 5. Intended marketplace workflow
-
-1. Employer creates an account and verifies their email.
-2. The authenticated workspace function creates the private company workspace and owner membership.
-3. Employer prepares a vacancy through a trusted server endpoint.
-4. Server validates fields, anti-spam controls, and URL policy, then creates a pending submission.
-5. Submission enters the private owner review queue.
-6. For paid tiers, server creates a payment request; the listing remains unpublished.
-7. A verified PayPal webhook confirms payment server-to-server.
-8. Server publishes the approved listing and sets its expiry.
-9. Public visitors can read only published, unexpired jobs.
-10. Employer and owner records, contact details, payment data, and audit events remain private.
-
-## 6. Security rules
-
-- Never trust a browser redirect or success page as proof of payment.
-- Never expose Supabase secret keys, service-role keys, or PayPal credentials to the browser.
-- Do not allow anonymous clients to write directly to submissions, payments, audit events, employer accounts, memberships, subscriptions, or published jobs.
-- Keep employer email addresses and review notes out of the public jobs table.
-- Verify the PayPal webhook signature before changing payment or publication status.
-- Store only SHA-256 token hashes for email verification and private employer-management links; never store raw tokens.
-- Give verification tokens short expirations and single-use consumption; rotate or revoke employer-management tokens when necessary.
-- Add rate limiting and abuse monitoring to public submission and verification endpoints.
-- Keep the `job_submission_tokens` table inaccessible to browser roles; its lack of direct RLS policies is intentional defense-in-depth.
-
-## 7. Employer workspaces and subscriptions
-
-The employer schema adds:
-
-- Employer company workspaces and team membership roles.
-- A configurable employer subscription-plan catalogue.
-- Employer subscription records with monthly, annual, or one-time billing intervals.
-- Provider event records for auditable billing updates.
-- Optional links from existing job submissions and published jobs to an employer workspace.
-
-The migration intentionally does not invent subscription prices or activate a payment provider. Add approved plan rows to `employer_subscription_plans` only after package names, prices, billing interval, limits, and provider are confirmed. Existing job listings and public feed records remain intact because employer links are nullable.
-
-All employer onboarding, workspace writes, subscription changes, and billing-event processing must be implemented in trusted server functions. Provider webhook signatures must be verified before changing subscription status or entitlements. The browser must never write billing status directly.
+The current source review and CI checks do not replace the real-account browser and PayPal Sandbox tests. Keep production and live payments unchanged until those tests pass.
