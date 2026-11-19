@@ -2,7 +2,7 @@ import {getCompanyLogoUrl, JobListing} from '../data/jobs';
 
 const DEFAULT_TITLE = 'PlanetAI — AI & Remote Job Aggregator';
 const DEFAULT_DESC =
-  'Browse 200+ vetted remote AI training, coding, audio/voice, and data annotation jobs in global USD rates with zero-login AI career prep tools.';
+  'Explore curated AI and remote-work opportunity guides, compare career platforms, and use free AI career tools. Confirm current vacancies and terms directly with each employer.';
 
 function toEmploymentType(workType: JobListing['workType']): string {
   if (workType === 'Full-Time Remote') return 'FULL_TIME';
