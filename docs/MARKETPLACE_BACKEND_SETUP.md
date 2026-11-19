@@ -5,7 +5,7 @@
 The production site remains untouched. Development work is isolated on `planetai-premium-refresh` in draft PR #1.
 
 - The Supabase project contains the marketplace schema, employer workspace data, job submission/payment tables, and the security migrations listed below.
-- The five Edge Functions already exist in Supabase, but the latest hardening and payment-recovery code on this branch has **not** been deployed.
+- The five original Edge Functions exist in Supabase. A sixth PayPal webhook function has been added on this branch but is not deployed. All latest hardening, webhook, and payment-recovery code on this branch remains **undeployed**.
 - PayPal is configured for Sandbox. No live charges have been enabled.
 - The employer registration, profile, listing, moderation, and payment screens are implemented in the frontend. A complete real-account browser test is still required before release.
 
@@ -36,7 +36,7 @@ The employer account owner index was applied after verifying there were no dupli
 
 ## Edge Function deployment boundary
 
-The following functions are present in Supabase: `employer-workspace`, `employer-profile`, `job-submission`, `admin-moderation`, and `paypal-listing-checkout`.
+The five deployed functions are `employer-workspace`, `employer-profile`, `job-submission`, `admin-moderation`, and `paypal-listing-checkout`. The branch also contains `paypal-webhook`; it is not deployed.
 
 The latest branch versions include:
 - Exact-origin CORS allowlisting, with `APP_ALLOWED_ORIGINS` for future approved domains
@@ -94,12 +94,19 @@ The public jobs table exposes only published, unexpired listings through its RLS
 - Unique provider order/capture IDs and the unique job submission link prevent duplicate payment records and duplicate published jobs.
 
 Still required before live payments:
-- PayPal webhook endpoint with signature verification and event de-duplication
-- Refund/dispute handling and reconciliation for provider-side changes
+- Sandbox webhook registration, delivery verification, and end-to-end retry/deduplication testing for the new webhook endpoint
+- Refund, reversal, and dispute handling (the new listener currently processes completed captures only; other signed event types are acknowledged without changing payment state)
+- A monitored operational process for unmatched provider events and payments that cannot be reconciled automatically
 - A monitored operational process for payments that cannot be reconciled automatically
 - Full Sandbox test using a real test employer account and PayPal buyer account
 
 Never treat a browser redirect or success query parameter as proof of payment. Never apply paid visibility without server-side verification.
+
+## PayPal webhook implementation on the feature branch
+
+The new `paypal-webhook` function verifies the PayPal transmission signature through PayPal's official verify-webhook-signature API using the configured `PAYPAL_WEBHOOK_ID`. It accepts only `PAYMENT.CAPTURE.COMPLETED` for automatic payment reconciliation, fetches the order directly from PayPal, validates the submission reference, exact USD amount and capture ID, then idempotently updates the existing payment ledger and publishes the already-approved listing. Event IDs are deduplicated in `employer_billing_events.provider_event_id`.
+
+Before deploying, create a webhook in the matching PayPal Sandbox app, subscribe it to `PAYMENT.CAPTURE.COMPLETED`, set `PAYPAL_WEBHOOK_ID` as an Edge Function secret, and deploy this endpoint with JWT verification disabled **for this function only**. Keep PayPal in Sandbox. This branch change does not create or configure a PayPal webhook, set secrets, or deploy any function. Refunds/reversals/disputes remain manual reconciliation items and block live-payment readiness.
 
 ## Rate limiting and request protection
 
