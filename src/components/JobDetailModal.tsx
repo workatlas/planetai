@@ -101,8 +101,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     job.isCustomEmployerPost || job.id.startsWith('custom-')
   );
   const isCuratedGuide = !isCustomPost;
-  const isFeatured = Boolean(job.featured);
-  const isVerified = Boolean(job.verified);
+  const isFeatured = isCustomPost && Boolean(job.featured);
+  const isVerified = isCustomPost && Boolean(job.verified);
   const isEstablished = job.companyTier === 'Established Leader';
   const isCustomPartner = job.companyTier === 'Custom Partner';
   const externalApplyUrl = isCustomPost
