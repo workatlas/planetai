@@ -1,15 +1,12 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
   });
 
 const clean = (value: unknown, max: number) =>
@@ -202,11 +199,12 @@ const handler = async (req: Request) => {
 };
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isAllowedOrigin(req)) return new Response("Origin not allowed.", { status: 403, headers: corsHeadersFor(req) });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
   try {
     const response = await handler(req);
     const headers = new Headers(response.headers);
-    for (const [name, value] of Object.entries(corsHeaders)) headers.set(name, value);
+    for (const [name, value] of Object.entries(corsHeadersFor(req))) headers.set(name, value);
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
     console.error("Unhandled job submission error", error);
