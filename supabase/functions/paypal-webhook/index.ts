@@ -175,6 +175,17 @@ Deno.serve(async (req) => {
           payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, resource_id: captureReference.resourceId, manual_reconciliation_required: true },
         })
         .eq("id", eventRowId);
+      if (payment.spotlight_reservation_id) {
+        const { error: reviewError } = await admin.from("employer_spotlight_reservations")
+          .update({ status: "payment_review", updated_at: new Date().toISOString() })
+          .eq("id", payment.spotlight_reservation_id)
+          .in("status", ["payment_pending", "scheduled", "active", "payment_review"]);
+        if (reviewError) throw new Error("Spotlight reservation could not be paused for payment review.");
+        const { error: deactivateError } = await admin.from("jobs")
+          .update({ spotlight_active: false, spotlight_expires_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("spotlight_reservation_id", payment.spotlight_reservation_id);
+        if (deactivateError) throw new Error("Spotlight placement could not be paused after a payment reversal.");
+      }
       console.error("PayPal refund/reversal/denial requires administrator reconciliation.", {
         eventId, eventType, orderId: captureReference.orderId, captureId: captureReference.captureId,
       });
