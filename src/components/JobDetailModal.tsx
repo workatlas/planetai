@@ -319,8 +319,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
           </div>
         )}
 
-        {/* Assessment & Payout Transparency */}
-        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* Employer-specific screening and payout details are not inferred for curated guides. */}
+        {!isCuratedGuide && (
+          <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-3.5">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#77847b]">
               <ClipboardCheck className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
@@ -346,7 +347,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               Paid in standard USD
             </p>
           </div>
-        </div>
+          </div>
+        )}
 
         {/* Income estimates are shown only for employer-submitted listings with stated pay. */}
         {!isCuratedGuide && job.payUnit === 'hr' && (
