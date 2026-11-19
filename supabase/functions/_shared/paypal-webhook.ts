@@ -17,7 +17,7 @@ export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders
   if (Object.values(fields).some((value) => !value || value.length > 2048)) return null;
   try {
     const certUrl = new URL(fields.cert_url!);
-    if (certUrl.protocol !== "https:" || !/(^|\\.)paypal\\.com$/i.test(certUrl.hostname)) return null;
+    if (certUrl.protocol !== "https:" || !/(^|\.)paypal\.com$/i.test(certUrl.hostname)) return null;
   } catch {
     return null;
   }
