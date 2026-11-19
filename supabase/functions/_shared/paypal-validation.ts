@@ -47,8 +47,8 @@ export function verifyCompletedPayPalOrder(
   const currency = capture.amount?.currency_code;
   const value = capture.amount?.value;
   if (!id || currency !== "USD" || typeof value !== "string" ||
-      !/^\\d+\\.\\d{2}$/.test(value) || value !== expectedAmount ||
-      !/^\\d+\\.\\d{2}$/.test(expectedAmount)) return null;
+      !/^\d+\.\d{2}$/.test(value) || value !== expectedAmount ||
+      !/^\d+\.\d{2}$/.test(expectedAmount)) return null;
 
   return {
     id,
