@@ -38,11 +38,9 @@ export function verifyCompletedPayPalOrder(
   const unit = candidate.purchase_units[0];
   if (unit.custom_id !== expectedSubmissionId) return null;
   const captures = unit.payments?.captures;
-  if (!Array.isArray(captures)) return null;
-  const completed = captures.filter((item) => item?.status === "COMPLETED");
-  if (completed.length !== 1) return null;
+  if (!Array.isArray(captures) || captures.length !== 1 || captures[0]?.status !== "COMPLETED") return null;
 
-  const capture = completed[0];
+  const capture = captures[0];
   const id = typeof capture.id === "string" ? capture.id.trim() : "";
   const currency = capture.amount?.currency_code;
   const value = capture.amount?.value;
