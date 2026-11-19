@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
           event_status: "received",
           amount_minor: Math.round(Number(payment.amount) * 100),
           currency: payment.currency,
-          payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId },
+          payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, resource_id: captureReference.resourceId },
         })
         .select("id")
         .maybeSingle();
@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
       await admin.from("employer_billing_events")
         .update({
           event_status: "failed",
-          payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, manual_reconciliation_required: true },
+          payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, resource_id: captureReference.resourceId, manual_reconciliation_required: true },
         })
         .eq("id", eventRowId);
       console.error("PayPal refund/reversal/denial requires administrator reconciliation.", {
