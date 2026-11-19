@@ -418,7 +418,21 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
           verified_employer_addon: false, bot_check: botCheck,
         },
       });
-      if (submitError) throw new Error(submitError.message || 'Secure submission service unavailable.');
+      if (submitError) {
+        let message = submitError.message || 'Secure submission service unavailable.';
+        const responseContext = (submitError as Error & { context?: Response }).context;
+        if (responseContext) {
+          try {
+            const payload = await responseContext.clone().json();
+            if (typeof payload?.error === 'string' && payload.error.trim()) {
+              message = payload.error;
+            }
+          } catch {
+            // Keep the SDK message when the response body is not readable JSON.
+          }
+        }
+        throw new Error(message);
+      }
       if (!data?.submission?.reference_code) throw new Error(data?.error || 'No confirmation reference was returned.');
       const persistedReference = data.submission.reference_code as string;
       const approvalSnippet = JSON.stringify(stagedJob, null, 2);
