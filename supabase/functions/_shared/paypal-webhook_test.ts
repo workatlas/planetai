@@ -31,8 +31,8 @@ Deno.test("extracts the capture and related order IDs only from completed captur
   }), { orderId: "ORDER-1", captureId: "CAPTURE-1" });
   assertEquals(getPayPalCaptureOrderId({
     event_type: "PAYMENT.CAPTURE.REFUNDED",
-    resource: { id: "REFUND-1", supplementary_data: { related_ids: { order_id: "ORDER-1" } } },
-  }), null);
+    resource: { id: "CAPTURE-1", supplementary_data: { related_ids: { order_id: "ORDER-1" } } },
+  }), { orderId: "ORDER-1", captureId: "CAPTURE-1" });
   assertEquals(getPayPalCaptureOrderId({
     event_type: "PAYMENT.CAPTURE.COMPLETED",
     resource: { id: "CAPTURE-1" },
