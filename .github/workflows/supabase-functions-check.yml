@@ -32,7 +32,7 @@ jobs:
       - name: Install npm dependencies for Deno type-checking
         run: deno install
       - name: Test shared security helpers
-        run: deno test --allow-env=APP_ALLOWED_ORIGINS supabase/functions/_shared/security_test.ts
+        run: deno test --allow-env=APP_ALLOWED_ORIGINS supabase/functions/_shared/security_test.ts supabase/functions/_shared/paypal-validation_test.ts
       - name: Type-check Edge Functions
         run: |
           deno check \
