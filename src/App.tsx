@@ -73,6 +73,7 @@ function mapPublishedDatabaseJob(row: {
   pay_period: string | null; description: string; requirements: string[] | null;
   tags: string[] | null; apply_url: string; featured: boolean; verified_employer: boolean;
   published_at: string;
+  spotlight_active?: boolean;
 }): JobListing {
   const category = JOB_CATEGORIES.includes(row.category as JobCategory) && row.category !== 'All'
     ? row.category as Exclude<JobCategory, 'All'> : 'Remote';
@@ -94,7 +95,7 @@ function mapPublishedDatabaseJob(row: {
     isCustomEmployerPost: true,
     featured: Boolean(row.featured),
     verified: Boolean(row.verified_employer),
-    marqueeSpotlight: false,
+    marqueeSpotlight: Boolean(row.spotlight_active),
     category,
     payMinUsd: Number(row.salary_min || 0),
     payMaxUsd: Number(row.salary_max || 0),
@@ -111,14 +112,28 @@ function mapPublishedDatabaseJob(row: {
 }
 
 async function fetchPublishedDatabaseJobs(): Promise<JobListing[]> {
-  const { data, error } = await supabase.from('jobs')
+  const baseQuery = supabase.from('jobs');
+  const spotlightResult = await baseQuery
+    .select('id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, salary_min, salary_max, pay_period, description, requirements, tags, apply_url, featured, verified_employer, published_at, spotlight_active')
+    .eq('status', 'published')
+    .gt('expires_at', new Date().toISOString())
+    .order('spotlight_active', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(100);
+  if (!spotlightResult.error) {
+    return (spotlightResult.data || []).map(row => mapPublishedDatabaseJob(row));
+  }
+
+  // Keep the existing preview usable before the Spotlight migration is
+  // applied. Once the column exists, active paid placements sort first.
+  const fallback = await supabase.from('jobs')
     .select('id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, salary_min, salary_max, pay_period, description, requirements, tags, apply_url, featured, verified_employer, published_at')
     .eq('status', 'published')
     .gt('expires_at', new Date().toISOString())
     .order('published_at', { ascending: false })
     .limit(100);
-  if (error) throw error;
-  return (data || []).map(row => mapPublishedDatabaseJob(row));
+  if (fallback.error) throw fallback.error;
+  return (fallback.data || []).map(row => mapPublishedDatabaseJob(row));
 }
 
 type SortOption = 'newest' | 'highest-pay' | 'urgent' | 'alphabetical';
