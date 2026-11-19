@@ -41,8 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
 
   const countLabel =
     liveJobCount === totalJobCount
-      ? `${liveJobCount} Live Jobs`
-      : `${liveJobCount} / ${totalJobCount} Live`;
+      ? `${liveJobCount} Opportunities`
+      : `${liveJobCount} / ${totalJobCount} Opportunities`;
 
   return (
     <header className="sticky top-0 z-40 pt-safe pb-2.5 lg:py-0 min-h-[64px] lg:h-16 border-b border-slate-800/90 bg-[#090D16]/95 backdrop-blur-md">
@@ -91,7 +91,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden xl:inline">Job Seeker</span>
           </a>
 
-          <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium text-emerald-300 whitespace-nowrap shrink-0" title="Live available jobs matching current filters">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-2.5 sm:px-3 py-1.5 text-[11px] sm:text-xs font-medium text-emerald-300 whitespace-nowrap shrink-0" title="Curated guides and employer-submitted listings matching current filters">
             <span aria-hidden="true" className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
             <span className="font-mono tabular-nums font-semibold">{countLabel}</span>
             <span className="hidden 2xl:inline text-emerald-300/90">Available</span>
