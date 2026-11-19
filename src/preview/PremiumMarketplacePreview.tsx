@@ -146,22 +146,22 @@ export default function PremiumMarketplacePreview({
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
       <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
-        <div className="relative mx-auto max-w-[1320px] px-5 sm:px-8">
-          <div className="flex h-[76px] items-center justify-between gap-4">
-            <a href="#top" className="flex min-w-0 items-center gap-3" aria-label="PLANETAI marketplace home">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
-              <span className="min-w-0 leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Global careers, with clarity</span></span>
+        <div className="relative mx-auto max-w-[1320px] px-2 sm:px-8">
+          <div className="flex h-[68px] items-center justify-between gap-2 sm:h-[76px] sm:gap-4">
+            <a href="#top" className="flex shrink-0 items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
+              <span className="leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Global careers, with clarity</span></span>
             </a>
-            <div className="flex shrink-0 items-center gap-2">
-              <button type="button" onClick={onShareApp} className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-[#dce5dc] bg-white px-3 py-3 text-[11px] font-bold text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:px-4 sm:text-xs" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"}><Share2 size={14}/><span>{copied ? 'Copied' : 'Share'}</span></button>
-              <button onClick={onPostJob} className="inline-flex min-h-11 items-center gap-1.5 rounded-full bg-[#183c32] px-4 py-3 text-[11px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:px-5 sm:text-xs">Post a job <ArrowUpRight className="inline" size={14}/></button>
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <button type="button" onClick={onShareApp} className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-[#dce5dc] bg-white px-2 text-[10px] font-bold text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:min-h-11 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-xs" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"}><Share2 size={14}/><span className="hidden min-[380px]:inline">{copied ? 'Copied' : 'Share'}</span></button>
+              <button onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap rounded-full bg-[#183c32] px-2.5 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:min-h-11 sm:gap-1.5 sm:px-5 sm:py-3 sm:text-xs">Post a job <ArrowUpRight className="inline" size={13}/></button>
               <button
                 type="button"
                 onClick={() => setMenuOpen(value => !value)}
                 aria-label={menuOpen ? "Close main menu" : "Open main menu"}
                 aria-expanded={menuOpen}
                 aria-controls="planetai-main-menu"
-                className="grid h-11 w-11 place-items-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b]"
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11"
               >
                 {menuOpen ? <X size={19}/> : <Menu size={19}/>}
               </button>
