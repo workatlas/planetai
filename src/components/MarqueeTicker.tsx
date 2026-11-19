@@ -51,15 +51,17 @@ export const MarqueeTicker: React.FC<MarqueeTickerProps> = ({
 
   return (
     <div
-      className="bg-[#0D1320] overflow-hidden px-4 sm:px-6"
+      className="bg-[#0D1320] overflow-hidden"
       aria-label="PLANETAI employer plans and listing review information"
     >
-      <div className="marquee-container marquee-fade-mask relative mx-auto max-w-7xl overflow-hidden border-b border-slate-800/80">
+      <div className="relative mx-auto max-w-7xl overflow-hidden px-4 sm:px-6 border-b border-slate-800/80">
+        <div className="marquee-container marquee-fade-mask relative overflow-hidden">
         <div className="marquee-track">
           <div className="flex items-center">{renderMessages('a')}</div>
           <div className="flex items-center" aria-hidden="true">
             {renderMessages('b')}
           </div>
+        </div>
         </div>
       </div>
     </div>
