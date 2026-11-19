@@ -4,8 +4,7 @@ export type PayPalWebhookHeaders = {
   transmission_id: string;
   transmission_sig: string;
   transmission_time: string;
-  webhook_id: string;
-};
+  };
 
 export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders | null {
   const fields = {
@@ -28,7 +27,6 @@ export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders
     transmission_id: fields.transmission_id!,
     transmission_sig: fields.transmission_sig!,
     transmission_time: fields.transmission_time!,
-    webhook_id: "",
   };
 }
 
