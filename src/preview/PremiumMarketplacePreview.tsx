@@ -43,13 +43,13 @@ const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
   const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
   const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
-    <div className="planetai-company-logo-tile flex h-[96px] w-[128px] shrink-0 flex-col items-center justify-center gap-1.5 rounded-2xl border border-[#dce5dc] px-3 py-2 shadow-sm sm:h-[104px] sm:w-[140px]">
+    <div className="planetai-company-logo-tile flex h-[68px] w-[104px] shrink-0 flex-col items-center justify-center gap-1 rounded-xl border border-[#dce5dc] px-2 py-1.5 shadow-sm sm:h-[72px] sm:w-[116px]">
       {logoUrl && !failed ? (
-        <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
+        <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
       ) : (
-        <span aria-hidden="true" className="grid h-12 w-12 place-items-center rounded-xl bg-[#edf4ee] text-sm font-extrabold text-[#285c4b] sm:h-14 sm:w-14">{initials || 'CO'}</span>
+        <span aria-hidden="true" className="grid h-7 w-7 place-items-center rounded-lg bg-[#edf4ee] text-xs font-extrabold text-[#285c4b] sm:h-8 sm:w-8">{initials || 'CO'}</span>
       )}
-      <span className="max-w-full truncate text-[10px] font-extrabold tracking-[.01em] text-[#40584a] sm:text-[11px]">{job.company}</span>
+      <span className="max-w-full truncate text-[9px] font-extrabold tracking-[.01em] text-[#40584a] sm:text-[10px]">{job.company}</span>
     </div>
   );
 };
@@ -207,12 +207,12 @@ export default function PremiumMarketplacePreview({
 
       <div role="region" aria-label="Companies with opportunities on PLANETAI" className="overflow-hidden border-b border-[#29493c] bg-[#142c26] text-[#d6e7df]">
         <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
-        <div className="mx-auto flex max-w-[1320px] items-center gap-5 px-4 py-3 sm:px-8 sm:py-4">
-          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.2em] text-[#a9c9b4] lg:block">Companies to explore</span>
-          <div className="marquee-container min-w-0 flex-1 overflow-hidden">
-            <div className="marquee-track items-center gap-4">
-              <div className="flex items-center gap-4 pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
-              <div className="flex items-center gap-4 pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
+        <div className="mx-auto grid w-full max-w-[1320px] grid-cols-1 items-center gap-2 px-5 py-2.5 sm:px-8 sm:py-3 lg:grid-cols-[auto_minmax(0,1fr)] lg:gap-5">
+          <span className="hidden shrink-0 text-[9px] font-bold uppercase tracking-[.18em] text-[#a9c9b4] lg:block">Companies to explore</span>
+          <div className="marquee-container min-w-0 w-full overflow-hidden">
+            <div className="marquee-track items-center gap-3 sm:gap-4">
+              <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
+              <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
             </div>
           </div>
         </div>
