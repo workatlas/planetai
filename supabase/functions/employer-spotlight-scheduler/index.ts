@@ -86,8 +86,12 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     payment_required: true,
     amount: "149.00",
     currency: "USD",
-    checkout_enabled: true,
-    message: "Your 15-minute slot hold is ready for secure PayPal checkout.",
+    checkout_enabled: data[0].status === "payment_pending" &&
+      Boolean(data[0].hold_expires_at) &&
+      new Date(data[0].hold_expires_at).getTime() > Date.now(),
+    message: data[0].status === "payment_pending"
+      ? "Your 15-minute slot hold is ready for secure PayPal checkout."
+      : "This listing already has a scheduled or active Spotlight reservation. Do not pay again.",
   }, 202);
 });
 
