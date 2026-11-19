@@ -1,4 +1,4 @@
-import { withSupabase } from "npm:@supabase/server";
+import { withSupabase } from "npm:@supabase/server@1";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
 import { checkRateLimit } from "../_shared/rate-limit.ts";
