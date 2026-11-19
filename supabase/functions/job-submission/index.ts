@@ -38,9 +38,17 @@ const handler = async (req: Request) => {
     return json({ error: "Job submission is temporarily unavailable." }, 503);
   }
 
+  const declaredLength = Number(req.headers.get("content-length") || 0);
+  if (declaredLength > 32_768) return json({ error: "The submission request is too large." }, 413);
+
   let body: Record<string, unknown>;
   try {
-    body = await req.json();
+    const rawBody = await req.text();
+    if (rawBody.length > 32_768) return json({ error: "The submission request is too large." }, 413);
+    body = JSON.parse(rawBody);
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return json({ error: "A valid JSON request body is required." }, 400);
+    }
   } catch {
     return json({ error: "A valid JSON request body is required." }, 400);
   }
@@ -117,6 +125,8 @@ const handler = async (req: Request) => {
     if (error || !data.user) return json({ error: "Your sign-in session could not be verified. Please sign in again." }, 401);
     userId = data.user.id;
   }
+
+  if (!userId) return json({ error: "Create or sign in to your employer workspace before submitting a listing." }, 401);
 
   const { data: membership, error: memberError } = await admin
     .from("employer_members")
