@@ -36,13 +36,16 @@ export function getPayPalCaptureOrderId(event: unknown): { orderId: string; capt
     event_type?: unknown;
     resource?: {
       id?: unknown;
-      supplementary_data?: { related_ids?: { order_id?: unknown } };
+      supplementary_data?: { related_ids?: { order_id?: unknown; capture_id?: unknown } };
     };
   };
   if (!["PAYMENT.CAPTURE.COMPLETED", "PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED", "PAYMENT.CAPTURE.DENIED"].includes(String(value.event_type))) return null;
   const orderId = value.resource?.supplementary_data?.related_ids?.order_id;
-  const captureId = value.resource?.id;
+  const resourceId = value.resource?.id;
+  const relatedCaptureId = value.resource?.supplementary_data?.related_ids?.capture_id;
+  const captureId = value.event_type === "PAYMENT.CAPTURE.COMPLETED" ? resourceId : relatedCaptureId;
   if (typeof orderId !== "string" || !orderId.trim() ||
-      typeof captureId !== "string" || !captureId.trim()) return null;
-  return { orderId: orderId.trim(), captureId: captureId.trim() };
+      typeof captureId !== "string" || !captureId.trim() ||
+      typeof resourceId !== "string" || !resourceId.trim()) return null;
+  return { orderId: orderId.trim(), captureId: captureId.trim(), resourceId: resourceId.trim() };
 }
