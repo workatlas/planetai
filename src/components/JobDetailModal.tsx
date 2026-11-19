@@ -100,6 +100,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const isCustomPost = Boolean(
     job.isCustomEmployerPost || job.id.startsWith('custom-')
   );
+  const isCuratedGuide = !isCustomPost;
   const isFeatured = Boolean(job.featured);
   const isVerified = Boolean(job.verified);
   const isEstablished = job.companyTier === 'Established Leader';
@@ -229,7 +230,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                     Custom Employer Post
                   </span>
                 )}
-                {job.urgent && (
+                {isCustomPost && job.urgent && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400">
                     <Zap className="w-3.5 h-3.5" />
                     Urgent Hiring
@@ -243,7 +244,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 <span aria-hidden="true">·</span>
                 <span className="inline-flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {job.postedAgo}
+                  {isCuratedGuide ? 'Opportunity guide · availability not confirmed' : job.postedAgo}
                 </span>
                 {safeWebsiteUrl && (
                   <>
@@ -382,6 +383,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 </strong>
               </span>
             </div>
+          </div>
+        )}
+
+        {isCuratedGuide && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-3.5 text-sm text-amber-900">
+            <strong>Important:</strong> This is a curated role guide, not a confirmed live vacancy or an offer from the employer. Open the employer's official site to check whether the role is currently available, who can apply, and the latest compensation and terms.
           </div>
         )}
 
@@ -583,7 +590,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#183c32] text-white text-xs sm:text-sm font-bold hover:bg-[#285c4b] active:scale-[0.98] transition-all whitespace-nowrap"
             >
-              <span>Apply Now</span>
+              <span>{isCustomPost ? 'View Listing' : 'Visit Employer Site'}</span>
               <ArrowUpRight className="w-4 h-4 shrink-0" />
             </a>
           </div>
