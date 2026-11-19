@@ -29,6 +29,8 @@ jobs:
         uses: denoland/setup-deno@v2
         with:
           deno-version: v2.x
+      - name: Install npm dependencies for Deno type-checking
+        run: deno install
       - name: Type-check Edge Functions
         run: |
           deno check \
