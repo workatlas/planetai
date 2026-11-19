@@ -84,6 +84,14 @@ Do not store resumes, identity documents, private candidate data, or other sensi
 
 The public jobs table exposes only published, unexpired listings through its RLS policy. Employer contact details, moderation notes, and payment records are not part of the public job record.
 
+## Exclusive Employer Spotlight scheduler (feature branch only)
+
+The feature branch now includes a proposed `employer_spotlight_reservations` ledger and `employer-spotlight-scheduler` Edge Function. The migration uses a database exclusion constraint on 30-day date ranges to prevent overlapping live holds/reservations, a transaction-scoped advisory lock to allocate the next available slot, and a 15-minute hold for unpaid reservations. Only a confirmed employer owner/admin can request a slot for an approved Spotlight submission. Reservation rows are not readable or writable by browser roles.
+
+A database worker function, `private.process_employer_spotlight_queue()`, activates due paid reservations and expires completed placements. It must be invoked by a trusted scheduled worker. That worker is not configured. The reservation migration is not applied to Supabase, the Edge Function is not deployed, the employer booking UI and reservation-to-PayPal checkout association are not complete, and the $149 tier remains disabled. This is intentionally not presented as a working booking flow yet.
+
+The intended commercial rule is payment at reservation, with the 30-day placement period beginning on the scheduled start date. Existing Platform Opportunity Guides remain a separate multi-card curated section; paid Employer Spotlight is a separate exclusive placement.
+
 ## PayPal listing payment recovery
 
 - PayPal remains in Sandbox.
@@ -137,14 +145,14 @@ The shared CORS helper includes the existing Netlify production/preview origins 
 Before any production release:
 
 1. Inspect Supabase Auth URL Configuration: keep Site URL at the current production origin until domain approval; allow the production and exact deploy-preview redirect origins; enable email confirmations; verify confirmation/recovery templates use the redirect target correctly. See `docs/EMPLOYER_PAYMENT_TEST_PLAN.md`.
-2. Confirm leaked-password protection is enabled in Supabase Auth settings, or record the plan limitation and an approved mitigation.
+2. Record that Supabase leaked-password protection is Pro-only and unavailable on the current Free plan. Set the strongest available Email-provider password rules (12+ characters and mixed character classes) without purchasing an upgrade unless separately approved.
 3. Confirm the final approved domain and update Auth redirect URLs, CORS origins, canonical metadata, and sitemap.
 4. Deploy the branch Edge Functions only to the approved test environment, then verify CORS, authentication, rate limits, and all endpoint responses.
 5. Complete the Auth tests and employer/payment scenarios in `docs/EMPLOYER_PAYMENT_TEST_PLAN.md`.
 6. Complete the real employer journey: signup/email confirmation → workspace creation → profile edit and branding upload → job submission → admin approval → Sandbox checkout → capture verification → publication → public listing visibility.
 7. Test interruption/retry cases: duplicate create-order, capture response lost, ledger update failure, publication failure, and repeat publication.
 8. Verify unauthorized users cannot access another employer's workspace, files, submissions, or admin actions.
-9. Implement and test PayPal webhook signature verification, refund handling, and operational reconciliation before enabling live PayPal.
+9. Complete the exclusive Spotlight scheduler: reservation-to-PayPal association, trusted scheduled worker configuration, activation/expiry idempotency, refunds/disputes and S1–S12 tests before enabling the $149 tier.
 10. Re-run database security/performance advisors and confirm CI type-check and frontend build pass on the final PR head.
 11. Only then request explicit approval to merge and deploy.
 
