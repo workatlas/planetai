@@ -8,6 +8,7 @@ type Payment = {
   currency: string;
   provider_order_id: string | null;
   confirmed_at: string | null;
+  spotlight_reservation_id?: string | null;
 };
 type Listing = {
   id: string;
@@ -24,7 +25,7 @@ const tierName = (tier: string) =>
   tier === 'featured' ? 'Featured Boost' :
   tier === 'spotlight' ? 'Spotlight + Marquee' : 'Free Standard';
 const priceFor = (tier: string) =>
-  tier === 'featured' ? 49 : tier === 'spotlight' ? null : 0;
+  tier === 'featured' ? 49 : tier === 'spotlight' ? 149 : 0;
 const statusLabel = (status: string) => ({
   pending_review: 'In moderation',
   email_verification_pending: 'Email verification pending',
@@ -136,6 +137,45 @@ export default function EmployerPayments() {
     }
   }
 
+  async function startSpotlightCheckout(listing: Listing) {
+    setBusyId(listing.id);
+    setError('');
+    setNotice('');
+    try {
+      const { data: slot, error: slotError } = await supabase.functions.invoke('employer-spotlight-scheduler', {
+        body: { action: 'next-slot', submission_id: listing.id },
+      });
+      if (slotError || !slot?.next_available_start) {
+        throw new Error(slot?.error || slotError?.message || 'The next Spotlight date is unavailable.');
+      }
+
+      const { data: hold, error: holdError } = await supabase.functions.invoke('employer-spotlight-scheduler', {
+        body: { action: 'reserve-next', submission_id: listing.id },
+      });
+      if (holdError || !hold?.reservation?.id || hold.checkout_enabled !== true) {
+        throw new Error(hold?.error || holdError?.message || hold?.message || 'We could not reserve the next Spotlight date.');
+      }
+
+      const { data: checkout, error: checkoutError } = await supabase.functions.invoke('paypal-listing-checkout', {
+        body: {
+          action: 'create-order',
+          submission_id: listing.id,
+          reservation_id: hold.reservation.id,
+        },
+      });
+      if (checkoutError || !checkout?.approve_url) {
+        throw new Error(checkout?.error || checkoutError?.message || 'Secure Spotlight checkout could not be started.');
+      }
+
+      const startDate = hold.reservation.slot_start || slot.next_available_start;
+      setNotice('Spotlight reserved for ' + new Date(startDate + 'T00:00:00').toLocaleDateString() + '. Redirecting to PayPal…');
+      window.location.assign(checkout.approve_url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to reserve a Spotlight placement.');
+      setBusyId('');
+    }
+  }
+
   async function retryPublication(listing: Listing) {
     if (!listing.payment?.provider_order_id) return;
     setBusyId(listing.id);
@@ -225,7 +265,7 @@ export default function EmployerPayments() {
                   </div>
                   <div className="text-right">
                     <p className="text-xl font-semibold">{amount === null ? 'Coming soon' : amount > 0 ? '$' + amount.toFixed(2) : 'Free'}</p>
-                    <p className="mt-1 text-[10px] text-[#9aa49d]">{amount === null ? 'Marquee placement is not yet available' : amount > 0 ? 'USD · one-time listing upgrade' : 'No payment required'}</p>
+                    <p className="mt-1 text-[10px] text-[#9aa49d]">{amount === null ? 'Marquee placement is not yet available' : listing.package_tier === 'spotlight' ? 'USD · exclusive 30-day placement' : amount > 0 ? 'USD · one-time listing upgrade' : 'No payment required'}</p>
                   </div>
                 </div>
 
@@ -240,14 +280,14 @@ export default function EmployerPayments() {
                       </button>
                     )
                   ) : canPay ? (
-                    <button onClick={() => startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
-                      {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <CreditCard size={14}/>} Pay securely with PayPal <ExternalLink size={13}/>
+                    <button onClick={() => listing.package_tier === 'spotlight' ? startSpotlightCheckout(listing) : startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
+                      {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <CreditCard size={14}/>} {listing.package_tier === 'spotlight' ? 'Reserve date & pay $149' : 'Pay securely with PayPal'} <ExternalLink size={13}/>
                     </button>
                   ) : listing.status === 'rejected' ? (
                     <span className="text-xs text-rose-600">No payment is due.</span>
                   ) : (
                     <span className="text-[10px] text-[#9aa49d]">
-                      {listing.status === 'published' ? 'Your listing is live.' : listing.status === 'approved_awaiting_payment' ? 'Payment is not available for this package yet.' : 'We will unlock payment here after approval.'}
+                      {listing.status === 'published' ? 'Your listing is live.' : listing.status === 'approved_awaiting_payment' && listing.package_tier === 'spotlight' ? 'Reserve the next exclusive 30-day Spotlight + Marquee slot.' : listing.status === 'approved_awaiting_payment' ? 'Payment is not available for this package yet.' : 'We will unlock payment here after approval.'}
                     </span>
                   )}
                 </div>
