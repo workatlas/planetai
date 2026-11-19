@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       }
     } else {
       const { error: retryEventError } = await admin.from("employer_billing_events")
-        .update({ event_status: "received", payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId } })
+        .update({ event_status: "received", payload: { order_id: captureReference.orderId, capture_id: captureReference.captureId, resource_id: captureReference.resourceId } })
         .eq("id", eventRowId);
       if (retryEventError) throw new Error("Webhook retry could not be recorded.");
     }
