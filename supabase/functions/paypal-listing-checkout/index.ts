@@ -258,6 +258,8 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 });
 
 Deno.serve(async (req) => {
+  if (!isAllowedOrigin(req)) return new Response("Origin not allowed.", { status: 403, headers: corsHeadersFor(req) });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
   try {
     const response = await handler(req);
     const headers = new Headers(response.headers);
