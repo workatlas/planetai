@@ -152,8 +152,20 @@ Before any production release:
 6. Complete the real employer journey: signup/email confirmation → workspace creation → profile edit and branding upload → job submission → admin approval → Sandbox checkout → capture verification → publication → public listing visibility.
 7. Test interruption/retry cases: duplicate create-order, capture response lost, ledger update failure, publication failure, and repeat publication.
 8. Verify unauthorized users cannot access another employer's workspace, files, submissions, or admin actions.
-9. Complete the exclusive Spotlight scheduler: reservation-to-PayPal association, trusted scheduled worker configuration, activation/expiry idempotency, refunds/disputes and S1–S12 tests before enabling the $149 tier.
+9. Validate the exclusive Spotlight implementation: apply the branch migration only in the approved test environment, verify the pg_cron job and cron.job_run_details, run S13–S26, confirm reservation-to-PayPal association and late-capture reconciliation, then complete refund/dispute procedures before enabling the $149 tier.
 10. Re-run database security/performance advisors and confirm CI type-check and frontend build pass on the final PR head.
 11. Only then request explicit approval to merge and deploy.
 
 The current source review and CI checks do not replace the real-account browser and PayPal Sandbox tests. Keep production and live payments unchanged until those tests pass.
+
+
+## Exclusive Spotlight booking flow (feature branch)
+
+- Employers can reserve only after moderation approval and only as the owner/admin of the listing's exact employer account.
+- The employer booking interface requests the next available date, creates a 15-minute hold, then sends the reservation ID to the PayPal checkout Edge Function.
+- Checkout reads the reservation from the database and enforces $149.00 USD. It does not trust a client-supplied price.
+- The payment row stores spotlight_reservation_id. A verified PayPal capture is finalized through a service-role-only RPC that checks the exact reservation, payment row, amount, currency, capture ID, and hold expiry.
+- A late capture is not allowed to take a slot that has been reallocated. It is left for manual reconciliation and no Spotlight activation is granted automatically.
+- Paid Spotlight listings are published without featured=true; the database queue processor activates the Spotlight flag only on the scheduled start date.
+- The migration enables pg_cron and schedules private.process_employer_spotlight_queue() once per minute. The function is private and does not expose a service key or public endpoint.
+- The migration, scheduler, checkout integration, webhook integration, and employer UI are branch-only. No migration has been applied and no Edge Function has been deployed.
