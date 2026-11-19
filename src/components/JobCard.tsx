@@ -204,6 +204,9 @@ export const JobCard: React.FC<JobCardProps> = ({
   const externalApplyUrl = isCustomPost
     ? job.applyUrl
     : resolveApplyUrl(job.company, job.applyUrl);
+  const displayPay = isCuratedGuide
+    ? 'Pay not listed — check employer'
+    : formattedPay;
 
   return (
     <article
@@ -345,7 +348,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Global USD Pay Rate & Remote Location */}
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
           <span className="font-mono tabular-nums text-lg font-semibold text-cyan-300">
-            {formattedPay}
+            {displayPay}
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
             <Globe2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
