@@ -170,3 +170,6 @@ The feature branch now connects the employer booking flow to a 15-minute reserva
 | S26 | Refund, reversal, denial or dispute occurs | Event is flagged for manual reconciliation; placement is not silently reallocated |
 
 Do not mark S13–S26 passed until executed against a dedicated test environment with the migration applied and PayPal Sandbox configured. Confirm Cron job creation and inspect cron.job_run_details for successful processor runs.
+
+
+Additional Spotlight payment safety: signed refund, reversal, denial, and dispute events move the associated reservation into payment_review, pause any active Spotlight flag, and keep that date range blocked from automatic reallocation. Resolution does not automatically reactivate a placement; an administrator must reconcile the case first.
