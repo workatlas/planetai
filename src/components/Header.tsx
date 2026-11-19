@@ -1,7 +1,6 @@
 import React from 'react';
 import {Check, Share2, UserRound} from 'lucide-react';
 import {PlanetAILogo} from './PlanetAILogo';
-import {PWAInstallButton} from './PWAInstallButton';
 
 export type AppTab =
   | 'jobs'
@@ -101,7 +100,6 @@ export const Header: React.FC<HeaderProps> = ({
             {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4 text-slate-300" />}
           </button>
 
-          <div className="hidden sm:flex shrink-0"><PWAInstallButton compact /></div>
         </div>
       </div>
     </header>
