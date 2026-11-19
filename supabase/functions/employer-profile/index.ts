@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -15,6 +16,10 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   catch { return json({ error: "A valid JSON request body is required." }, 400); }
 
   const admin = ctx.supabaseAdmin;
+  const rateLimit = await checkRateLimit(admin, "employer-profile", userId, 30, 60);
+  if (rateLimit === null) return json({ error: "Profile protection is temporarily unavailable." }, 503);
+  if (!rateLimit) return json({ error: "Too many profile requests. Please slow down." }, 429);
+
   const { data: account, error: lookupError } = await admin
     .from("employer_accounts")
     .select("id, owner_user_id, company_name, company_website, company_logo_url, company_cover_image_url, company_description, company_location, contact_email")
