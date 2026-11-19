@@ -91,6 +91,80 @@ Deno.serve(async (req) => {
       return json({ error: "Webhook signature verification failed." }, 401);
     }
 
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    // Disputes identify the seller-side transaction/capture ID rather than
+    // the Checkout order ID. Verify the webhook first, then record for review.
+    if (["CUSTOMER.DISPUTE.CREATED", "CUSTOMER.DISPUTE.UPDATED", "CUSTOMER.DISPUTE.RESOLVED", "RISK.DISPUTE.CREATED"].includes(eventType)) {
+      const resource = event.resource && typeof event.resource === "object"
+        ? event.resource as { id?: unknown; disputed_transactions?: Array<{ seller_transaction_id?: unknown }> }
+        : {};
+      const sellerTransactionId = Array.isArray(resource.disputed_transactions)
+        ? resource.disputed_transactions.map(item => item?.seller_transaction_id).find(value => typeof value === "string" && value.trim())
+        : null;
+      if (typeof sellerTransactionId !== "string") {
+        console.error("Verified PayPal dispute event has no seller transaction reference.", { eventId, eventType });
+        return json({ received: true, reconciliation_required: true });
+      }
+
+      const { data: disputePayment, error: disputePaymentError } = await admin.from("job_payments")
+        .select("id, submission_id, provider_capture_id, amount, currency, spotlight_reservation_id")
+        .eq("provider", "paypal")
+        .eq("provider_capture_id", sellerTransactionId.trim())
+        .maybeSingle();
+      if (disputePaymentError) throw new Error("Dispute payment lookup failed.");
+      if (!disputePayment) {
+        console.error("Verified PayPal dispute has no matching PLANETAI capture.", { eventId, eventType, sellerTransactionId });
+        return json({ received: true, reconciliation_required: true });
+      }
+
+      const { data: disputeSubmission, error: disputeSubmissionError } = await admin.from("job_submissions")
+        .select("employer_account_id")
+        .eq("id", disputePayment.submission_id)
+        .maybeSingle();
+      if (disputeSubmissionError || !disputeSubmission?.employer_account_id) throw new Error("Dispute employer lookup failed.");
+
+      const { data: existingDisputeEvent, error: existingDisputeEventError } = await admin.from("employer_billing_events")
+        .select("id")
+        .eq("provider_event_id", eventId)
+        .maybeSingle();
+      if (existingDisputeEventError) throw new Error("Dispute event deduplication lookup failed.");
+      if (existingDisputeEvent) return json({ received: true, duplicate: true });
+
+      const { error: insertDisputeEventError } = await admin.from("employer_billing_events").insert({
+        employer_account_id: disputeSubmission.employer_account_id,
+        billing_provider: "paypal",
+        provider_event_id: eventId,
+        event_type: eventType,
+        event_status: "failed",
+        amount_minor: Math.round(Number(disputePayment.amount) * 100),
+        currency: disputePayment.currency,
+        payload: {
+          dispute_id: typeof resource.id === "string" ? resource.id : null,
+          capture_id: sellerTransactionId.trim(),
+          manual_reconciliation_required: true,
+        },
+      });
+      if (insertDisputeEventError?.code === "23505") return json({ received: true, duplicate: true });
+      if (insertDisputeEventError) throw new Error("Dispute event could not be recorded.");
+
+      if (disputePayment.spotlight_reservation_id) {
+        const { error: reviewError } = await admin.from("employer_spotlight_reservations")
+          .update({ status: "payment_review", updated_at: new Date().toISOString() })
+          .eq("id", disputePayment.spotlight_reservation_id)
+          .in("status", ["payment_pending", "scheduled", "active", "payment_review"]);
+        if (reviewError) throw new Error("Spotlight reservation could not be paused for dispute review.");
+        const { error: deactivateError } = await admin.from("jobs")
+          .update({ spotlight_active: false, spotlight_expires_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+          .eq("spotlight_reservation_id", disputePayment.spotlight_reservation_id);
+        if (deactivateError) throw new Error("Spotlight placement could not be paused after a dispute.");
+      }
+      console.warn("Verified PayPal dispute requires administrator reconciliation.", { eventId, eventType, sellerTransactionId });
+      return json({ received: true, reconciliation_required: true });
+    }
+
     // Only a signed completed capture can grant paid listing publication.
     // Other event types are acknowledged but never mutate payment or listing state.
     const captureReference = getPayPalCaptureOrderId(event);
@@ -98,10 +172,6 @@ Deno.serve(async (req) => {
       console.info("Verified PayPal event acknowledged without state mutation.", { eventId, eventType });
       return json({ received: true, processed: false });
     }
-
-    const admin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    });
     const { data: payment, error: paymentError } = await admin.from("job_payments")
       .select("id, submission_id, provider_order_id, provider_capture_id, amount, currency, status, spotlight_reservation_id")
       .eq("provider", "paypal")
