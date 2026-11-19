@@ -133,7 +133,7 @@ export default function EmployerAuth() {
       <header className="border-b border-[#e2e8e1] bg-white">
         <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
           <a href="/" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
+            <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><PlanetAILogo className="h-9 w-9"/></span>
             <span><b className="block text-sm tracking-[-.05em]">PLANETAI</b><small className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Global talent marketplace</small></span>
           </a>
           <a href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-[#64748b] hover:text-[#285c4b]"><ArrowLeft size={14}/> Back to jobs</a>
