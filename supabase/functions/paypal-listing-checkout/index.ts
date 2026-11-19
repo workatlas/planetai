@@ -272,6 +272,6 @@ Deno.serve(async (req) => {
     return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
   } catch (error) {
     console.error("PayPal checkout error", error);
-    return json({ error: error instanceof Error ? error.message : "Payment service unavailable." }, 500);
+    return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Payment service unavailable." }), { status: 500, headers: { ...corsHeadersFor(req), "Content-Type": "application/json" } });
   }
 });
