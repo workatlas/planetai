@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 
 const json = (body: unknown, status = 200) =>
@@ -25,6 +26,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   }
 
   const admin = ctx.supabaseAdmin;
+  const rateLimit = await checkRateLimit(admin, "employer-workspace", userId, 20, 900);
+  if (rateLimit === null) return json({ error: "Workspace protection is temporarily unavailable. Please try again shortly." }, 503);
+  if (!rateLimit) return json({ error: "Too many workspace requests. Please wait before trying again." }, 429);
 
   if (body.action === "list") {
     const { data: membership, error: membershipError } = await admin
