@@ -166,7 +166,6 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 });
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const response = await handler(req);
   const headers = new Headers(response.headers);
   for (const [name, value] of Object.entries(corsHeadersFor(req))) headers.set(name, value);
