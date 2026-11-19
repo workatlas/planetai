@@ -300,3 +300,98 @@ revoke all on function public.process_employer_spotlight_queue() from public, an
 grant execute on function public.next_employer_spotlight_slot() to service_role;
 grant execute on function public.reserve_next_employer_spotlight_slot(uuid, uuid, uuid) to service_role;
 grant execute on function public.process_employer_spotlight_queue() to service_role;
+
+
+-- Finalize a verified PayPal capture into a scheduled placement. The Edge
+-- Function calls this only after PayPal's order has been fetched and verified.
+-- The hold must still be valid; late captures are deliberately sent to manual
+-- reconciliation rather than silently stealing a later employer's slot.
+create or replace function private.confirm_employer_spotlight_payment(
+  p_reservation_id uuid,
+  p_payment_id uuid,
+  p_capture_id text
+)
+returns boolean
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_reservation public.employer_spotlight_reservations%rowtype;
+  v_payment public.job_payments%rowtype;
+begin
+  if p_reservation_id is null or p_payment_id is null or coalesce(length(trim(p_capture_id)), 0) = 0 then
+    raise exception 'A reservation, payment and verified capture are required'
+      using errcode = '22023';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtext('planetai_employer_spotlight_queue'));
+
+  select * into v_reservation
+  from public.employer_spotlight_reservations
+  where id = p_reservation_id
+  for update;
+
+  if not found then
+    raise exception 'Spotlight reservation not found' using errcode = 'P0002';
+  end if;
+
+  if v_reservation.status = 'scheduled' and v_reservation.payment_id = p_payment_id then
+    return true;
+  end if;
+
+  if v_reservation.status <> 'payment_pending'
+     or v_reservation.hold_expires_at is null
+     or v_reservation.hold_expires_at <= now() then
+    raise exception 'Spotlight hold expired; payment requires manual reconciliation'
+      using errcode = 'P0001';
+  end if;
+
+  select * into v_payment
+  from public.job_payments
+  where id = p_payment_id
+    and submission_id = v_reservation.submission_id
+    and spotlight_reservation_id = v_reservation.id
+  for update;
+
+  if not found
+     or v_payment.provider <> 'paypal'
+     or v_payment.status <> 'completed'
+     or v_payment.provider_capture_id <> p_capture_id
+     or v_payment.amount <> 149.00
+     or btrim(v_payment.currency) <> 'USD' then
+    raise exception 'Verified payment does not match the Spotlight reservation'
+      using errcode = '23514';
+  end if;
+
+  update public.employer_spotlight_reservations
+  set status = 'scheduled',
+      payment_id = p_payment_id,
+      paid_at = coalesce(paid_at, now()),
+      hold_expires_at = null,
+      updated_at = now()
+  where id = v_reservation.id;
+
+  return true;
+end;
+$$;
+
+create or replace function public.confirm_employer_spotlight_payment(
+  p_reservation_id uuid,
+  p_payment_id uuid,
+  p_capture_id text
+)
+returns boolean
+language sql
+security definer
+set search_path = ''
+as $$
+  select private.confirm_employer_spotlight_payment(
+    p_reservation_id, p_payment_id, p_capture_id
+  );
+$$;
+
+revoke all on function private.confirm_employer_spotlight_payment(uuid, uuid, text) from public, anon, authenticated;
+grant execute on function private.confirm_employer_spotlight_payment(uuid, uuid, text) to service_role;
+revoke all on function public.confirm_employer_spotlight_payment(uuid, uuid, text) from public, anon, authenticated;
+grant execute on function public.confirm_employer_spotlight_payment(uuid, uuid, text) to service_role;
