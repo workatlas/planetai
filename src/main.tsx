@@ -4,6 +4,7 @@ import {registerSW} from 'virtual:pwa-register';
 import App from './App.tsx';
 import { ApplicantDashboardPreview, EmployerDashboardPreview } from './preview/MarketplaceDashboardsPreview';
 import EmployerAuth from './preview/EmployerAuth';
+import EmployerPasswordReset from './preview/EmployerPasswordReset';
 import EmployerProfile from './preview/EmployerProfile';
 import JobSeekerAuth from './preview/JobSeekerAuth';
 import JobSeekerDashboard from './preview/JobSeekerDashboard';
@@ -37,6 +38,7 @@ const mountApplication = () => {
     : experience === 'employer-profile' ? <EmployerProfile />
     : experience === 'employer-payments' ? <EmployerPayments />
     : experience === 'employer-auth' ? <EmployerAuth />
+    : experience === 'employer-password-reset' ? <EmployerPasswordReset />
     : experience === 'job-seeker-auth' ? <JobSeekerAuth />
     : experience === 'job-seeker-reset' ? <JobSeekerPasswordReset />
     : experience === 'job-seeker-dashboard' ? <JobSeekerDashboard />
