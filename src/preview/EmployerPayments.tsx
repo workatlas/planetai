@@ -120,6 +120,14 @@ export default function EmployerPayments() {
         body: { action: 'create-order', submission_id: listing.id },
       });
       if (requestError) throw new Error(requestError.message || 'PayPal checkout could not be started.');
+      if (data?.paid) {
+        await loadListings();
+        setNotice(data.publication_pending
+          ? 'PayPal confirms your payment. Your listing is awaiting publication recovery; please do not pay again.'
+          : 'Your previous PayPal payment has been recovered and reconciled successfully.');
+        setBusyId('');
+        return;
+      }
       if (!data?.approve_url) throw new Error(data?.error || 'PayPal did not return a secure approval link.');
       window.location.assign(data.approve_url);
     } catch (err) {
