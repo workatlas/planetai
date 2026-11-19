@@ -49,12 +49,14 @@ These versions remain branch-only. Do not deploy or merge them until the preview
 
 ## Authentication and authorization
 
-Employer route: `/?experience=employer-auth`
+Employer route: `/?experience=employer-auth`  
+Employer password recovery route: `/?experience=employer-password-reset`
 
-1. Employer signs up and confirms their email if confirmation is enabled.
-2. After sign-in, the authenticated workspace function derives the user ID from the verified JWT.
-3. The function creates or loads the employer account and ensures owner membership.
-4. The employer can edit the company profile, upload branding, and manage submitted listings.
+1. Employer signs up and confirms their email. Email confirmations must be enabled in Supabase Auth.
+2. Password recovery sends the user to a dedicated reset route. The new-password form is locked until Supabase emits a valid `PASSWORD_RECOVERY` event/session; a direct visit or expired/reused link cannot unlock it.
+3. After sign-in, the authenticated workspace function validates the live Auth user record and requires `email_confirmed_at` before proceeding.
+4. The function creates or loads the employer account and ensures owner membership.
+5. The employer can edit the company profile, upload branding, and manage submitted listings. Employer profile and job-submission endpoints also reject unconfirmed email accounts.
 
 Authorization rules:
 - User-editable Auth metadata is used only for initial display/default values, never as proof of employer or admin authority.
@@ -134,14 +136,16 @@ The shared CORS helper includes the existing Netlify production/preview origins 
 
 Before any production release:
 
-1. Confirm leaked-password protection is enabled in Supabase Auth settings.
-2. Confirm the final approved domain and update Auth redirect URLs, CORS origins, canonical metadata, and sitemap.
-3. Deploy the branch Edge Functions only to the approved test environment, then verify CORS, authentication, rate limits, and all endpoint responses.
-4. Complete the real employer journey: signup/email confirmation → workspace creation → profile edit and branding upload → job submission → admin approval → Sandbox checkout → capture verification → publication → public listing visibility.
-5. Test interruption/retry cases: duplicate create-order, capture response lost, ledger update failure, publication failure, and repeat publication.
-6. Verify unauthorized users cannot access another employer's workspace, files, submissions, or admin actions.
-7. Implement and test PayPal webhook signature verification, refund handling, and operational reconciliation before enabling live PayPal.
-8. Re-run database security/performance advisors and confirm CI type-check and frontend build pass on the final PR head.
-9. Only then request explicit approval to merge and deploy.
+1. Inspect Supabase Auth URL Configuration: keep Site URL at the current production origin until domain approval; allow the production and exact deploy-preview redirect origins; enable email confirmations; verify confirmation/recovery templates use the redirect target correctly. See `docs/EMPLOYER_PAYMENT_TEST_PLAN.md`.
+2. Confirm leaked-password protection is enabled in Supabase Auth settings, or record the plan limitation and an approved mitigation.
+3. Confirm the final approved domain and update Auth redirect URLs, CORS origins, canonical metadata, and sitemap.
+4. Deploy the branch Edge Functions only to the approved test environment, then verify CORS, authentication, rate limits, and all endpoint responses.
+5. Complete the Auth tests and employer/payment scenarios in `docs/EMPLOYER_PAYMENT_TEST_PLAN.md`.
+6. Complete the real employer journey: signup/email confirmation → workspace creation → profile edit and branding upload → job submission → admin approval → Sandbox checkout → capture verification → publication → public listing visibility.
+7. Test interruption/retry cases: duplicate create-order, capture response lost, ledger update failure, publication failure, and repeat publication.
+8. Verify unauthorized users cannot access another employer's workspace, files, submissions, or admin actions.
+9. Implement and test PayPal webhook signature verification, refund handling, and operational reconciliation before enabling live PayPal.
+10. Re-run database security/performance advisors and confirm CI type-check and frontend build pass on the final PR head.
+11. Only then request explicit approval to merge and deploy.
 
 The current source review and CI checks do not replace the real-account browser and PayPal Sandbox tests. Keep production and live payments unchanged until those tests pass.
