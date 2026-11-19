@@ -97,8 +97,8 @@ export const Header: React.FC<HeaderProps> = ({
             <span className="hidden 2xl:inline text-emerald-300/90">Guides &amp; listings</span>
           </div>
 
-          <button type="button" onClick={onShareApp} aria-label="Share PlanetAI app link" className="inline-flex items-center justify-center gap-2 min-h-[40px] min-w-[40px] sm:min-h-[44px] sm:min-w-[44px] px-2.5 sm:px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/90 text-slate-100 text-xs sm:text-sm font-medium hover:border-slate-700 hover:bg-slate-800 active:scale-[0.98] transition-all whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
-            {copied ? <><Check className="w-4 h-4 text-emerald-400 shrink-0" /><span className="hidden sm:inline text-emerald-300">Copied!</span></> : <><Share2 className="w-4 h-4 text-slate-300 shrink-0" /><span className="hidden sm:inline">Share App</span></>}
+          <button type="button" onClick={onShareApp} aria-label={copied ? "PlanetAI app link copied" : "Share PlanetAI app link"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900/90 text-slate-100 transition-all hover:border-slate-700 hover:bg-slate-800 active:scale-[0.98] sm:h-11 sm:w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
+            {copied ? <Check className="h-4 w-4 text-emerald-400" /> : <Share2 className="h-4 w-4 text-slate-300" />}
           </button>
 
           <div className="hidden sm:flex shrink-0"><PWAInstallButton compact /></div>
