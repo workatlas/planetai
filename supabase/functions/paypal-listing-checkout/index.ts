@@ -155,13 +155,25 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
     const returnUrl = `${origin}/?experience=employer-payments&payment=success&submission_id=${encodeURIComponent(submission.id)}`;
     const cancelUrl = `${origin}/?experience=employer-payments&payment=cancelled&submission_id=${encodeURIComponent(submission.id)}`;
-    const { data: existing } = await admin.from("job_payments")
-      .select("id, provider_order_id, status")
+    const { data: existing, error: existingPaymentError } = await admin.from("job_payments")
+      .select("id, provider_order_id, provider_capture_id, status")
       .eq("submission_id", submissionId)
-      .eq("status", "pending")
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (existingPaymentError) {
+      console.error("Existing payment lookup failed", existingPaymentError);
+      return json({ error: "We could not verify the previous payment attempt. Please try again shortly." }, 503);
+    }
+    if (existing?.status === "completed") {
+      if (!existing.provider_capture_id) {
+        return json({ error: "A completed payment record is missing its capture reference. Administrator reconciliation is required; do not pay again." }, 409);
+      }
+      const published = await ensurePublished(existing.provider_capture_id, existing.provider_order_id || "");
+      return published
+        ? json({ paid: true, published: true, already_completed: true, capture_id: existing.provider_capture_id })
+        : json({ paid: true, publication_pending: true, already_completed: true, capture_id: existing.provider_capture_id, error: "Payment is verified. Publication still needs attention." }, 202);
+    }
 
     const token = await paypalToken();
     if (existing?.provider_order_id) {
