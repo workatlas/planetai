@@ -11,6 +11,14 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const userId = ctx.userClaims?.id;
   if (!userId) return json({ error: "Authentication required" }, 401);
 
+  const { data: authData, error: authError } = await ctx.supabase.auth.getUser();
+  if (authError || !authData.user || authData.user.id !== userId) {
+    return json({ error: "Your sign-in session could not be verified. Please sign in again." }, 401);
+  }
+  if (!authData.user.email_confirmed_at) {
+    return json({ error: "Confirm your email address before managing your company profile." }, 403);
+  }
+
   let body: { action?: unknown; profile?: Record<string, unknown> };
   try { body = await req.json(); }
   catch { return json({ error: "A valid JSON request body is required." }, 400); }
