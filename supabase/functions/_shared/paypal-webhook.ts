@@ -4,7 +4,7 @@ export type PayPalWebhookHeaders = {
   transmission_id: string;
   transmission_sig: string;
   transmission_time: string;
-  };
+};
 
 export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders | null {
   const fields = {
@@ -14,7 +14,7 @@ export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders
     transmission_sig: headers.get("paypal-transmission-sig"),
     transmission_time: headers.get("paypal-transmission-time"),
   };
-  if (Object.values(fields).some((value) => !value || value.length > 2048)) return null;
+  if (Object.values(fields).some((value) => !value || value.length > 2048) || fields.auth_algo !== "SHA256withRSA") return null;
   try {
     const certUrl = new URL(fields.cert_url!);
     if (certUrl.protocol !== "https:" || !/(^|\.)paypal\.com$/i.test(certUrl.hostname)) return null;
@@ -39,7 +39,7 @@ export function getPayPalCaptureOrderId(event: unknown): { orderId: string; capt
       supplementary_data?: { related_ids?: { order_id?: unknown } };
     };
   };
-  if (value.event_type !== "PAYMENT.CAPTURE.COMPLETED") return null;
+  if (!["PAYMENT.CAPTURE.COMPLETED", "PAYMENT.CAPTURE.REFUNDED", "PAYMENT.CAPTURE.REVERSED", "PAYMENT.CAPTURE.DENIED"].includes(String(value.event_type))) return null;
   const orderId = value.resource?.supplementary_data?.related_ids?.order_id;
   const captureId = value.resource?.id;
   if (typeof orderId !== "string" || !orderId.trim() ||
