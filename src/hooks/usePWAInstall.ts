@@ -72,7 +72,7 @@ export function PWAInstallProvider({children}: {children: React.ReactNode}) {
     install,
   }), [deferredPrompt, isInstalled, isIOS]);
 
-  return <PWAInstallContext.Provider value={value}>{children}</PWAInstallContext.Provider>;
+  return React.createElement(PWAInstallContext.Provider, {value}, children);
 }
 
 export function usePWAInstall() {
