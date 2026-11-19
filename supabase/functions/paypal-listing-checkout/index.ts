@@ -156,7 +156,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const returnUrl = `${origin}/?experience=employer-payments&payment=success&submission_id=${encodeURIComponent(submission.id)}`;
     const cancelUrl = `${origin}/?experience=employer-payments&payment=cancelled&submission_id=${encodeURIComponent(submission.id)}`;
     const { data: existing, error: existingPaymentError } = await admin.from("job_payments")
-      .select("id, provider_order_id, provider_capture_id, status")
+      .select("id, provider_order_id, provider_capture_id, amount, currency, status")
       .eq("submission_id", submissionId)
       .order("created_at", { ascending: false })
       .limit(1)
@@ -166,7 +166,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       return json({ error: "We could not verify the previous payment attempt. Please try again shortly." }, 503);
     }
     if (existing?.status === "completed") {
-      if (!existing.provider_capture_id) {
+      if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" || !existing.provider_capture_id) {
         return json({ error: "A completed payment record is missing its capture reference. Administrator reconciliation is required; do not pay again." }, 409);
       }
       const published = await ensurePublished(existing.provider_capture_id, existing.provider_order_id || "");
@@ -181,7 +181,8 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       if (savedOrder.status === "COMPLETED") {
         const unit = savedOrder.purchase_units?.[0];
         const captured = unit?.payments?.captures?.find((item: { status: string }) => item.status === "COMPLETED");
-        if (unit?.custom_id !== submission.id || captured?.status !== "COMPLETED" ||
+        if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" ||
+            unit?.custom_id !== submission.id || captured?.status !== "COMPLETED" ||
             captured?.amount?.currency_code !== "USD" ||
             Number(captured?.amount?.value).toFixed(2) !== amount || !captured?.id) {
           console.error("Completed PayPal order did not match its pending listing", { orderId: existing.provider_order_id });
@@ -265,6 +266,9 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     if (paymentLookupError || !payment) return json({ error: "This PayPal order is not recorded for the selected listing." }, 404);
 
     if (payment.status === "completed" && payment.provider_capture_id) {
+      if (Number(payment.amount).toFixed(2) !== amount || payment.currency.trim() !== "USD") {
+        return json({ error: "The completed payment ledger does not match the approved listing price. Administrator reconciliation is required." }, 409);
+      }
       const published = await ensurePublished(payment.provider_capture_id, orderId);
       return published
         ? json({ paid: true, published: true, capture_id: payment.provider_capture_id, already_completed: true })
