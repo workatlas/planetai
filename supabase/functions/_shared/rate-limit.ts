@@ -7,13 +7,14 @@ type RateLimitClient = {
  * and null when the limiter could not be reached (callers should fail closed).
  */
 export async function checkRateLimit(
-  admin: RateLimitClient,
+  admin: unknown,
   scope: string,
   subject: string,
   maxRequests: number,
   windowSeconds: number,
 ): Promise<boolean | null> {
-  const { data, error } = await admin.rpc("consume_edge_rate_limit", {
+  const client = admin as RateLimitClient;
+  const { data, error } = await client.rpc("consume_edge_rate_limit", {
     p_scope: scope,
     p_subject: subject,
     p_window_seconds: windowSeconds,
