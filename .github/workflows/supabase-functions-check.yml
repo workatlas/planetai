@@ -41,3 +41,4 @@ jobs:
             supabase/functions/employer-profile/index.ts \
             supabase/functions/admin-moderation/index.ts \
             supabase/functions/paypal-listing-checkout/index.ts \
+            supabase/functions/paypal-webhook/index.ts
