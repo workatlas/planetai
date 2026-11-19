@@ -61,7 +61,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   }
 
   if (action === "next-slot") {
-    const { data, error } = await admin.schema("private").rpc("next_employer_spotlight_slot");
+    const { data, error } = await admin.rpc("next_employer_spotlight_slot");
     if (error || !data) {
       console.error("Spotlight next-slot lookup failed.", error);
       return json({ error: "The next Spotlight date is temporarily unavailable." }, 503);
@@ -69,7 +69,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     return json({ next_available_start: data, duration_days: 30, amount: "149.00", currency: "USD" });
   }
 
-  const { data, error } = await admin.schema("private").rpc("reserve_next_employer_spotlight_slot", {
+  const { data, error } = await admin.rpc("reserve_next_employer_spotlight_slot", {
     p_submission_id: submissionId,
     p_employer_account_id: membership.employer_account_id,
     p_user_id: userId,
