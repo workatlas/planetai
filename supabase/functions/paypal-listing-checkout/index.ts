@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
@@ -54,6 +55,10 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (!/^[0-9a-f-]{36}$/i.test(submissionId)) return json({ error: "A valid submission is required." }, 400);
 
   const admin = ctx.supabaseAdmin;
+  const rateLimit = await checkRateLimit(admin, "paypal-listing-checkout", userId, 12, 600);
+  if (rateLimit === null) return json({ error: "Payment protection is temporarily unavailable. Please try again shortly." }, 503);
+  if (!rateLimit) return json({ error: "Too many payment requests. Please wait 10 minutes before trying again." }, 429);
+
   const { data: submission, error: submissionError } = await admin.from("job_submissions")
     .select("id, reference_code, package_tier, status, employer_account_id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, remote_policy, salary_min, salary_max, salary_currency, pay_period, description, requirements, tags, apply_url")
     .eq("id", submissionId).maybeSingle();
