@@ -20,7 +20,7 @@ Before testing, inspect and record the actual values; do not assume the dashboar
 - Review the confirmation and recovery email templates. If they use a custom `redirectTo`, ensure the confirmation/recovery link uses Supabase's `{{ .RedirectTo }}` variable where required.
 - Confirm SMTP delivery and sender identity before relying on production email. Do not configure paid SMTP or change sender DNS without approval.
 - Review OTP expiry and Auth email rate limits. Keep recovery links short-lived and single-use.
-- Check Authentication → Security and enable leaked-password protection if the current plan/settings permit it. If the Free plan does not expose the control, record it as a release blocker and choose an approved mitigation/upgrade only after discussing cost.
+- Leaked-password protection is a Supabase Pro-plan feature and is not available on this project's Free plan. Do not keep searching for a missing toggle or upgrade without approval. In Authentication → Sign In / Providers → Email, set the strongest available minimum password length (recommended 12+) and require lowercase, uppercase, digits and symbols. Record that the Auth-level HaveIBeenPwned check remains unavailable on Free.
 
 Dashboard settings are not changed by this source-code branch. A project owner must inspect and apply the dashboard values, then record a screenshot or change log before sign-off.
 
@@ -43,7 +43,32 @@ Use a dedicated test employer mailbox that the tester controls. Never use a real
 | A11 | Attempt employer workspace/profile/listing action before email confirmation | Server rejects with 403 |
 | A12 | Sign out and revisit protected employer actions | Request rejected; no workspace data returned |
 
-## 3. Employer journey
+## 3. Exclusive Employer Spotlight scheduler
+
+The Spotlight + Marquee product is a separate paid placement from the multi-card Platform Opportunity Guides section. The planned price is $149 USD for one exclusive 30-day slot. Employers pay when reserving; the 30-day placement begins on the scheduled start date. The existing $49 Featured Boost remains a different product.
+
+The feature-branch migration adds a server-only reservation ledger, a 15-minute unpaid hold, an atomic next-slot allocator, a database exclusion constraint preventing overlapping live reservations, and a queue processor that activates/ends placements. The feature-branch Edge Function validates confirmed Auth identity, employer owner/admin membership and approved Spotlight submissions. The migration and Edge Function are not deployed; the reservation checkout flow and scheduled worker are not enabled. Therefore Spotlight remains unavailable for purchase.
+
+Required scheduler tests before enabling the $149 tier:
+
+| ID | Scenario | Expected result |
+|---|---|---|
+| S1 | Two employers reserve simultaneously | Database lock and exclusion constraint allow only one reservation per 30-day slot |
+| S2 | Employer repeats reservation request | Same live reservation is returned; no duplicate slot is created |
+| S3 | Unpaid 15-minute hold expires | Slot becomes available again |
+| S4 | Unapproved or non-Spotlight submission requests a slot | Request rejected; no reservation created |
+| S5 | Another employer submits a guessed submission ID | No listing or reservation data disclosed |
+| S6 | Payment succeeds during a valid hold | Reservation becomes scheduled and stores the verified payment reference |
+| S7 | Payment arrives after hold expiry or slot reassignment | No automatic placement; manual reconciliation/refund path required |
+| S8 | Scheduled start date arrives | Trusted worker activates the placement and starts the 30-day period |
+| S9 | Scheduled end date arrives | Trusted worker ends placement and releases the slot |
+| S10 | Worker runs more than once | Activation/expiry remain idempotent |
+| S11 | Worker misses a run and resumes | Due placement is reconciled without overlap or duplicate activation |
+| S12 | Refund, reversal or dispute | Placement is paused/flagged according to documented operations; no silent renewal |
+
+A trusted scheduled worker must invoke `private.process_employer_spotlight_queue()` at least every few minutes. Configure and verify that worker only after the approved test deployment. Do not enable checkout before the payment ledger, webhook, worker, refunds and end-to-end scheduler tests are complete.
+
+## 4. Employer journey
 
 After Auth dashboard configuration and approved preview backend deployment:
 
@@ -61,7 +86,7 @@ After Auth dashboard configuration and approved preview backend deployment:
 12. Verify the approved listing publishes once, is visible publicly, and displays its employer-supplied pay range or “Salary not disclosed” when pay is absent/invalid.
 13. Verify the employer portal reflects the same payment and publication state after refresh and a new sign-in.
 
-## 4. Authorization and storage isolation
+## 5. Authorization and storage isolation
 
 - Employer A cannot read, update, or delete Employer B's profile, workspace, submissions, payment records, or branding objects.
 - Employer A cannot submit a listing using Employer B's submission/account identifier.
@@ -71,7 +96,7 @@ After Auth dashboard configuration and approved preview backend deployment:
 - Public/anonymous visitors can read only active published jobs and intentionally public employer branding assets.
 - No private applicant documents or personal data are stored in the public employer-branding bucket.
 
-## 5. PayPal Sandbox recovery and idempotency tests
+## 6. PayPal Sandbox recovery and idempotency tests
 
 Use a fresh approved test submission for each scenario. Capture request IDs, PayPal Sandbox order/capture IDs, webhook event IDs, and corresponding ledger rows. Never expose credentials or tokens in the evidence.
 
@@ -90,7 +115,7 @@ Use a fresh approved test submission for each scenario. Capture request IDs, Pay
 | P11 | Refund, reversal, denial, dispute, unmatched event | No silent state change; surfaced for manual reconciliation under documented operations |
 | P12 | Concurrent checkout/capture retries | Unique constraints and reconciliation result in one payment and one published job |
 
-## 6. Webhook-specific prerequisites
+## 7. Webhook-specific prerequisites
 
 - Create a webhook in the PayPal Sandbox app and subscribe to `PAYMENT.CAPTURE.COMPLETED`.
 - Store the matching `PAYPAL_WEBHOOK_ID` as an Edge Function secret.
@@ -99,7 +124,7 @@ Use a fresh approved test submission for each scenario. Capture request IDs, Pay
 - Deliver valid, invalid, duplicate, and mismatched Sandbox events and inspect the billing event ledger.
 - Document an owner and response process for refunds, reversals, disputes, unmatched events, and reconciliation failures before live payments.
 
-## 7. Sign-off criteria
+## 8. Sign-off criteria
 
 Do not call the employer/payment journey launch-ready until:
 
@@ -117,6 +142,7 @@ Do not call the employer/payment journey launch-ready until:
 
 - Source implementation and CI are not a substitute for these live tests.
 - The branch contains the payment recovery and webhook implementation, but those latest Edge Function changes have not been deployed.
+- The exclusive Spotlight reservation migration and authenticated scheduler Edge Function are branch-only; the reservation-to-PayPal checkout association, scheduled worker, and employer-facing booking UI remain unimplemented. The $149 tier is disabled.
 - The project has no test submissions or payment ledger records yet.
 - Supabase Auth dashboard settings have not been independently verified or changed through the available project connection.
 - PayPal remains Sandbox. No real charge, production deployment, merge, paid provider, or domain purchase is authorized.
