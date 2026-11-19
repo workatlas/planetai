@@ -1342,7 +1342,7 @@ export default function App() {
                       <strong className="font-mono tabular-nums text-cyan-300">
                         {filteredJobs.length}
                       </strong>{' '}
-                      matching roles in standard USD ($)
+                      curated opportunity guides and employer listings in standard USD ($)
                     </p>
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
@@ -1375,7 +1375,7 @@ export default function App() {
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
                 <p className="font-display text-lg font-bold text-slate-100">
-                  No matching jobs found
+                  No matching opportunities found
                 </p>
                 <p className="mt-1.5 text-sm text-slate-400 max-w-md mx-auto">
                   Try clearing your search term or switching back to all categories.
