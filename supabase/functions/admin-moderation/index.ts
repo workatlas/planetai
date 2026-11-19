@@ -1,18 +1,16 @@
 import { withSupabase } from "npm:@supabase/server";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
+import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
-  status, headers: { ...corsHeaders, "Content-Type": "application/json" },
+  status, headers: { "Content-Type": "application/json" },
 });
 const slugify = (value: string) => value.toLowerCase().normalize("NFKD")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "job";
 
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!isAllowedOrigin(req)) return new Response("Origin not allowed.", { status: 403, headers: corsHeadersFor(req) });
+  if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
   if (req.method !== "POST") return json({ error: "Method not allowed." }, 405);
   const userId = ctx.userClaims?.id;
   if (!userId) return json({ error: "Authentication required." }, 401);
@@ -171,6 +169,6 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   const response = await handler(req);
   const headers = new Headers(response.headers);
-  for (const [name, value] of Object.entries(corsHeaders)) headers.set(name, value);
+  for (const [name, value] of Object.entries(corsHeadersFor(req))) headers.set(name, value);
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 });
