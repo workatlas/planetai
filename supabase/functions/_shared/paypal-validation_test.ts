@@ -50,6 +50,18 @@ Deno.test("rejects an amount mismatch", () => {
   }
 });
 
+Deno.test("rejects an additional pending capture alongside a completed capture", () => {
+  const order = validOrder();
+  order.purchase_units[0].payments.captures.push({
+    id: "CAPTURE-PENDING",
+    status: "PENDING",
+    amount: { currency_code: "USD", value: "49.00" },
+  });
+  if (verifyCompletedPayPalOrder(order, "submission-123", "49.00") !== null) {
+    throw new Error("multiple capture records must be rejected as ambiguous");
+  }
+});
+
 Deno.test("rejects missing capture IDs and ambiguous multiple captures", () => {
   const missingId = validOrder();
   missingId.purchase_units[0].payments.captures[0].id = "";
