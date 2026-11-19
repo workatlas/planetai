@@ -99,10 +99,27 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       .single();
 
     if (createError) {
-      console.error("Employer workspace creation failed", createError);
-      return json({ error: "We could not create your employer workspace." }, 500);
+      // If an owner-uniqueness constraint is present, recover from a concurrent
+      // first-time setup by loading the account created by the winning request.
+      if (createError.code === "23505") {
+        const { data: racedAccount, error: raceLookupError } = await admin
+          .from("employer_accounts")
+          .select("id, company_name")
+          .eq("owner_user_id", userId)
+          .maybeSingle();
+        if (!raceLookupError && racedAccount) {
+          account = racedAccount;
+        } else {
+          console.error("Employer workspace race recovery failed", raceLookupError);
+          return json({ error: "Your workspace setup is being finalized. Please refresh and try again." }, 409);
+        }
+      } else {
+        console.error("Employer workspace creation failed", createError);
+        return json({ error: "We could not create your employer workspace." }, 500);
+      }
+    } else {
+      account = created;
     }
-    account = created;
   }
 
   const { error: membershipError } = await admin
