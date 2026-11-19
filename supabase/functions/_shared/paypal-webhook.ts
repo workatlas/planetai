@@ -30,7 +30,7 @@ export function readPayPalWebhookHeaders(headers: Headers): PayPalWebhookHeaders
   };
 }
 
-export function getPayPalCaptureOrderId(event: unknown): { orderId: string; captureId: string } | null {
+export function getPayPalCaptureOrderId(event: unknown): { orderId: string; captureId: string; resourceId: string } | null {
   if (!event || typeof event !== "object") return null;
   const value = event as {
     event_type?: unknown;
