@@ -41,21 +41,20 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (!rateLimit) return json({ error: "Too many workspace requests. Please wait before trying again." }, 429);
 
   if (body.action === "list") {
-    const { data: membership, error: membershipError } = await admin
+    const { data: memberships, error: membershipError } = await admin
       .from("employer_members")
       .select("employer_account_id")
-      .eq("user_id", userId)
-      .limit(1)
-      .maybeSingle();
+      .eq("user_id", userId);
     if (membershipError) {
       console.error("Employer listing membership lookup failed", membershipError);
       return json({ error: "We could not verify your employer workspace." }, 500);
     }
-    if (!membership?.employer_account_id) return json({ listings: [] });
+    const employerAccountIds = [...new Set((memberships || []).map(item => item.employer_account_id).filter(Boolean))];
+    if (!employerAccountIds.length) return json({ listings: [] });
     const { data: submissions, error: submissionsError } = await admin
       .from("job_submissions")
       .select("id, reference_code, job_title, company_name, package_tier, status, submitted_at")
-      .eq("employer_account_id", membership.employer_account_id)
+      .in("employer_account_id", employerAccountIds)
       .order("submitted_at", { ascending: false })
       .limit(100);
     if (submissionsError) {
@@ -65,7 +64,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     const ids = (submissions || []).map((item) => item.id);
     const { data: payments, error: paymentsError } = ids.length
       ? await admin.from("job_payments")
-          .select("submission_id, status, amount, currency, provider_order_id, confirmed_at")
+          .select("submission_id, status, amount, currency, provider_order_id, confirmed_at, spotlight_reservation_id")
           .in("submission_id", ids)
           .order("created_at", { ascending: false })
       : { data: [], error: null };
@@ -73,14 +72,29 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       console.error("Employer payment query failed", paymentsError);
       return json({ error: "We could not load your payment records." }, 500);
     }
-    const latestPayment = new Map<string, { status: string; amount: number; currency: string; provider_order_id: string | null; confirmed_at: string | null }>();
+    const latestPayment = new Map<string, { status: string; amount: number; currency: string; provider_order_id: string | null; confirmed_at: string | null; spotlight_reservation_id: string | null }>();
     for (const payment of payments || []) {
       if (!latestPayment.has(payment.submission_id)) latestPayment.set(payment.submission_id, payment);
+    }
+    const { data: reservations, error: reservationsError } = ids.length
+      ? await admin.from("employer_spotlight_reservations")
+          .select("id, submission_id, slot_start, slot_end, status, paid_at, activated_at")
+          .in("submission_id", ids)
+          .order("created_at", { ascending: false })
+      : { data: [], error: null };
+    if (reservationsError) {
+      console.error("Employer Spotlight reservation lookup failed", reservationsError);
+      return json({ error: "We could not load your Spotlight booking details." }, 500);
+    }
+    const latestReservation = new Map<string, { id: string; slot_start: string; slot_end: string; status: string; paid_at: string | null; activated_at: string | null }>();
+    for (const reservation of reservations || []) {
+      if (!latestReservation.has(reservation.submission_id)) latestReservation.set(reservation.submission_id, reservation);
     }
     return json({
       listings: (submissions || []).map((item) => ({
         ...item,
         payment: latestPayment.get(item.id) || null,
+        reservation: latestReservation.get(item.id) || null,
       })),
     });
   }
