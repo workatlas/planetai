@@ -116,12 +116,15 @@ export default function PremiumMarketplacePreview({
     return (
       <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24]">
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
-          <div className="mx-auto flex h-[76px] max-w-[1320px] items-center justify-between px-5 sm:px-8">
-            <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex items-center gap-3" aria-label="PLANETAI marketplace home">
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#183c32] text-white"><PlanetAILogo className="h-9 w-9"/></span>
-              <span className="leading-tight"><span className="block text-[17px] font-extrabold tracking-[-0.06em]">PLANET<span className="text-[#39836a]">AI</span></span><span className="block text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089]">Career workspace</span></span>
+          <div className="mx-auto flex h-[68px] max-w-[1320px] items-center justify-between gap-2 px-3 sm:h-[76px] sm:px-8">
+            <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex min-w-0 shrink items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
+              <span className="min-w-0 leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Career workspace</span></span>
             </a>
-            <div className="flex items-center gap-2"><PWAInstallButton compact /><button onClick={onReturnToMarketplace} className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae]">Back to marketplace <ArrowRight className="ml-1 inline" size={13}/></button></div>
+            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+              <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11">{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
+              <button onClick={onReturnToMarketplace} className="inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-full border border-[#dce5dc] bg-white px-3 py-1.5 text-xs font-bold text-[#40534a] transition hover:border-[#a9bcae] sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-[11px]">Back to marketplace <ArrowRight className="inline" size={13}/></button>
+            </div>
           </div>
         </header>
         <main className="mx-auto max-w-[1320px] px-5 py-9 sm:px-8 sm:py-12">
@@ -153,7 +156,7 @@ export default function PremiumMarketplacePreview({
               <span className="leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Global careers, with clarity</span></span>
             </a>
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-              <button type="button" onClick={onShareApp} className="inline-flex min-h-10 min-w-10 items-center justify-center gap-1 rounded-full border border-[#dce5dc] bg-white px-2 text-[10px] font-bold text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:min-h-11 sm:gap-1.5 sm:px-4 sm:py-3 sm:text-xs" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"}><Share2 size={14}/><span className="hidden min-[380px]:inline">{copied ? 'Copied' : 'Share'}</span></button>
+              <button type="button" onClick={onShareApp} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"}>{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
               <button onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap rounded-full bg-[#183c32] px-2.5 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:min-h-11 sm:gap-1.5 sm:px-5 sm:py-3 sm:text-xs">Post a job <ArrowUpRight className="inline" size={13}/></button>
               <button
                 type="button"
@@ -218,7 +221,7 @@ export default function PremiumMarketplacePreview({
           <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
           <div className="grid grid-cols-1 items-center gap-2 px-6 py-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-5">
             <span className="shrink-0 text-[9px] font-bold uppercase tracking-[.18em] text-white/90">Companies to explore</span>
-            <div className="marquee-container marquee-fade-mask min-w-0 w-full overflow-hidden">
+            <div className="marquee-container marquee-fade-mask min-w-0 w-full overflow-hidden px-3 sm:px-4">
               <div className="marquee-track items-center gap-3 sm:gap-4">
                 <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
                 <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
@@ -312,7 +315,7 @@ export default function PremiumMarketplacePreview({
       {jobDetailModal}
       {postJobModal}
       {privacyPolicyModal}
-      <div className="fixed bottom-3 right-3 z-40 rounded-lg border border-[#dce4dc] bg-white/95 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-[#6b7d70] shadow-lg">PLANETAI Marketplace</div>
+      <div className="fixed bottom-3 right-3 z-40 hidden rounded-lg border border-[#dce4dc] bg-white/95 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-[#6b7d70] shadow-lg sm:block">PLANETAI Marketplace</div>
     </div>
   );
 }
