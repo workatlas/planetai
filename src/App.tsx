@@ -870,7 +870,7 @@ export default function App() {
                     </span>
                   </div>
                   <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
-                    Live curated roles across established AI leaders and emerging startups—covering model training, coding benchmarks, voice synthesis, and annotation.
+                    Curated opportunity guides across AI and tech platforms. These are not confirmed vacancies—check the employer's official site for current openings, eligibility, and pay.
                   </p>
                 </div>
 
