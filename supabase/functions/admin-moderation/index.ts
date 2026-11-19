@@ -1,6 +1,7 @@
 import { withSupabase } from "npm:@supabase/server";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), {
   status, headers: { "Content-Type": "application/json" },
@@ -16,6 +17,10 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (!userId) return json({ error: "Authentication required." }, 401);
 
   const admin = ctx.supabaseAdmin;
+  const rateLimit = await checkRateLimit(admin, "admin-moderation", userId, 120, 60);
+  if (rateLimit === null) return json({ error: "Admin protection is temporarily unavailable." }, 503);
+  if (!rateLimit) return json({ error: "Too many admin requests. Please slow down." }, 429);
+
   const { data: adminRecord, error: adminError } = await admin
     .from("admin_users").select("user_id").eq("user_id", userId).maybeSingle();
   if (adminError) {
