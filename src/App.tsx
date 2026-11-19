@@ -546,7 +546,7 @@ export default function App() {
         id: j.id,
         title: j.title,
         company: j.company,
-        pay: formatPayRate(j.payMinUsd, j.payMaxUsd, j.payUnit),
+        pay: j.isCustomEmployerPost ? formatPayRate(j.payMinUsd, j.payMaxUsd, j.payUnit) : 'Not listed — confirm with employer',
         applyUrl: resolveApplyUrl(j.company, j.applyUrl),
       })),
       appliedTracker: appliedJobsList.map(({job, record}) => ({
@@ -1513,11 +1513,9 @@ export default function App() {
                             ·
                           </span>
                           <span className="font-mono text-slate-300">
-                            {formatPayRate(
-                              job.payMinUsd,
-                              job.payMaxUsd,
-                              job.payUnit
-                            )}
+                            {job.isCustomEmployerPost
+                              ? formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)
+                              : 'Pay not listed'}
                           </span>
                           <span className="text-slate-600" aria-hidden="true">
                             ·
