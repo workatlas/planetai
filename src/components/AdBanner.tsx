@@ -56,16 +56,16 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       data-admob-unit={ADMOB_BANNER_UNIT}
       className={fullBleed ? 'w-full' : 'mx-auto w-full max-w-[970px]'}
     >
-      <div className="w-full overflow-hidden rounded-2xl border border-[#dce5dc] bg-white shadow-[0_8px_28px_rgba(28,55,42,.035)]">
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-[#e8eee8] bg-[#fbfcfa] px-4 py-2.5">
-          <span className="rounded-md border border-[#dce5dc] bg-[#f1f5f0] px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#738278]">
+      <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0d1425] shadow-[0_8px_28px_rgba(0,0,0,.18)]">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-white/10 bg-[#111b30] px-4 py-2.5">
+          <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#b8c6df]">
             Sponsored
           </span>
-          <span className="text-[10px] text-[#89958c]">
+          <span className="text-[10px] text-[#9ba9c1]">
             Partner advertising helps support free access to PLANETAI.
           </span>
         </div>
-        <div className="flex min-h-[100px] w-full items-center justify-center px-2 py-3 sm:min-h-[120px]">
+        <div className="flex min-h-[64px] w-full items-center justify-center bg-[#0d1425] px-2 py-2 sm:min-h-[80px]">
           <ins
             className="adsbygoogle block w-full"
             style={{display: 'block'}}
