@@ -168,6 +168,8 @@ The feature branch now connects the employer booking flow to a 15-minute reserva
 | S24 | Scheduler runs repeatedly for same reservation | Activation and expiry remain idempotent |
 | S25 | User belongs to multiple employer accounts | Scheduler authorizes only membership in the account that owns the submitted listing |
 | S26 | Refund, reversal, denial or dispute occurs | Event is flagged for manual reconciliation; placement is not silently reallocated |
+| S27 | Signed refund/reversal/denial event for an active Spotlight | Reservation moves to payment_review, active flag is cleared, and slot remains blocked |
+| S28 | Signed dispute created/updated/resolved event | Seller transaction is matched to the capture; manual review is recorded and Spotlight remains paused until administrator resolution |
 
 Do not mark S13–S26 passed until executed against a dedicated test environment with the migration applied and PayPal Sandbox configured. Confirm Cron job creation and inspect cron.job_run_details for successful processor runs.
 
