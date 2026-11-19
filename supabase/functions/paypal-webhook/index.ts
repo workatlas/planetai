@@ -131,24 +131,25 @@ Deno.serve(async (req) => {
         .eq("provider_event_id", eventId)
         .maybeSingle();
       if (existingDisputeEventError) throw new Error("Dispute event deduplication lookup failed.");
-      if (existingDisputeEvent) return json({ received: true, duplicate: true });
-
-      const { error: insertDisputeEventError } = await admin.from("employer_billing_events").insert({
-        employer_account_id: disputeSubmission.employer_account_id,
-        billing_provider: "paypal",
-        provider_event_id: eventId,
-        event_type: eventType,
-        event_status: "failed",
-        amount_minor: Math.round(Number(disputePayment.amount) * 100),
-        currency: disputePayment.currency,
-        payload: {
-          dispute_id: typeof resource.id === "string" ? resource.id : null,
-          capture_id: sellerTransactionId.trim(),
-          manual_reconciliation_required: true,
-        },
-      });
-      if (insertDisputeEventError?.code === "23505") return json({ received: true, duplicate: true });
-      if (insertDisputeEventError) throw new Error("Dispute event could not be recorded.");
+      if (!existingDisputeEvent) {
+        const { error: insertDisputeEventError } = await admin.from("employer_billing_events").insert({
+          employer_account_id: disputeSubmission.employer_account_id,
+          billing_provider: "paypal",
+          provider_event_id: eventId,
+          event_type: eventType,
+          event_status: "failed",
+          amount_minor: Math.round(Number(disputePayment.amount) * 100),
+          currency: disputePayment.currency,
+          payload: {
+            dispute_id: typeof resource.id === "string" ? resource.id : null,
+            capture_id: sellerTransactionId.trim(),
+            manual_reconciliation_required: true,
+          },
+        });
+        if (insertDisputeEventError?.code !== "23505" && insertDisputeEventError) {
+          throw new Error("Dispute event could not be recorded.");
+        }
+      }
 
       if (disputePayment.spotlight_reservation_id) {
         const { error: reviewError } = await admin.from("employer_spotlight_reservations")
