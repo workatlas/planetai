@@ -167,7 +167,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
     }
     if (existing?.status === "completed") {
       if (Number(existing.amount).toFixed(2) !== amount || existing.currency.trim() !== "USD" || !existing.provider_capture_id) {
-        return json({ error: "A completed payment record is missing its capture reference. Administrator reconciliation is required; do not pay again." }, 409);
+        return json({ error: "The completed payment record does not match the approved price or capture reference. Administrator reconciliation is required; do not pay again." }, 409);
       }
       const published = await ensurePublished(existing.provider_capture_id, existing.provider_order_id || "");
       return published
