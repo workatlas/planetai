@@ -93,6 +93,21 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   };
 
   const ensurePublished = async (captureId: string, orderId: string) => {
+    let spotlightReservation: { id: string; slot_end: string } | null = null;
+    if (isSpotlight) {
+      const { data, error } = await admin.from("employer_spotlight_reservations")
+        .select("id, slot_end")
+        .eq("submission_id", submission.id)
+        .in("status", ["scheduled", "active"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error || !data) {
+        console.error("Paid Spotlight reservation is not scheduled for publication.", error);
+        return false;
+      }
+      spotlightReservation = data;
+    }
     const { data: existingJob, error: existingJobError } = await admin.from("jobs")
       .select("id").eq("submission_id", submission.id).maybeSingle();
     if (existingJobError) throw new Error("Payment is verified, but publication status could not be checked.");
@@ -121,11 +136,18 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         tags: submission.tags,
         apply_url: submission.apply_url,
         featured: !isSpotlight,
-        ...(isSpotlight ? { spotlight_active: false, spotlight_reservation_id: null } : {}),
+        ...(isSpotlight ? {
+          spotlight_active: false,
+          spotlight_reservation_id: spotlightReservation?.id || null,
+          spotlight_started_at: null,
+          spotlight_expires_at: null,
+        } : {}),
         verified_employer: false,
         status: "published",
         published_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        expires_at: isSpotlight && spotlightReservation
+          ? new Date(spotlightReservation.slot_end + "T00:00:00.000Z").toISOString()
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       });
       if (jobError) {
         // A concurrent recovery request may have inserted the unique listing
