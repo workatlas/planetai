@@ -1726,7 +1726,8 @@ const POSTED_AGO_SLOTS = [
 
 function generateExpandedJobs(): JobListing[] {
   const generated: JobListing[] = [];
-  const totalToGenerate = 150;
+  // Synthetic role variations are intentionally disabled. Only manually curated guides remain public.
+  const totalToGenerate = 0;
 
   for (let i = 0; i < totalToGenerate; i++) {
     const num = 51 + i;
