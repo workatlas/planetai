@@ -74,11 +74,11 @@ declare
 begin
   perform pg_advisory_xact_lock(hashtext('planetai_employer_spotlight_queue'));
 
-  update public.employer_spotlight_reservations
+  update public.employer_spotlight_reservations as r
   set status = 'expired', updated_at = now()
-  where status = 'payment_pending'
-    and hold_expires_at is not null
-    and hold_expires_at <= now();
+  where r.status = 'payment_pending'
+    and r.hold_expires_at is not null
+    and r.hold_expires_at <= now();
 
   loop
     if not exists (
@@ -130,11 +130,11 @@ begin
 
   perform pg_advisory_xact_lock(hashtext('planetai_employer_spotlight_queue'));
 
-  update public.employer_spotlight_reservations
+  update public.employer_spotlight_reservations as r
   set status = 'expired', updated_at = now()
-  where status = 'payment_pending'
-    and hold_expires_at is not null
-    and hold_expires_at <= now();
+  where r.status = 'payment_pending'
+    and r.hold_expires_at is not null
+    and r.hold_expires_at <= now();
 
   select s.* into v_submission
   from public.job_submissions s
