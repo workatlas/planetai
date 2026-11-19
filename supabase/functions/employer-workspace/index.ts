@@ -26,7 +26,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   }
 
   const admin = ctx.supabaseAdmin;
-  const rateLimit = await checkRateLimit(admin, "employer-workspace", userId, 20, 900);
+  const rateLimit = await checkRateLimit(admin, "employer-workspace", userId, 60, 60);
   if (rateLimit === null) return json({ error: "Workspace protection is temporarily unavailable. Please try again shortly." }, 503);
   if (!rateLimit) return json({ error: "Too many workspace requests. Please wait before trying again." }, 429);
 
