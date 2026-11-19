@@ -90,6 +90,8 @@ export default function EmployerPayments() {
           nextError = data?.error || captureError?.message || 'We could not confirm this payment. Please contact support before trying again.';
         } else if (data.publication_pending) {
           nextNotice = 'Payment verified. Your listing is awaiting publication recovery.';
+        } else if (data.spotlight_scheduled) {
+          nextNotice = 'Payment confirmed! Your listing is published and your exclusive Spotlight + Marquee placement is scheduled. Its 30-day run begins on the reserved start date.';
         } else {
           nextNotice = 'Payment confirmed! Your promoted listing is now published.';
         }
