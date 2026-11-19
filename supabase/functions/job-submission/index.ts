@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 import { corsHeadersFor, isAllowedOrigin } from "../_shared/cors.ts";
+import { checkRateLimit } from "../_shared/rate-limit.ts";
 
 
 const json = (body: unknown, status = 200) =>
@@ -145,6 +146,9 @@ const handler = async (req: Request) => {
     return json({ error: "Your employer workspace role does not allow job submissions." }, 403);
   }
   const employerAccountId = membership.employer_account_id;
+  const rateLimit = await checkRateLimit(admin, "job-submission", userId, 5, 900);
+  if (rateLimit === null) return json({ error: "Submission protection is temporarily unavailable. Please try again shortly." }, 503);
+  if (!rateLimit) return json({ error: "Too many submissions. Please wait 15 minutes before trying again." }, 429);
 
   const referenceCode = `PAI-${crypto.randomUUID().replaceAll("-", "").slice(0, 10).toUpperCase()}`;
   const status = "pending_review";
