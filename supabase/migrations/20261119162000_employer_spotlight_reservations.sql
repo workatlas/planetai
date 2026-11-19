@@ -2,6 +2,10 @@
 -- This migration is intentionally committed to the feature branch only.
 -- It is NOT applied to the shared Supabase project by this change.
 
+-- Supabase Cron runs the queue processor inside Postgres without exposing a
+-- service key or depending on an externally managed scheduler.
+create extension if not exists pg_cron with schema pg_catalog;
+
 create table if not exists public.employer_spotlight_reservations (
   id uuid primary key default gen_random_uuid(),
   submission_id uuid not null references public.job_submissions(id) on delete restrict,
@@ -395,3 +399,12 @@ revoke all on function private.confirm_employer_spotlight_payment(uuid, uuid, te
 grant execute on function private.confirm_employer_spotlight_payment(uuid, uuid, text) to service_role;
 revoke all on function public.confirm_employer_spotlight_payment(uuid, uuid, text) from public, anon, authenticated;
 grant execute on function public.confirm_employer_spotlight_payment(uuid, uuid, text) to service_role;
+
+
+-- Activate scheduled Spotlight reservations and expire placements every minute.
+-- This is database-internal and does not expose a callable public endpoint.
+select cron.schedule(
+  'planetai-employer-spotlight-queue',
+  '* * * * *',
+  'select private.process_employer_spotlight_queue();'
+);
