@@ -103,7 +103,7 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data: payment, error: paymentError } = await admin.from("job_payments")
-      .select("id, submission_id, provider_order_id, provider_capture_id, amount, currency, status")
+      .select("id, submission_id, provider_order_id, provider_capture_id, amount, currency, status, spotlight_reservation_id")
       .eq("provider", "paypal")
       .eq("provider_order_id", captureReference.orderId)
       .maybeSingle();
@@ -181,7 +181,8 @@ Deno.serve(async (req) => {
       return json({ received: true, reconciliation_required: true });
     }
 
-    const expectedAmount = priceFor(submission.package_tier);
+    const isSpotlight = submission.package_tier === "spotlight";
+    const expectedAmount = isSpotlight ? "149.00" : priceFor(submission.package_tier);
     if (!expectedAmount || Number(payment.amount).toFixed(2) !== expectedAmount ||
         payment.currency.trim() !== "USD" || payment.provider_order_id !== captureReference.orderId) {
       await admin.from("employer_billing_events").update({ event_status: "failed" }).eq("id", eventRowId);
@@ -229,6 +230,23 @@ Deno.serve(async (req) => {
       return json({ received: true, reconciliation_required: true });
     }
 
+    if (isSpotlight) {
+      if (!payment.spotlight_reservation_id) {
+        await admin.from("employer_billing_events").update({ event_status: "failed", payload: { order_id: captureReference.orderId, capture_id: verifiedCapture.id, manual_reconciliation_required: true, reason: "Spotlight payment has no reservation link" } }).eq("id", eventRowId);
+        return json({ received: true, reconciliation_required: true });
+      }
+      const { data: confirmedReservation, error: reservationConfirmError } = await admin.rpc("confirm_employer_spotlight_payment", {
+        p_reservation_id: payment.spotlight_reservation_id,
+        p_payment_id: payment.id,
+        p_capture_id: verifiedCapture.id,
+      });
+      if (reservationConfirmError || confirmedReservation !== true) {
+        await admin.from("employer_billing_events").update({ event_status: "failed", payload: { order_id: captureReference.orderId, capture_id: verifiedCapture.id, manual_reconciliation_required: true, reason: "Spotlight hold expired or reservation confirmation failed" } }).eq("id", eventRowId);
+        console.error("Verified Spotlight payment needs manual reservation reconciliation.", reservationConfirmError);
+        return json({ received: true, reconciliation_required: true });
+      }
+    }
+
     const { data: existingJob, error: existingJobError } = await admin.from("jobs")
       .select("id").eq("submission_id", submission.id).maybeSingle();
     if (existingJobError) throw new Error("Published listing lookup failed.");
@@ -254,7 +272,8 @@ Deno.serve(async (req) => {
         requirements: submission.requirements,
         tags: submission.tags,
         apply_url: submission.apply_url,
-        featured: true,
+        featured: !isSpotlight,
+        ...(isSpotlight ? { spotlight_active: false, spotlight_reservation_id: null } : {}),
         verified_employer: false,
         status: "published",
         published_at: new Date().toISOString(),
