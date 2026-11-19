@@ -108,6 +108,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const externalApplyUrl = isCustomPost
     ? job.applyUrl
     : resolveApplyUrl(job.company, job.applyUrl);
+  const displayPay = isCuratedGuide
+    ? 'Not listed — confirm with employer'
+    : formattedPay;
 
   const prepTips =
     job.prepTips && job.prepTips.length > 0
@@ -135,7 +138,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
       try {
         await navigator.share({
           title: `${job.title} at ${job.company} — PlanetAI`,
-          text: `Check out this remote role (${formattedPay}) on PlanetAI:`,
+          text: isCuratedGuide
+            ? `Explore this opportunity guide on PLANETAI and confirm current details with the employer.`
+            : `Check out this remote role (${formattedPay}) on PLANETAI:`, 
           url: shareUrl,
         });
         return;
@@ -288,7 +293,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               Global Compensation (USD)
             </span>
             <span className="font-mono tabular-nums text-xl font-bold text-[#47745c]">
-              {formattedPay}
+              {displayPay}
             </span>
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#65736b]">
@@ -343,8 +348,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
           </div>
         </div>
 
-        {/* Weekly Remote Income Estimator (Hourly Roles) */}
-        {job.payUnit === 'hr' && (
+        {/* Income estimates are shown only for employer-submitted listings with stated pay. */}
+        {!isCuratedGuide && job.payUnit === 'hr' && (
           <div className="mt-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#40534a]">
