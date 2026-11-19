@@ -65,6 +65,7 @@ import {
 import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
 import {syncSeoMetadata} from './utils/seo';
 import {supabase} from './lib/supabase';
+import {PWAInstallProvider} from './hooks/usePWAInstall';
 
 function mapPublishedDatabaseJob(row: {
   id: string; job_title: string; company_name: string; company_website: string | null;
@@ -210,7 +211,7 @@ function hydrateCustomJobs(): JobListing[] {
     });
 }
 
-export default function App() {
+function AppContent() {
   const [activeTab, setActiveTab] = useState<AppTab>(() => {
     const requestedTab = new URLSearchParams(window.location.search).get('tab');
     return requestedTab === 'ai-tools' || requestedTab === 'news' || requestedTab === 'saved' || requestedTab === 'platforms' || requestedTab === 'app'
@@ -1727,5 +1728,13 @@ export default function App() {
         onClose={() => setIsPrivacyOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <PWAInstallProvider>
+      <AppContent />
+    </PWAInstallProvider>
   );
 }
