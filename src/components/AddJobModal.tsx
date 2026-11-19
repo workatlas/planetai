@@ -297,7 +297,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
 
     if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
       setError(
-        'Please enter a valid recruiter or company contact email for approval notifications.'
+        'Please enter a valid recruiter or company contact email for listing review follow-up.'
       );
       return;
     }
@@ -690,7 +690,7 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                       No temporary local previews active
                     </p>
                     <p className="mt-1 text-xs text-[#77847b]">
-                      Submitted roles are emailed for moderation first and never publish globally without review.
+                      Submitted roles enter PLANETAI's moderation queue and never publish globally without review.
                     </p>
                     <button
                       type="button"
