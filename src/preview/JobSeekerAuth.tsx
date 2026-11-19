@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { Session } from '@supabase/supabase-js';
-import { ArrowLeft, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, Globe2, LoaderCircle, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
+import { ArrowLeft, BriefcaseBusiness, CheckCircle2, Eye, EyeOff, LoaderCircle, LockKeyhole, Mail, ShieldCheck, UserRound } from 'lucide-react';
+import {PlanetAILogo} from '../components/PlanetAILogo';
 import { supabase } from '../lib/supabase';
 
 type Mode = 'signup' | 'signin' | 'forgot' | 'reset';
@@ -131,9 +132,12 @@ export default function JobSeekerAuth() {
   return (
     <div className="planetai-nexora min-h-screen bg-[#f4f7fb] text-[#17243a]">
       <header className="border-b border-[#e4eaf2] bg-white">
-        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between px-5 sm:px-8">
-          <a href="/" className="flex items-center gap-3"><span className="grid h-10 w-10 place-items-center rounded-xl bg-[#172b49] text-white"><Globe2 size={20}/></span><span><b className="block text-sm tracking-[-.05em]">PLANETAI</b><small className="text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Your next opportunity starts here</small></span></a>
-          <a href="/" className="inline-flex items-center gap-2 text-xs font-semibold text-[#64748b] hover:text-[#244f91]"><ArrowLeft size={14}/> Browse jobs</a>
+        <div className="mx-auto flex h-[76px] max-w-7xl items-center justify-between gap-3 px-5 sm:px-8">
+          <a href="/" className="flex min-w-0 items-center gap-3" aria-label="PLANETAI home">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#172b49] text-white"><PlanetAILogo className="h-9 w-9"/></span>
+            <span className="min-w-0"><b className="block whitespace-nowrap text-sm tracking-[-.05em]">PLANETAI</b><small className="block whitespace-nowrap text-[9px] font-semibold uppercase tracking-[.16em] text-[#8997aa]">Global talent marketplace</small></span>
+          </a>
+          <a href="/" className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap text-xs font-semibold text-[#64748b] transition hover:text-[#244f91]"><ArrowLeft size={14}/> Browse jobs</a>
         </div>
       </header>
       <main className="mx-auto grid min-h-[calc(100vh-76px)] max-w-7xl items-center gap-10 px-5 py-10 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
