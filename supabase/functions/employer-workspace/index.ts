@@ -15,8 +15,18 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
 
   // @supabase/server exposes the verified user's ID as `id`, not the raw JWT `sub` claim.
   const userId = ctx.userClaims?.id;
-  const userEmail = typeof ctx.userClaims?.email === "string" ? ctx.userClaims.email : null;
   if (!userId) return json({ error: "Authentication required" }, 401);
+
+  // Validate the live Auth user record, not only the JWT identity. This prevents
+  // unconfirmed email accounts from creating or accessing employer workspaces.
+  const { data: authData, error: authError } = await ctx.supabase.auth.getUser();
+  if (authError || !authData.user || authData.user.id !== userId) {
+    return json({ error: "Your sign-in session could not be verified. Please sign in again." }, 401);
+  }
+  if (!authData.user.email_confirmed_at) {
+    return json({ error: "Confirm your email address before accessing an employer workspace." }, 403);
+  }
+  const userEmail = authData.user.email || null;
 
   let body: { company_name?: unknown; action?: string };
   try {
