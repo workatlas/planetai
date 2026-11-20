@@ -36,14 +36,6 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       }
       window.adsbygoogle = window.adsbygoogle || [];
       window.adsbygoogle.push({});
-      if (!document.getElementById('planetai-adsense-script')) {
-        const script = document.createElement('script');
-        script.id = 'planetai-adsense-script';
-        script.async = true;
-        script.crossOrigin = 'anonymous';
-        script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=' + ADSENSE_CLIENT;
-        document.head.appendChild(script);
-      }
     } catch {
       // Ad blockers, consent choices, or offline mode can prevent ad loading.
     }
@@ -56,7 +48,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
       aria-label="Sponsored advertisement"
       data-ad-placement={placement}
       data-admob-unit={ADMOB_BANNER_UNIT}
-      className={isInlineFeed || fullBleed ? 'w-full min-w-0' : 'mx-auto w-full max-w-[970px]'}
+      className={`my-5 w-full min-w-0 ${isInlineFeed || fullBleed ? '' : 'mx-auto max-w-[970px]'}`}
     >
       <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1425] shadow-[0_8px_28px_rgba(0,0,0,.18)]">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-white/10 bg-[#111b30] px-4 py-2.5">
@@ -67,7 +59,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({
             Partner advertising helps support free access to PLANETAI.
           </span>
         </div>
-        <div className="flex w-full min-w-0 min-h-[90px] max-h-[140px] items-center justify-center overflow-hidden bg-[#0d1425] px-4 py-2 box-border sm:min-h-[100px]">
+        <div className="planetai-ad-unit flex w-full min-w-0 min-h-[90px] max-h-[140px] items-center justify-center overflow-hidden bg-[#0d1425] px-4 py-2 box-border sm:min-h-[100px]">
           <ins
             className="adsbygoogle block w-full min-w-0 max-w-full"
             style={{display: 'block', width: '100%', maxWidth: '100%', minWidth: 0}}
