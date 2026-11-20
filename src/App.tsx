@@ -249,6 +249,7 @@ function AppContent() {
   const [inspectedJob, setInspectedJob] = useState<JobListing | null>(null);
   const [tailoredDraft, setTailoredDraft] =
     useState<TailoredResumeDraft | null>(null);
+  const [targetedResumeJobId, setTargetedResumeJobId] = useState<string | null>(null);
   const [requestedAITool, setRequestedAITool] =
     useState<RequestedAITool | null>(null);
 
@@ -593,6 +594,7 @@ function AppContent() {
   };
 
   const handleTailorResumeForJob = (job: JobListing) => {
+    setTargetedResumeJobId(job.id);
     setTailoredDraft({
       role: job.title,
       company: job.company,
@@ -770,6 +772,7 @@ function AppContent() {
     return (
       <PremiumMarketplacePreview
         jobs={marketplaceJobs}
+        targetedResumeJobId={targetedResumeJobId}
         onRefreshJobs={handleRefreshFeed}
         isRefreshing={isRefreshing}
         lastSyncedAt={lastJobsSyncAt}
