@@ -1119,11 +1119,14 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     htmlFor="job-desc-input"
                     className="block text-xs font-medium text-[#65736b] mb-1.5"
                   >
-                    Role &amp; Company Overview
+                    Role &amp; Company Overview * · at least 80 characters
                   </label>
                   <textarea
                     id="job-desc-input"
-                    rows={2}
+                    rows={5}
+                    required
+                    minLength={80}
+                    maxLength={4000}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     placeholder="Describe what your company builds and what the candidate will do..."
@@ -1136,11 +1139,12 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
                     htmlFor="job-req-input"
                     className="block text-xs font-medium text-[#65736b] mb-1.5"
                   >
-                    Key Requirements (Optional, comma separated)
+                    Key Requirements * · at least two, comma separated
                   </label>
                   <input
                     id="job-req-input"
                     type="text"
+                    required
                     value={requirementsInput}
                     onChange={(e) => setRequirementsInput(e.target.value)}
                     placeholder="e.g., 2+ yrs Python, Fluent English, Async availability"
