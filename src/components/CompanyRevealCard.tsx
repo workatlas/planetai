@@ -1,5 +1,5 @@
 import React from 'react';
-import {ArrowUpRight, Bookmark, MapPin, ShieldCheck} from 'lucide-react';
+import {Bookmark, MapPin, ShieldCheck} from 'lucide-react';
 import {formatPayRate, type JobListing, resolveApplyUrl} from '../data/jobs';
 import {CompanyLogo} from './JobCard';
 
@@ -63,7 +63,7 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
         <span className="text-[9px] font-semibold text-slate-500">No PLANETAI account needed</span>
       </div>
       <a href={applyUrl} target="_blank" rel="noopener noreferrer" className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#6366f1] px-4 py-2.5 text-[11px] font-extrabold text-[#070b14] shadow-lg shadow-cyan-950/20 transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
-        Apply Direct ↗ <ArrowUpRight size={14}/>
+        Apply Direct ↗
       </a>
     </article>
   );
