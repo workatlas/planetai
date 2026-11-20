@@ -773,6 +773,22 @@ function AppContent() {
         onRefreshJobs={handleRefreshFeed}
         isRefreshing={isRefreshing}
         lastSyncedAt={lastJobsSyncAt}
+        savedIds={savedIds}
+        onToggleSave={toggleSaveJob}
+        onOpenJob={setInspectedJob}
+        onPostJob={handleOpenPostJob}
+        onShareApp={handleShareApp}
+        copied={copied}
+        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+        privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
+        onOpenWorkspace={(tab) => openCareerWorkspace(tab === 'saved' ? 'saved' : tab === 'platforms' ? 'platforms' : tab === 'app' ? 'app' : 'ai-tools')}
+        onReturnToMarketplace={() => {
+          setIsCareerToolsOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('experience');
+          window.history.replaceState({}, '', url.pathname + url.search);
+          window.scrollTo({top: 0, behavior: 'smooth'});
+        }}
         showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
         careerToolsContent={<CareerWorkspaceHub tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />}
         jobDetailModal={
