@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowUpRight, Check, Menu, RefreshCw, Share2,
+  ArrowRight, ArrowUpRight, Check, Menu, RefreshCw, Share2,
   Search, ShieldCheck, X,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
