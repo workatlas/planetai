@@ -12,9 +12,10 @@ const validPublicUrl = (value: unknown) => {
   if (typeof value !== "string" || !value.trim()) return false;
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase().replace(/^www\\./, "");
+    const rawHost = url.hostname.toLowerCase();
+    const host = rawHost.startsWith("www.") ? rawHost.slice(4) : rawHost;
     return url.protocol === "https:" &&
-      !["test.com", "example.com", "example.org", "example.net", "localhost"].includes(host) &&
+      !["test.com", "example.com", "example.org", "example.net", "localhost", "bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "cutt.ly"].includes(host) &&
       !host.endsWith(".invalid") && !host.endsWith(".example");
   } catch { return false; }
 };
