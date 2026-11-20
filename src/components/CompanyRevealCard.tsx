@@ -58,7 +58,7 @@ export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
 
       {job.tags.length > 0 && <div className="mt-3 flex flex-wrap gap-1.5">{job.tags.slice(0,4).map(tag => <span key={tag} className="rounded-md border border-white/[0.07] bg-white/[0.035] px-2 py-1 text-[9px] font-medium text-slate-400">{tag.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</span>)}</div>}
 
-      <div className="mt-auto mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
+      <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4">
         <span className="text-[10px] text-slate-500">{job.postedAgo}</span>
         <span className="text-[9px] font-semibold text-slate-500">No PLANETAI account needed</span>
       </div>
