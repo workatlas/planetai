@@ -281,13 +281,17 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
     const cleanTitle = sanitizeText(title, 120);
     const cleanCompany = sanitizeText(company, 80);
     const cleanLocation = sanitizeText(location, 80) || 'Worldwide Remote';
-    const cleanDescription = sanitizeText(description, 400);
+    const cleanDescription = sanitizeText(description, 4000);
     const cleanEmail = sanitizeText(contactEmail, 120);
     const min = Number(payMin);
     const max = Number(payMax);
 
     if (!cleanTitle || !cleanCompany) {
       setError('Please enter your company name and job title.');
+      return;
+    }
+    if (cleanDescription.length < 80) {
+      setError('Please provide a complete role overview of at least 80 characters.');
       return;
     }
     if (Number.isNaN(min) || Number.isNaN(max) || min <= 0 || max < min) {
@@ -371,8 +375,12 @@ export const AddJobModal: React.FC<AddJobModalProps> = ({
     const parsedRequirements = requirementsInput
       .split(/[\n,;]+/)
       .map((r) => sanitizeText(r, 140))
-      .filter(Boolean)
+      .filter((r) => r.length >= 8)
       .slice(0, 5);
+    if (parsedRequirements.length < 2) {
+      setError('Add at least two specific qualifications or setup requirements (8 characters or more each).');
+      return;
+    }
 
     const stagedJob: JobListing = {
       id: `submission-${Date.now()}`,
