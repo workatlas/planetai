@@ -49,14 +49,16 @@ export const AdBanner: React.FC<AdBannerProps> = ({
     }
   }, []);
 
+  const isInlineFeed = placement === 'inline-feed';
+
   return (
     <aside
       aria-label="Sponsored advertisement"
       data-ad-placement={placement}
       data-admob-unit={ADMOB_BANNER_UNIT}
-      className={fullBleed ? 'w-full' : 'mx-auto w-full max-w-[970px]'}
+      className={isInlineFeed || fullBleed ? 'w-full min-w-0' : 'mx-auto w-full max-w-[970px]'}
     >
-      <div className="w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0d1425] shadow-[0_8px_28px_rgba(0,0,0,.18)]">
+      <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1425] shadow-[0_8px_28px_rgba(0,0,0,.18)]">
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-white/10 bg-[#111b30] px-4 py-2.5">
           <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#b8c6df]">
             Sponsored
@@ -65,10 +67,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({
             Partner advertising helps support free access to PLANETAI.
           </span>
         </div>
-        <div className="flex min-h-[64px] w-full items-center justify-center bg-[#0d1425] px-2 py-2 sm:min-h-[80px]">
+        <div className="flex h-[90px] min-h-[90px] max-h-[140px] w-full min-w-0 items-center justify-center overflow-hidden bg-[#0d1425] px-2 py-2 sm:h-[140px] sm:min-h-[100px]">
           <ins
-            className="adsbygoogle block w-full"
-            style={{display: 'block'}}
+            className="adsbygoogle block w-full max-w-full"
+            style={{display: 'block', width: '100%', maxWidth: '100%'}}
             data-ad-client={ADSENSE_CLIENT}
             data-ad-slot={slotId}
             data-ad-format="auto"
