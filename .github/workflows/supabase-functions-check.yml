@@ -1,0 +1,45 @@
+name: Supabase Edge Function checks
+
+on:
+  push:
+    branches:
+      - planetai-premium-refresh
+    paths:
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-functions-check.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "supabase/functions/**"
+      - "supabase/migrations/**"
+      - ".github/workflows/supabase-functions-check.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  edge-functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Install npm dependencies for Deno type-checking
+        run: deno install
+      - name: Test shared security helpers
+        run: deno test --allow-env=APP_ALLOWED_ORIGINS supabase/functions/_shared/security_test.ts supabase/functions/_shared/paypal-validation_test.ts supabase/functions/_shared/paypal-webhook_test.ts
+      - name: Type-check Edge Functions
+        run: |
+          deno check \
+            supabase/functions/job-submission/index.ts \
+            supabase/functions/employer-workspace/index.ts \
+            supabase/functions/employer-profile/index.ts \
+            supabase/functions/admin-moderation/index.ts \
+            supabase/functions/paypal-listing-checkout/index.ts \
+            supabase/functions/paypal-webhook/index.ts \
+            supabase/functions/employer-spotlight-scheduler/index.ts

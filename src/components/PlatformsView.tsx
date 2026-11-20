@@ -1,7 +1,6 @@
 import React, {useMemo, useState} from 'react';
 import {ArrowUpRight, Filter, PlusCircle} from 'lucide-react';
 import {
-  formatPayRate,
   JobListing,
   PlatformSummary,
   TOP_PLATFORMS,
@@ -77,7 +76,7 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
             Top AI &amp; Remote Platforms
           </h1>
           <p className="mt-1.5 text-sm text-slate-400 max-w-2xl">
-            Verified AI training, voice synthesis, and remote software engineering networks currently onboarding contributors worldwide — plus employer-submitted companies.
+            Explore established AI and remote-work platforms alongside employer-submitted companies. This directory is informational and does not imply a partnership or an active vacancy. Confirm openings, eligibility, compensation, and terms on each official site.
           </p>
         </div>
 
@@ -96,7 +95,7 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {allPlatforms.map((platform) => {
           const openCount = jobs.filter(
-            (j) => j.company.toLowerCase() === platform.name.toLowerCase()
+            (j) => j.id.startsWith('database-') && j.company.toLowerCase() === platform.name.toLowerCase()
           ).length;
           const isEstablished = platform.tier === 'Established Leader';
           const isCustomPartner = platform.tier === 'Custom Partner';
@@ -134,7 +133,7 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
                         {platform.name}
                       </h2>
                       <p className="font-mono text-xs text-emerald-400 tabular-nums">
-                        {openCount} active {openCount === 1 ? 'role' : 'roles'} in feed
+                        {openCount} published employer {openCount === 1 ? 'listing' : 'listings'}
                       </p>
                     </div>
                   </div>
@@ -154,7 +153,7 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
                   </span>
                   {platform.isCustom && (
                     <span className="inline-flex items-center rounded-md border border-amber-500/35 bg-amber-950/40 px-2 py-0.5 text-[11px] font-medium text-amber-300">
-                      Custom Employer Post
+                      Employer-submitted listing
                     </span>
                   )}
                 </div>
@@ -163,23 +162,8 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
                   {platform.focus}
                 </p>
 
-                <div className="mt-4 pt-3 border-t border-slate-800/70 space-y-1.5 text-xs">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-400">Typical Rate (USD)</span>
-                    <span className="font-mono tabular-nums font-semibold text-cyan-300">
-                      {formatPayRate(
-                        platform.typicalMinUsd,
-                        platform.typicalMaxUsd,
-                        'hr'
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-slate-400">Payouts</span>
-                    <span className="text-slate-200">
-                      {platform.payoutSchedule}
-                    </span>
-                  </div>
+                <div className="mt-4 rounded-xl border border-slate-700/70 bg-slate-900/70 p-3 text-xs leading-relaxed text-slate-400">
+                  Openings, eligibility, pay, and payout methods can change. Check the official platform site before relying on any details.
                 </div>
               </div>
 
@@ -190,7 +174,7 @@ export const PlatformsView: React.FC<PlatformsViewProps> = ({
                   className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-3.5 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs sm:text-sm font-medium text-slate-100 hover:bg-slate-800 transition-colors whitespace-nowrap"
                 >
                   <Filter className="w-3.5 h-3.5 text-cyan-400" />
-                  <span>View Roles</span>
+                  <span>View Guides</span>
                 </button>
 
                 <a

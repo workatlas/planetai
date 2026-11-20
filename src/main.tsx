@@ -2,19 +2,90 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import {registerSW} from 'virtual:pwa-register';
 import App from './App.tsx';
+import { ApplicantDashboardPreview, EmployerDashboardPreview } from './preview/MarketplaceDashboardsPreview';
+import EmployerAuth from './preview/EmployerAuth';
+import EmployerPasswordReset from './preview/EmployerPasswordReset';
+import EmployerProfile from './preview/EmployerProfile';
+import JobSeekerAuth from './preview/JobSeekerAuth';
+import JobSeekerDashboard from './preview/JobSeekerDashboard';
+import JobSeekerPasswordReset from './preview/JobSeekerPasswordReset';
+import AdminModeration from './preview/AdminModeration';
+import EmployerPayments from './preview/EmployerPayments';
 import './index.css';
 
-if ('serviceWorker' in navigator) {
-  registerSW({
-    immediate: true,
-    onOfflineReady() {
-      // Service worker cached app shell for offline / APK WebView usage
-    },
-  });
-}
+// Deploy previews must never be controlled by an older cached app shell.
+// Clean registrations and Cache Storage before mounting React. A one-time
+// reload guard prevents a browser that refuses unregister() from looping.
+// Treat every Netlify Deploy Preview for this project as disposable preview
+// state. Do not install a persistent PWA worker on preview domains; production
+// keeps its normal service-worker registration and offline behavior.
+const previewHostname = window.location.hostname.toLowerCase();
+const productionHostname = 'planetai-global.netlify.app';
+// Netlify has two preview URL formats:
+//   deploy-preview-123--planetai-global.netlify.app
+//   <deploy-hash>--planetai-global.netlify.app
+// Clear both, but never disable the production PWA on the canonical hostname.
+const isNetlifyPreview = previewHostname !== productionHostname
+  && previewHostname.endsWith('--planetai-global.netlify.app');
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+const mountApplication = () => {
+  if ('serviceWorker' in navigator && !isNetlifyPreview) {
+    registerSW({ immediate: true, onOfflineReady() {} });
+  }
+
+  const experience = new URLSearchParams(window.location.search).get('experience');
+  const preview = experience === 'admin-moderation' ? <AdminModeration />
+    : experience === 'employer-profile' ? <EmployerProfile />
+    : experience === 'employer-payments' ? <EmployerPayments />
+    : experience === 'employer-auth' ? <EmployerAuth />
+    : experience === 'employer-password-reset' ? <EmployerPasswordReset />
+    : experience === 'job-seeker-auth' ? <JobSeekerAuth />
+    : experience === 'job-seeker-reset' ? <JobSeekerPasswordReset />
+    : experience === 'job-seeker-dashboard' ? <JobSeekerDashboard />
+    : experience === 'employer' ? <EmployerDashboardPreview />
+    : experience === 'applicant' ? <ApplicantDashboardPreview />
+    : <App />;
+
+  createRoot(document.getElementById('root')!).render(<StrictMode>{preview}</StrictMode>);
+};
+
+if (isNetlifyPreview) {
+  void (async () => {
+    const registrations = 'serviceWorker' in navigator
+      ? await navigator.serviceWorker.getRegistrations().catch(() => [])
+      : [];
+    const cacheNames = 'caches' in window ? await caches.keys().catch(() => []) : [];
+    const hadStaleState = ('serviceWorker' in navigator && Boolean(navigator.serviceWorker.controller))
+      || registrations.length > 0
+      || cacheNames.length > 0;
+
+    await Promise.allSettled(registrations.map(registration => registration.unregister()));
+    if ('caches' in window) {
+      await Promise.allSettled(cacheNames.map(cacheName => caches.delete(cacheName)));
+    }
+
+    if (hadStaleState) {
+      let shouldReload = true;
+      try {
+        const reloadKey = 'planetai_preview_cache_cleanup_v3';
+        shouldReload = window.sessionStorage.getItem(reloadKey) !== '1';
+        if (shouldReload) window.sessionStorage.setItem(reloadKey, '1');
+      } catch {
+        // Continue without a reload guard when session storage is unavailable.
+      }
+      if (shouldReload) {
+        window.location.reload();
+        return;
+      }
+    }
+
+    try {
+      window.sessionStorage.removeItem('planetai_preview_cache_cleanup_v3');
+    } catch {
+      // Ignore storage restrictions; the application can still start.
+    }
+    mountApplication();
+  })();
+} else {
+  mountApplication();
+}

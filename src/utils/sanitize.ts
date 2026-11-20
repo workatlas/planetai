@@ -12,6 +12,8 @@ export function sanitizeText(value: string, maxLength = 500): string {
     .slice(0, maxLength);
 }
 
+const PLACEHOLDER_HOSTS = ['test.com', 'example.com', 'example.org', 'example.net', 'localhost'];
+
 const URL_SHORTENER_HOSTS = [
   'bit.ly',
   'tinyurl.com',
@@ -77,10 +79,11 @@ export function validateHttpsUrl(rawUrl: string): string | null {
   }
   try {
     const parsed = new URL(trimmed);
-    if (parsed.protocol !== 'https:' || !parsed.hostname.includes('.')) {
+    const hostname = parsed.hostname.toLowerCase().replace(/^www\./, '');
+    if (parsed.protocol !== 'https:' || !hostname.includes('.') || PLACEHOLDER_HOSTS.includes(hostname) || hostname.endsWith('.invalid') || hostname.endsWith('.example')) {
       return null;
     }
-    if (isShortenerHost(parsed.hostname)) {
+    if (isShortenerHost(hostname)) {
       return null;
     }
     return parsed.toString();

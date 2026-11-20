@@ -122,7 +122,7 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({
     <div
       ref={containerRef}
       aria-hidden="true"
-      className={`flex ${box} shrink-0 items-center justify-center border border-slate-700/80 bg-gradient-to-br from-slate-800 to-slate-900 font-display ${text} font-bold tracking-tight text-cyan-300`}
+      className={`flex ${box} shrink-0 items-center justify-center border border-[#dce5dc] bg-gradient-to-br from-[#edf4ee] to-[#dfece2] font-display ${text} font-bold tracking-tight text-[#285c4b]`}
     >
       {short}
     </div>
@@ -196,13 +196,17 @@ export const JobCard: React.FC<JobCardProps> = ({
   const isCustomPost = Boolean(
     job.isCustomEmployerPost || job.id.startsWith('custom-')
   );
-  const isFeatured = Boolean(job.featured);
-  const isVerified = Boolean(job.verified);
+  const isCuratedGuide = !isCustomPost;
+  const isFeatured = isCustomPost && Boolean(job.featured);
+  const isVerified = isCustomPost && Boolean(job.verified);
   const isEstablished = job.companyTier === 'Established Leader';
   const isCustomPartner = job.companyTier === 'Custom Partner';
   const externalApplyUrl = isCustomPost
     ? job.applyUrl
     : resolveApplyUrl(job.company, job.applyUrl);
+  const displayPay = isCuratedGuide
+    ? 'Pay not listed — check employer'
+    : formattedPay;
 
   return (
     <article
@@ -240,14 +244,14 @@ export const JobCard: React.FC<JobCardProps> = ({
               company={job.company}
               short={job.companyShort}
               explicitLogoUrl={job.companyLogoUrl}
-              websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
+              websiteOrApplyUrl={isCustomPost ? undefined : job.companyWebsite || job.applyUrl}
               size="md"
               shouldLoad={isInViewport}
             />
             <div className="min-w-0">
               <div className="flex items-center gap-2 text-sm font-semibold text-slate-100 truncate">
                 <span className="truncate">{job.company}</span>
-                {job.urgent && (
+                {isCustomPost && job.urgent && (
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-400 shrink-0">
                     <Zap className="w-3 h-3" />
                     Urgent
@@ -259,7 +263,7 @@ export const JobCard: React.FC<JobCardProps> = ({
                 <span aria-hidden="true">·</span>
                 <span className="inline-flex items-center gap-1">
                   <Clock className="w-3 h-3 text-slate-500" />
-                  {job.postedAgo}
+                  {isCuratedGuide ? 'Opportunity guide' : job.postedAgo}
                 </span>
               </div>
             </div>
@@ -303,9 +307,13 @@ export const JobCard: React.FC<JobCardProps> = ({
           >
             {job.companyTier}
           </span>
-          {isCustomPost && (
+          {isCustomPost ? (
             <span className="inline-flex items-center rounded-md border border-amber-500/35 bg-amber-950/40 px-2 py-0.5 text-[11px] font-medium text-amber-300">
-              Custom Employer Post
+              Employer-submitted listing
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-md border border-slate-600/60 bg-slate-800/70 px-2 py-0.5 text-[11px] font-medium text-slate-300">
+              Curated guide · verify availability
             </span>
           )}
           {skillMatch && skillMatch.score > 0 && (
@@ -340,7 +348,7 @@ export const JobCard: React.FC<JobCardProps> = ({
         {/* Global USD Pay Rate & Remote Location */}
         <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2">
           <span className="font-mono tabular-nums text-lg font-semibold text-cyan-300">
-            {formattedPay}
+            {displayPay}
           </span>
           <span className="inline-flex items-center gap-1.5 text-xs text-slate-400">
             <Globe2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
@@ -388,7 +396,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           onClick={(e) => e.stopPropagation()}
           className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-xl bg-cyan-500 text-slate-950 text-xs sm:text-sm font-bold hover:bg-cyan-400 active:scale-[0.98] transition-all whitespace-nowrap shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300"
         >
-          <span>Apply Now</span>
+          <span>{isCustomPost ? 'View Listing' : 'Visit Employer Site'}</span>
           <ArrowUpRight className="w-4 h-4 shrink-0" />
         </a>
       </div>

@@ -1,0 +1,5 @@
+# Isolate Netlify pull-request previews from the live Supabase project.
+# These are browser-safe sandbox values only; never place service-role or PayPal secrets here.
+[context.deploy-preview.environment]
+  VITE_SUPABASE_URL = "https://eyarsumalvnsugfahlxe.supabase.co"
+  VITE_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_St6VboC23kfYBeKrkaTHJw_lKg5XAKq"

@@ -34,43 +34,41 @@ export const AdBanner: React.FC<AdBannerProps> = ({
         window.AndroidAdMob.showBanner(ADMOB_BANNER_UNIT);
         return;
       }
-      if (typeof window !== 'undefined') {
-        window.adsbygoogle = window.adsbygoogle || [];
-        window.adsbygoogle.push({});
-      }
+      window.adsbygoogle = window.adsbygoogle || [];
+      window.adsbygoogle.push({});
     } catch {
-      // Gracefully ignore when ad blockers or offline mode prevent ad script load
+      // Ad blockers, consent choices, or offline mode can prevent ad loading.
     }
   }, []);
+
+  const isInlineFeed = placement === 'inline-feed';
 
   return (
     <aside
       aria-label="Sponsored advertisement"
       data-ad-placement={placement}
       data-admob-unit={ADMOB_BANNER_UNIT}
-      className={
-        fullBleed
-          ? 'w-full flex justify-center'
-          : 'mx-auto w-full max-w-7xl px-4 sm:px-6 flex justify-center'
-      }
+      className={`my-5 w-full min-w-0 ${isInlineFeed || fullBleed ? '' : 'mx-auto max-w-[970px]'}`}
     >
-      <div className="ad-banner-frame relative mx-auto overflow-hidden rounded-xl border border-slate-800/80 bg-[#0D1320]">
-        <div className="flex h-full w-full items-center gap-2.5 px-3 md:px-4">
-          <span className="shrink-0 rounded-md border border-slate-700 bg-slate-900 px-1.5 md:px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400">
+      <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/10 bg-[#0d1425] shadow-[0_8px_28px_rgba(0,0,0,.18)]">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-white/10 bg-[#111b30] px-4 py-2.5">
+          <span className="rounded-md border border-white/15 bg-white/5 px-2 py-1 text-[9px] font-bold uppercase tracking-[.12em] text-[#b8c6df]">
             Sponsored
           </span>
-          <p className="text-[11px] md:text-xs text-slate-400 line-clamp-2 leading-tight min-w-0">
-            Partner placements keep PlanetAI 100% free with zero signup required.
-          </p>
+          <span className="text-[10px] text-[#9ba9c1]">
+            Partner advertising helps support free access to PLANETAI.
+          </span>
         </div>
-
-        <ins
-          className="adsbygoogle ad-banner-ins absolute inset-0 z-10"
-          data-ad-client={ADSENSE_CLIENT}
-          data-ad-slot={slotId}
-          data-ad-format="horizontal"
-          data-full-width-responsive="false"
-        />
+        <div className="planetai-ad-unit flex w-full min-w-0 min-h-[90px] items-center justify-center overflow-hidden bg-[#0d1425] px-4 py-2 box-border sm:min-h-[100px]">
+          <ins
+            className="adsbygoogle block w-full min-w-0 max-w-full"
+            style={{display: 'block', width: '100%', maxWidth: '100%', minWidth: 0}}
+            data-ad-client={ADSENSE_CLIENT}
+            data-ad-slot={slotId}
+            data-ad-format="horizontal"
+            data-full-width-responsive="true"
+          />
+        </div>
       </div>
     </aside>
   );

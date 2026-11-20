@@ -1,0 +1,379 @@
+import React, {useMemo, useState} from 'react';
+import type {ReactNode} from 'react';
+import {
+  ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, RefreshCw, Share2, Sparkles,
+  Search, ShieldCheck,
+} from 'lucide-react';
+import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
+import type {JobCategory, JobListing} from '../data/jobs';
+import {CompanyLogo} from '../components/JobCard';
+import {getCompanyLogoUrl} from '../data/jobs';
+import {CompanyRevealCard} from '../components/CompanyRevealCard';
+import {PlanetAILogo} from '../components/PlanetAILogo';
+import {PWAInstallButton} from '../components/PWAInstallButton';
+import {AdBanner} from '../components/AdBanner';
+
+interface PremiumMarketplacePreviewProps {
+  jobs: JobListing[];
+  targetedResumeJobId: string | null;
+  onRefreshJobs: () => void;
+  isRefreshing: boolean;
+  lastSyncedAt: string | null;
+  savedIds: string[];
+  onToggleSave: (id: string) => void;
+  onOpenJob: (job: JobListing) => void;
+  onPostJob: () => void;
+  onShareApp: () => void;
+  copied: boolean;
+  onOpenPrivacyPolicy: () => void;
+  privacyPolicyModal: ReactNode;
+  onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app', resumeMode?: 'resume' | 'cover') => void;
+  jobDetailModal: ReactNode;
+  postJobModal: ReactNode;
+  showCareerTools: boolean;
+  careerToolsContent: ReactNode;
+  onReturnToMarketplace: () => void;
+}
+
+const categoryLabel = (category: JobCategory) =>
+  category === 'All' ? 'All opportunities' : category;
+
+type CareerDestination = 'jobs' | 'workspace';
+function CareerNavigation({
+  active,
+  onNavigate,
+  onPostJob,
+}: {
+  active: CareerDestination;
+  onNavigate: (destination: CareerDestination) => void;
+  onPostJob: () => void;
+}) {
+  const destinations = [
+    {id: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+    {id: 'workspace' as const, label: 'Career Workspace', icon: Sparkles},
+  ];
+
+  return (
+    <>
+      <nav aria-label="Main navigation" className="hidden min-[769px]:flex min-w-0 items-center justify-center gap-2">
+        {destinations.map((item) => {
+          const Icon = item.icon;
+          const selected = active === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavigate(item.id)}
+              aria-current={selected ? 'page' : undefined}
+              className={'inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold transition ' + (selected ? 'border-[#22D3EE]/40 bg-[#22D3EE]/10 text-[#22D3EE] shadow-[0_0_18px_rgba(34,211,238,.08)]' : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-white')}
+            >
+              <Icon size={14} />
+              {item.label}
+            </button>
+          );
+        })}
+      </nav>
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed bottom-4 left-4 right-4 z-40 grid h-[68px] grid-cols-3 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.92)] p-3 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden"
+      >
+        <button
+          type="button"
+          onClick={() => onNavigate('jobs')}
+          aria-current={active === 'jobs' ? 'page' : undefined}
+          className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (active === 'jobs' ? 'bg-[#22D3EE] text-[#070B14] shadow-[0_0_18px_rgba(34,211,238,.18)]' : 'text-slate-400 hover:text-white')}
+        >
+          <BriefcaseBusiness size={16} />
+          <span>Jobs</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigate('workspace')}
+          aria-current={active === 'workspace' ? 'page' : undefined}
+          className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (active === 'workspace' ? 'bg-[#22D3EE] text-[#070B14] shadow-[0_0_18px_rgba(34,211,238,.18)]' : 'text-slate-400 hover:text-white')}
+        >
+          <Sparkles size={16} />
+          <span className="truncate">Career Workspace</span>
+        </button>
+        <button
+          type="button"
+          onClick={onPostJob}
+          className="flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none text-slate-400 transition hover:text-white"
+        >
+          <ArrowUpRight size={16} />
+          <span>Post Job</span>
+        </button>
+      </nav>
+    </>
+  );
+}
+
+
+const MarqueeCompanyLogo: React.FC<{company: string; job?: JobListing}> = ({company, job}) => {
+  const [failed, setFailed] = useState(false);
+  const logoUrl = getCompanyLogoUrl(company, job?.companyLogoUrl, job?.companyWebsite || job?.applyUrl);
+  const initials = company.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  return (
+    <div className="flex h-6 shrink-0 items-center gap-2">
+      {logoUrl && !failed ? <img src={logoUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 object-contain grayscale opacity-65"/> : <span aria-hidden="true" className="grid h-4 w-4 place-items-center rounded bg-white/10 text-[7px] font-bold text-slate-400">{initials || 'CO'}</span>}
+      <span className="whitespace-nowrap text-[10px] font-semibold tracking-wide text-slate-400">{company}</span>
+    </div>
+  );
+};
+
+export default function PremiumMarketplacePreview({
+  jobs,
+  targetedResumeJobId,
+  onRefreshJobs,
+  isRefreshing,
+  lastSyncedAt,
+  savedIds,
+  onToggleSave,
+  onOpenJob,
+  onPostJob,
+  onShareApp,
+  copied,
+  onOpenPrivacyPolicy,
+  privacyPolicyModal,
+  onOpenWorkspace,
+  jobDetailModal,
+  postJobModal,
+  showCareerTools,
+  careerToolsContent,
+  onReturnToMarketplace,
+}: PremiumMarketplacePreviewProps) {
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<JobCategory>('All');
+  const [sort, setSort] = useState('recommended');
+  const [quickFilter, setQuickFilter] = useState<'All' | 'Paid Only' | 'Saved' | 'Coding' | 'AI Training' | 'Remote'>('All');
+  const [activeDestination, setActiveDestination] = useState<CareerDestination>(showCareerTools ? 'workspace' : 'jobs');
+  const navigateCareer = (destination: CareerDestination) => {
+    setActiveDestination(destination);
+    if (destination === 'jobs') {
+      if (showCareerTools) onReturnToMarketplace();
+      else window.scrollTo({top: 0, behavior: 'smooth'});
+      return;
+    }
+    onOpenWorkspace('ai-tools');
+  };
+  const visibleJobs = useMemo(() => jobs.filter(job => !(job.isCustomEmployerPost && job.title.trim().toLowerCase() === 'planetai test')), [jobs]);
+
+  const baseFiltered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return visibleJobs.filter(job =>
+      (category === 'All' || job.category === category) &&
+      (!q || [job.title, job.company, job.category, job.location, job.description, ...job.tags].join(' ').toLowerCase().includes(q))
+    );
+  }, [visibleJobs, query, category]);
+
+  const filtered = useMemo(() => {
+    const matches = baseFiltered.filter(job => {
+      if (quickFilter === 'Saved') return savedIds.includes(job.id);
+      if (quickFilter === 'Paid Only') return Boolean(job.isCustomEmployerPost) && formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed';
+      if (quickFilter === 'Coding' || quickFilter === 'AI Training') return job.category === quickFilter;
+      if (quickFilter === 'Remote') return job.category === 'Remote' || /remote|worldwide/i.test(`${job.location} ${job.workType}`);
+      return true;
+    });
+    if (sort === 'company') return [...matches].sort((a,b) => a.company.localeCompare(b.company));
+    if (sort === 'pay') return [...matches].sort((a,b) => b.payMaxUsd - a.payMaxUsd);
+    if (sort === 'newest') return [...matches].sort((a,b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)));
+    return [...matches].sort((a,b) => Number(Boolean(b.featured)) - Number(Boolean(a.featured)) || Number(Boolean(b.urgent)) - Number(Boolean(a.urgent)));
+  }, [baseFiltered, quickFilter, savedIds, sort]);
+
+  const quickFilterCounts = useMemo(() => ({
+    All: baseFiltered.length,
+    'Paid Only': baseFiltered.filter(job => Boolean(job.isCustomEmployerPost) && formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed').length,
+    Saved: baseFiltered.filter(job => savedIds.includes(job.id)).length,
+    Coding: baseFiltered.filter(job => job.category === 'Coding').length,
+    'AI Training': baseFiltered.filter(job => job.category === 'AI Training').length,
+    Remote: baseFiltered.filter(job => job.category === 'Remote' || /remote|worldwide/i.test(`${job.location} ${job.workType}`)).length,
+  }), [baseFiltered, savedIds]);
+
+  const spotlight = visibleJobs.find(job => job.featured && !job.isCustomEmployerPost) || visibleJobs.find(job => job.featured && job.verified) || visibleJobs.find(job => !job.isCustomEmployerPost && job.company.trim().toLowerCase() === 'mercor') || visibleJobs.find(job => !job.isCustomEmployerPost) || visibleJobs[0] || null;
+  const marqueeCompanies = useMemo(() => {
+    const names = ['Mercor', 'micro1', 'Outlier', 'Scale AI', 'Alignerr', 'Appen'];
+    return names.map(company => ({
+      company,
+      job: visibleJobs.find(item => item.company.trim().toLowerCase() === company.toLowerCase() ||
+        (company === 'Appen' && /appen|crowdgen/i.test(item.company))),
+    }));
+  }, [visibleJobs]);
+
+  if (showCareerTools) {
+    return (
+      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24] pb-28 min-[769px]:pb-0">
+        <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
+          <div className="mx-auto grid h-[68px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:h-[76px] sm:px-8">
+            <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex min-w-0 shrink items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
+              <span className="min-w-0 leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Remote work & utility OS</span></span>
+            </a>
+            <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+            <div className="flex shrink-0 items-center justify-self-end gap-1.5 sm:gap-2">
+              <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11">{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
+              <button onClick={onReturnToMarketplace} className="inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-full border border-[#dce5dc] bg-white px-3 py-1.5 text-xs font-bold text-[#40534a] transition hover:border-[#a9bcae] sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-[11px]">Back to marketplace <ArrowRight className="inline" size={13}/></button>
+            </div>
+          </div>
+        </header>
+        <main className="mx-auto max-w-[1320px] px-5 py-9 pb-24 sm:px-8 sm:py-12 min-[769px]:pb-12">
+          <div className="mb-8 max-w-2xl">
+            <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">PLANETAI · Remote work & daily utility OS</p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Your all-in-one work & utility workspace.</h1>
+            <p className="mt-3 text-sm leading-6 text-[#77847b]">Discover remote opportunities, manage career tasks, create finance documents and use everyday productivity tools—all in one PLANETAI workspace.</p>
+            <nav aria-label="Career workspace sections" className="mt-6 flex flex-wrap gap-2">
+              <a href="#career-ai-tools" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">AI career tools</a>
+              <a href="#career-discovery" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">AI & developer discovery</a>
+              <a href="#career-productivity" className="rounded-full border border-[#dce5dc] bg-white px-4 py-2.5 text-[11px] font-bold text-[#40564a] hover:border-[#9fb6a4]">Productivity toolkit</a>
+            </nav>
+          </div>
+          {careerToolsContent}
+        </main>
+        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-28 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Remote work & daily utilities</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
+        {privacyPolicyModal}
+        <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+      </div>
+    );
+  }
+
+  return (
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f] pb-28 min-[769px]:pb-0">
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070b14]/95 backdrop-blur-xl">
+        <div className="mx-auto grid h-[60px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4">
+          <a href="#top" className="flex min-w-0 items-center gap-2.5" aria-label="PLANETAI marketplace home">
+            <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-400/[0.08] shadow-[0_0_24px_rgba(34,211,238,.18)]"><span className="absolute inset-0 rounded-xl bg-cyan-300/10 blur-md"/><PlanetAILogo className="relative h-8 w-8"/></span>
+            <span className="whitespace-nowrap text-[16px] font-extrabold tracking-[-.055em] text-white">PLANET<span className="text-cyan-300">AI</span></span>
+          </a>
+          <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+          <div className="flex items-center justify-self-end gap-2">
+            <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">{copied ? <Check size={14} className="text-emerald-400"/> : <Share2 size={14}/>}</button>
+            <button type="button" onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 py-2 text-[11px] font-bold text-white shadow-[0_8px_24px_rgba(79,70,229,.25)] transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">Post a job <ArrowUpRight size={13}/></button>
+          </div>
+        </div>
+      </header>
+
+      <section role="region" aria-label="Featured companies" className="h-10 w-full overflow-hidden border-y border-white/[0.08] bg-[#070b14]">
+        <p className="sr-only">Companies represented on PLANETAI: Mercor, micro1, Outlier, Scale AI, Alignerr and Appen.</p>
+        <div
+          className="marquee-container h-10 w-full overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+          }}
+        >
+          <div className="marquee-track flex h-10 w-max shrink-0 items-center">
+            <div className="flex w-max shrink-0 items-center gap-6 pr-6">
+              {[0, 1, 2, 3].map(copy => marqueeCompanies.map(item => (
+                <MarqueeCompanyLogo key={`first-${copy}-${item.company}`} company={item.company} job={item.job}/>
+              )))}
+            </div>
+            <div className="flex w-max shrink-0 items-center gap-6 pr-6" aria-hidden="true">
+              {[0, 1, 2, 3].map(copy => marqueeCompanies.map(item => (
+                <MarqueeCompanyLogo key={`second-${copy}-${item.company}`} company={item.company} job={item.job}/>
+              )))}
+            </div>
+          </div>
+        </div>
+      </section>
+      <main id="top" className="pb-28 min-[769px]:pb-0">
+        <section className="relative overflow-hidden bg-[#070b14]">
+          <div className="pointer-events-none absolute -left-28 -top-28 h-72 w-72 rounded-full bg-cyan-500/[0.08] blur-3xl"/>
+          <div className="pointer-events-none absolute -right-28 top-16 h-80 w-80 rounded-full bg-indigo-500/[0.09] blur-3xl"/>
+          <div className="mx-auto grid max-w-[1320px] items-center gap-4 px-4 pb-4 pt-4 min-[769px]:grid-cols-[1.12fr_.88fr] min-[769px]:gap-12 min-[769px]:px-8 min-[769px]:pb-20 min-[769px]:pt-20">
+            <div className="relative z-10 max-w-[720px]">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-cyan-300/15 bg-cyan-300/[0.06] px-3 py-1 text-[8px] font-bold uppercase tracking-[.17em] text-cyan-200 min-[769px]:mb-6 min-[769px]:py-1.5 min-[769px]:text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-cyan-300"/> ALL-IN-ONE REMOTE WORK & UTILITY OS • NO SIGNUP</div>
+              <h1 className="max-w-[700px] text-left text-[1.85rem] font-extrabold leading-[1.15] tracking-[-.055em] text-white min-[769px]:text-[clamp(3.25rem,5.4vw,5.6rem)] min-[769px]:leading-[1.02]">Find work that moves you forward.</h1>
+              <p className="mt-2 max-w-[520px] text-[11px] leading-[1.45rem] text-slate-400 min-[769px]:mt-6 min-[769px]:text-[16px] min-[769px]:leading-7">Curated remote roles plus free AI career, USD finance, and daily productivity tools in one tab.</p>
+              <div className="mt-3 flex flex-col items-stretch gap-2 min-[769px]:mt-8 min-[769px]:flex-row min-[769px]:items-center min-[769px]:gap-4">
+                <a href="#opportunity-filters" onClick={(event) => { event.preventDefault(); document.getElementById("opportunity-filters")?.scrollIntoView({behavior:"smooth", block:"start"}); }} className="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#6366f1] px-5 py-3 text-[12px] font-extrabold text-[#070b14] shadow-lg shadow-cyan-950/30 transition hover:-translate-y-0.5 hover:brightness-110 min-[769px]:w-auto min-[769px]:px-6 min-[769px]:text-[13px]">Explore Live Roles ↓</a>
+                <span className="text-center text-[10px] font-semibold text-slate-400 min-[769px]:text-left min-[769px]:text-[11px]"><ShieldCheck className="mr-1 inline text-cyan-300" size={14}/> Browse without signup</span>
+              </div>
+              <div className="mt-4 hidden flex-wrap gap-x-8 gap-y-3 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-400 min-[769px]:mt-12 min-[769px]:flex min-[769px]:pt-6"><span><Check className="mr-1.5 inline text-emerald-300" size={14}/> Direct employer applications</span><span><Check className="mr-1.5 inline text-emerald-300" size={14}/> Clear job information</span><span><Check className="mr-1.5 inline text-emerald-300" size={14}/> Browse freely</span></div>
+            </div>
+            <div className="relative mx-auto w-full max-w-[480px]">
+              <div className="absolute -inset-4 rounded-[2rem] bg-emerald-500/[0.09] blur-2xl"/>
+              <div className="relative rounded-2xl border border-[rgba(16,185,129,.35)] bg-[linear-gradient(160deg,rgba(16,185,129,.08)_0%,rgba(13,18,34,.95)_100%)] p-[18px] shadow-[0_24px_70px_rgba(0,0,0,.28)]">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-emerald-300">Opportunity Spotlight</p>
+                  <span className="shrink-0 rounded-full border border-emerald-300/20 bg-[rgba(16,185,129,.14)] px-2.5 py-1 text-[9px] font-bold text-[#6EE7B7]">{spotlight?.verified ? "Verified • No Signup" : "Curated • No Signup"}</span>
+                </div>
+                {spotlight ? <button onClick={() => onOpenJob(spotlight)} className="mt-3 block w-full rounded-xl text-left transition hover:bg-white/[0.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <CompanyLogo company={spotlight.company} short={spotlight.companyShort} explicitLogoUrl={spotlight.companyLogoUrl} websiteOrApplyUrl={spotlight.companyWebsite || spotlight.applyUrl} size="sm" lazy={false}/>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[1.2rem] font-extrabold leading-tight tracking-[-.025em] text-white">{spotlight.title}</p>
+                      <p className="mt-1 text-[10px] text-slate-400 min-[769px]:text-xs">{spotlight.company} • {spotlight.location} • {spotlight.workType}</p>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3">
+                    <span className={`rounded-full border px-3 py-1.5 text-[11px] font-extrabold ${spotlight.isCustomEmployerPost && formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) !== "Salary not disclosed" ? "border-emerald-400/35 bg-[rgba(16,185,129,.22)] text-[#34D399]" : "border-slate-700/70 bg-slate-800/60 text-slate-400"}`}>{spotlight.isCustomEmployerPost ? formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) : "Salary not disclosed"}</span>
+                    <span className="text-[9px] font-bold text-emerald-300">VIEW ROLE ↗</span>
+                  </div>
+                </button> : <div className="mt-4 text-sm text-slate-400">New opportunities are on the way.</div>}
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Opportunities</p><p className="mt-1 text-[10px] font-bold text-slate-200">{visibleJobs.length} to explore</p></div>
+                  <div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Access</p><p className="mt-1 text-[10px] font-bold text-slate-200">No candidate signup</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="opportunities" className="mx-auto max-w-[1320px] px-4 pb-12 pt-5 sm:px-8 min-[769px]:py-20">
+          <div className="flex flex-col justify-between gap-3 min-[769px]:flex-row min-[769px]:items-end">
+            <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">The opportunity board</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Work worth exploring.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77847b]">Search curated and employer-published roles by skill, company or location.</p></div>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-[11px] font-semibold text-[#718077]"><ShieldCheck size={16} className="text-[#58816b]"/> Employer listings are reviewed before publication</div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-[#8a978f]">{lastSyncedAt ? `Updated ${new Date(lastSyncedAt).toLocaleTimeString([], {hour: 'numeric', minute: '2-digit'})}` : 'Checking listings'}</span>
+                <button type="button" onClick={onRefreshJobs} disabled={isRefreshing} className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#dce5dc] bg-white px-3.5 py-2 text-[11px] font-bold text-[#40534a] transition hover:border-[#a9bcae] disabled:cursor-wait disabled:opacity-60" aria-label="Refresh job listings">
+                  <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''}/>
+                  {isRefreshing ? 'Refreshing' : 'Refresh jobs'}
+                </button>
+              </div>
+            </div>
+          </div>
+          <div id="opportunity-filters" className="mt-4 scroll-mt-[76px] rounded-2xl border border-white/10 bg-[#0b1220]/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,.24)] backdrop-blur-xl min-[769px]:mt-7 min-[769px]:flex min-[769px]:items-center min-[769px]:gap-3 min-[769px]:p-4">
+            <div className="flex min-h-10 min-w-0 flex-1 items-center gap-3 px-2"><Search size={17} className="shrink-0 text-slate-500"/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Job title, skill or company" aria-label="Search opportunities" className="w-full min-w-0 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"/></div>
+            <div className="flex items-center gap-2 border-t border-white/10 pt-3 min-[769px]:border-0 min-[769px]:pt-0">
+              <label htmlFor="opportunity-sort" className="shrink-0 text-[10px] font-bold text-slate-500 min-[769px]:hidden">Sort by</label>
+              <select id="opportunity-sort" value={sort} onChange={e => setSort(e.target.value)} aria-label="Sort opportunities" className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-slate-200 outline-none transition focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/10 min-[769px]:flex-none min-[769px]:min-w-[156px]"><option value="recommended">Recommended</option><option value="newest">Featured first</option><option value="pay">Highest pay</option><option value="company">Company A–Z</option></select>
+              <button className="min-h-10 shrink-0 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-indigo-500 min-[769px]:px-5" onClick={() => document.getElementById('role-list')?.scrollIntoView({behavior:'smooth'})}>Search</button>
+            </div>
+          </div>
+          <div className="no-scrollbar sticky top-[60px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/[0.08] bg-[rgba(7,11,20,.88)] px-4 py-3 backdrop-blur-xl min-[769px]:top-[60px] min-[769px]:mx-0 min-[769px]:mt-5 min-[769px]:border min-[769px]:border-white/[0.08] min-[769px]:rounded-2xl min-[769px]:px-4">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-[#ffffff] text-[#070b14]' : 'border-[rgba(148,163,184,.22)] bg-[rgba(30,41,59,.6)] text-[#cbd5e1] hover:border-slate-400/40 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
+           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 min-[769px]:mt-4">{JOB_CATEGORIES.filter(item => !['All', 'Coding', 'AI Training', 'Remote'].includes(item)).map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
+          <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
+          <div id="role-list" className="mt-4 grid grid-cols-1 items-stretch auto-rows-fr gap-[14px] min-[769px]:grid-cols-2 xl:grid-cols-3">
+             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} isResumeTarget={job.id === targetedResumeJobId} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="col-span-full w-full min-w-0"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
+           </div>
+           {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-[#ffffff] px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
+        </section>
+
+        <section id="how-it-works" className="border-y border-white/[0.07] bg-[#0d1425]">
+          <div className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-20">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#8d7aff]">Simple by design</p>
+              <h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-white sm:text-4xl">Less friction. More possibility.</h2>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-[#9ba9c1]">A straightforward path from discovering an opportunity to taking your next career step.</p>
+            </div>
+            <div className="mt-10 grid grid-cols-1 items-stretch gap-4 md:grid-cols-3 md:gap-5">
+              {[{n:'01',title:'Explore freely',body:'Browse roles and company information without creating a candidate account.'},{n:'02',title:'Know what to expect',body:'Review responsibilities, compensation, location, eligibility and requirements.'},{n:'03',title:'Apply directly',body:'Continue to the employer’s official application destination when you are ready.'}].map(item => <article key={item.n} className="flex h-full min-h-[220px] flex-col rounded-[22px] border border-white/[0.09] bg-[#111b30] p-6 shadow-[0_16px_44px_rgba(0,0,0,.16)] transition duration-300 hover:-translate-y-1 hover:border-[#8265ff]/35 sm:p-7">
+                <span className="grid h-10 w-10 place-items-center rounded-xl border border-[#8265ff]/25 bg-[#292044] text-xs font-extrabold tracking-wide text-[#bcaaff]">{item.n}</span>
+                <h3 className="mt-6 text-lg font-bold tracking-tight text-white">{item.title}</h3>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-[#aebbd0]">{item.body}</p>
+              </article>)}
+            </div>
+          </div>
+        </section>
+        <section aria-label="Sponsored information" className="border-b border-white/10 bg-[#070b14] py-7"><div className="mx-auto max-w-[1320px] px-5 sm:px-8"><AdBanner placement="bottom-suite" /></div></section>
+
+        <section id="employers" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24"><div className="overflow-hidden rounded-[28px] bg-[#183c32] p-7 text-white sm:p-12 lg:p-16"><div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a7c7b2]">For employers</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-.055em] sm:text-5xl">Meet the people who can move your business forward.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-[#c4d6ca]">Create an employer workspace, submit a role for review, and publish after approval. Free listings are welcome.</p><div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold text-[#d6e6db]"><span><Check className="mr-1 inline" size={14}/> Employer workspace</span><span><Check className="mr-1 inline" size={14}/> Human review</span><span><Check className="mr-1 inline" size={14}/> Clear listing packages</span></div></div><div className="flex flex-col items-start gap-3"><button onClick={onPostJob} className="inline-flex items-center gap-3 rounded-full bg-[#f1f5ec] px-6 py-4 text-[12px] font-extrabold text-[#183c32] transition hover:bg-white">Post a role <ArrowUpRight size={16}/></button><a href="/?experience=employer-auth&mode=signin" className="text-[11px] font-semibold text-[#d6e6db] underline underline-offset-4 hover:text-white">Already have an employer workspace? Sign in</a></div></div></div></section>
+      </main>
+      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-28 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
+      {jobDetailModal}
+      {postJobModal}
+      {privacyPolicyModal}
+      <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+    </div>
+  );
+}

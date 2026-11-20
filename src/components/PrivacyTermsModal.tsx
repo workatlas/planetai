@@ -14,84 +14,60 @@ export const PrivacyTermsModal: React.FC<PrivacyTermsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-sm p-0 sm:p-4"
+      className="fixed inset-0 z-[65] flex items-end justify-center bg-[#142c26]/55 p-0 backdrop-blur-sm sm:items-center sm:p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="privacy-terms-title"
     >
-      <div className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border border-slate-800 bg-[#111827] p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+      <div className="max-h-[90vh] w-full overflow-y-auto rounded-t-3xl border border-[#dce5dc] bg-white p-6 shadow-2xl sm:max-w-2xl sm:rounded-2xl">
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-cyan-950/70 border border-cyan-500/30 text-cyan-300">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="grid h-10 w-10 place-items-center rounded-xl border border-[#c1d2c4] bg-[#eef4ee] text-[#47745c]">
+              <ShieldCheck className="h-5 w-5" />
             </div>
             <div>
-              <h2
-                id="privacy-terms-title"
-                className="font-display text-lg font-bold text-slate-50"
-              >
-                Privacy Policy & Terms of Use
+              <h2 id="privacy-terms-title" className="text-lg font-bold text-[#1d3028]">
+                Privacy Policy
               </h2>
-              <p className="text-xs text-slate-400">
-                PlanetAI Transparency & Google Play Compliance Disclosure
-              </p>
+              <p className="text-xs text-[#77847b]">How PlanetAI handles information</p>
             </div>
           </div>
-
           <button
             type="button"
             onClick={onClose}
-            aria-label="Close privacy policy and terms"
-            className="min-h-[44px] min-w-[44px] -mr-2 -mt-2 flex items-center justify-center rounded-xl text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors"
+            aria-label="Close privacy policy"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-xl text-[#77847b] hover:bg-[#f4f6f2] hover:text-[#25372e]"
           >
-            <X className="w-5 h-5" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-5 space-y-4 text-sm text-slate-300 leading-relaxed">
-          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4">
-            <h3 className="font-semibold text-slate-100">
-              1. Independent Aggregator & Referral Disclosure
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
-              PlanetAI is an independent AI and remote job aggregator and affiliate/referral partner (including partner links to platforms such as micro1, Babel Audio, Mercor, Visora, and Spout). PlanetAI does not act as the direct employer for listed positions and requires zero account registration to browse or use its career tools.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4">
-            <h3 className="font-semibold text-slate-100">
-              2. External Third-Party Employer Links
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
-              All external job application and platform links are clearly marked with an external link icon (↗) and open in your external browser or a new tab. When you leave PlanetAI, your application data and interactions are governed by the respective third-party platform’s privacy policy and terms.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4">
-            <h3 className="font-semibold text-slate-100">
-              3. Local-Only Microphone & Career Tools Processing
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
-              Audio recorded inside the Voice Sample AI Prep tool uses your browser’s local Web Audio API and stays strictly inside your device’s browser memory. Voice clips, resumes, and email drafts are never uploaded to or stored on any PlanetAI server. Preferences such as saved jobs and alert choices are stored locally in your browser’s localStorage.
-            </p>
-          </div>
-
-          <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4">
-            <h3 className="font-semibold text-slate-100">
-              4. Advertising Disclosure (Google AdSense & AdMob)
-            </h3>
-            <p className="mt-1 text-xs sm:text-sm text-slate-300">
-              To keep PlanetAI 100% free with no signup barriers, non-intrusive banner advertisements are served via Google AdSense (Web) and Google AdMob (Android WebView/APK). Google and its partners may use cookies or device identifiers in accordance with Google’s advertising privacy policies.
-            </p>
-          </div>
+        <div className="mt-5 space-y-4 text-sm leading-6 text-[#52635a]">
+          <section className="rounded-xl border border-[#e2e8e1] bg-[#f7f8f6] p-4">
+            <h3 className="font-bold text-[#25372e]">1. Browsing and job applications</h3>
+            <p className="mt-1">You can browse PlanetAI job listings and use public career information without creating an applicant account. When you choose to apply, you are directed to the employer’s or platform’s application destination. Their privacy policy governs information you provide there.</p>
+          </section>
+          <section className="rounded-xl border border-[#e2e8e1] bg-[#f7f8f6] p-4">
+            <h3 className="font-bold text-[#25372e]">2. Employer accounts and job submissions</h3>
+            <p className="mt-1">If an employer creates a workspace or submits a listing, PlanetAI processes information such as account email, company and profile details, job content, verification and moderation status, and relevant listing or payment references to operate the service, review submissions, and manage published listings.</p>
+          </section>
+          <section className="rounded-xl border border-[#e2e8e1] bg-[#f7f8f6] p-4">
+            <h3 className="font-bold text-[#25372e]">3. Browser storage and career tools</h3>
+            <p className="mt-1">Features such as saved roles, application-tracker entries, and alert preferences may be stored in your browser. Career-tool drafts and voice samples are designed for local browser use; avoid entering sensitive personal information and review each tool’s behavior before sharing content outside PlanetAI.</p>
+          </section>
+          <section className="rounded-xl border border-[#e2e8e1] bg-[#f7f8f6] p-4">
+            <h3 className="font-bold text-[#25372e]">4. Service providers and advertising</h3>
+            <p className="mt-1">PlanetAI uses service providers to support hosting, database and authentication functions, communications, and payment-related workflows. A clearly labelled Google AdSense placement may appear in selected informational areas, separate from job listings and core career tools. Google may use cookies or similar technologies to provide and measure advertising, subject to your browser settings, applicable consent choices, and Google’s policies.</p>
+          </section>
+          <section className="rounded-xl border border-[#e2e8e1] bg-[#f7f8f6] p-4">
+            <h3 className="font-bold text-[#25372e]">5. Questions or privacy requests</h3>
+            <p className="mt-1">For questions about this notice or a privacy request, contact <a className="font-semibold text-[#315b47] underline underline-offset-2" href="mailto:workatlas.team@gmail.com">workatlas.team@gmail.com</a>. Please do not send passwords or other sensitive credentials by email.</p>
+          </section>
+          <p className="text-[11px] leading-5 text-[#87938b]">This notice describes current PlanetAI product practices at a high level and may be updated as features and service providers change. Last updated: November 18, 2026.</p>
         </div>
 
         <div className="mt-6 flex justify-end">
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
-          >
+          <button type="button" onClick={onClose} className="min-h-[44px] rounded-xl bg-[#183c32] px-5 py-2 text-sm font-bold text-white hover:bg-[#285c4b]">
             Close
           </button>
         </div>

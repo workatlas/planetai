@@ -44,7 +44,7 @@ export const TOP_AI_ASSISTANTS: AIAssistantItem[] = [
     id: 'gemini',
     name: 'Google Gemini',
     useCase: 'Multimodal reasoning & workspace prep',
-    url: 'https://google.com',
+    url: 'https://gemini.google.com/',
   },
   {
     id: 'claude',
@@ -113,7 +113,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Workspace',
     description:
       'Rapid AI app prototyping with instant full-stack preview, prompt testing, and deployment readiness.',
-    url: 'https://google.com',
+    url: 'https://aistudio.google.com/',
   },
   {
     id: 'builder-2',
@@ -131,7 +131,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Cloud IDE',
     description:
       'Cloud AI development workspace for building full-stack web apps, mobile previews, and APIs in browser.',
-    url: 'https://google.com',
+    url: 'https://idx.google.com/',
   },
   {
     id: 'builder-4',
@@ -140,7 +140,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: 'Free Starter Tier',
     description:
       'Free instant web and PWA hosting with automated HTTPS, edge previews, and continuous Git deployments.',
-    url: 'https://netlify.com',
+    url: 'https://www.netlify.com/',
   },
   {
     id: 'builder-5',
@@ -149,7 +149,7 @@ const DEV_TOOLS: DevToolItem[] = [
     pricing: '100% Free Utility',
     description:
       'Free PWA to Android APK/AAB packager for Google Play Store submission and Trusted Web Activity builds.',
-    url: 'https://pwabuilder.com',
+    url: 'https://www.pwabuilder.com/',
   },
   {
     id: 'tool-1',
@@ -205,7 +205,7 @@ type DevToolCategoryFilter =
   | 'Audio Cleaners'
   | 'Prompt Checkers';
 
-export const NewsDevToolsView: React.FC = () => {
+export const NewsDevToolsView: React.FC<{showAds?: boolean}> = ({showAds = true}) => {
   const [toolFilter, setToolFilter] = useState<DevToolCategoryFilter>('All');
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [subscribedEmail, setSubscribedEmail] = useState<string | null>(() => {
@@ -244,10 +244,10 @@ export const NewsDevToolsView: React.FC = () => {
       {/* Top AI Assistants Quick-Launch Hub */}
       <div className="space-y-4">
         <div className="flex items-center gap-2.5">
-          <Bot className="w-5 h-5 text-cyan-400 shrink-0" />
+          <Bot className="w-5 h-5 text-[#39836a] shrink-0" />
           <h1
             id="news-tools-heading"
-            className="font-display text-2xl sm:text-3xl font-bold text-slate-50 tracking-tight"
+            className="font-display text-2xl sm:text-3xl font-bold text-[#1d3028] tracking-tight"
           >
             Top AI Assistants
           </h1>
@@ -260,20 +260,20 @@ export const NewsDevToolsView: React.FC = () => {
               href={assistant.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#111827] p-4 hover:border-cyan-500/50 transition-colors"
+              className="group flex flex-col justify-between rounded-2xl border border-[#e2e8e1] bg-white p-4 hover:border-[#a9bcae] transition-colors"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-display text-base font-bold text-slate-50 group-hover:text-cyan-300 transition-colors">
+                  <span className="font-display text-base font-bold text-[#1d3028] group-hover:text-[#39836a] transition-colors">
                     {assistant.name}
                   </span>
-                  <ArrowUpRight className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <ArrowUpRight className="w-4 h-4 text-[#39836a] shrink-0" />
                 </div>
-                <p className="mt-1.5 text-xs text-slate-300 leading-relaxed">
+                <p className="mt-1.5 text-xs text-[#68766d] leading-relaxed">
                   {assistant.useCase}
                 </p>
               </div>
-              <span className="mt-3 text-[11px] font-medium text-cyan-300">
+              <span className="mt-3 text-[11px] font-medium text-[#39836a]">
                 Launch Assistant ↗
               </span>
             </a>
@@ -281,43 +281,44 @@ export const NewsDevToolsView: React.FC = () => {
         </div>
       </div>
 
-      {/* Live AI & Remote Work News */}
+      {/* AI & Remote Work Radar */}
       <div className="space-y-4">
         <div className="flex items-center gap-2.5">
-          <Newspaper className="w-5 h-5 text-cyan-400 shrink-0" />
-          <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-50 tracking-tight">
-            Live AI & Remote Work News
+          <Newspaper className="w-5 h-5 text-[#39836a] shrink-0" />
+          <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d3028] tracking-tight">
+            AI & Remote Work Radar
           </h2>
         </div>
+        <p className="text-sm text-[#819087]">Curated industry signals and source links. Open each source for its latest updates.</p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {LIVE_NEWS.map((item) => (
             <article
               key={item.id}
-              className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#111827] p-5 hover:border-cyan-500/40 transition-colors"
+              className="flex flex-col justify-between rounded-2xl border border-[#e2e8e1] bg-white p-5 hover:border-[#a9bcae] transition-colors"
             >
               <div>
-                <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <span className="font-semibold text-cyan-300">
+                <div className="flex items-center gap-2 text-xs text-[#819087]">
+                  <span className="font-semibold text-[#39836a]">
                     {item.source}
                   </span>
                   <span aria-hidden="true">·</span>
                   <span className="font-mono">{item.date}</span>
                 </div>
-                <h3 className="mt-2.5 font-display text-base sm:text-lg font-bold text-slate-50 leading-snug">
+                <h3 className="mt-2.5 font-display text-base sm:text-lg font-bold text-[#1d3028] leading-snug">
                   {item.title}
                 </h3>
-                <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                <p className="mt-2 text-sm text-[#68766d] leading-relaxed">
                   {item.summary}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-800/80">
+              <div className="mt-4 pt-3 border-t border-[#e2e8e1]">
                 <a
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-semibold text-cyan-300 hover:text-cyan-200 transition-colors"
+                  className="inline-flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-semibold text-[#39836a] hover:text-[#285c4b] transition-colors"
                 >
                   <span>Read Source</span>
                   <ArrowUpRight className="w-4 h-4 shrink-0" />
@@ -333,12 +334,12 @@ export const NewsDevToolsView: React.FC = () => {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-2.5">
-              <Wrench className="w-5 h-5 text-cyan-400 shrink-0" />
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-slate-50 tracking-tight">
+              <Wrench className="w-5 h-5 text-[#39836a] shrink-0" />
+              <h2 className="font-display text-xl sm:text-2xl font-bold text-[#1d3028] tracking-tight">
                 Free App Builders & Developer Tools
               </h2>
             </div>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[#819087]">
               Zero-cost app builders, PWA packagers, code assistants, audio cleaners, and prompt validators.
             </p>
           </div>
@@ -359,8 +360,8 @@ export const NewsDevToolsView: React.FC = () => {
                 onClick={() => setToolFilter(cat)}
                 className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors whitespace-nowrap shrink-0 ${
                   toolFilter === cat
-                    ? 'border-cyan-400 bg-cyan-500 text-slate-950'
-                    : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700'
+                    ? 'border-[#39836a] bg-[#183c32] text-white'
+                    : 'border-[#e2e8e1] bg-white text-[#68766d] hover:border-[#dce5dc]'
                 }`}
               >
                 {cat}
@@ -373,32 +374,32 @@ export const NewsDevToolsView: React.FC = () => {
           {visibleTools.map((tool) => (
             <div
               key={tool.id}
-              className="flex flex-col justify-between rounded-2xl border border-slate-800/90 bg-[#111827] p-5"
+              className="flex flex-col justify-between rounded-2xl border border-[#e2e8e1] bg-white p-5"
             >
               <div>
-                <div className="flex items-center justify-between gap-2 text-xs text-slate-400">
-                  <span className="text-cyan-300 font-semibold">
+                <div className="flex items-center justify-between gap-2 text-xs text-[#819087]">
+                  <span className="text-[#39836a] font-semibold">
                     {tool.category}
                   </span>
                   <span>{tool.pricing}</span>
                 </div>
-                <h3 className="mt-2 font-display text-base font-bold text-slate-50">
+                <h3 className="mt-2 font-display text-base font-bold text-[#1d3028]">
                   {tool.name}
                 </h3>
-                <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+                <p className="mt-2 text-sm text-[#68766d] leading-relaxed">
                   {tool.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-800/80">
+              <div className="mt-4 pt-3 border-t border-[#e2e8e1]">
                 <a
                   href={tool.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-semibold text-slate-100 hover:text-cyan-300 transition-colors"
+                  className="inline-flex items-center gap-1.5 min-h-[40px] text-xs sm:text-sm font-semibold text-[#40534a] hover:text-[#39836a] transition-colors"
                 >
                   <span>Open Tool</span>
-                  <ArrowUpRight className="w-4 h-4 text-cyan-400 shrink-0" />
+                  <ArrowUpRight className="w-4 h-4 text-[#39836a] shrink-0" />
                 </a>
               </div>
             </div>
@@ -407,26 +408,26 @@ export const NewsDevToolsView: React.FC = () => {
       </div>
 
       {/* Frictionless Weekly AI Job Drop Newsletter */}
-      <div className="rounded-2xl border border-slate-800 bg-[#111827] p-6">
+      <div className="rounded-2xl border border-[#e2e8e1] bg-white p-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="max-w-xl">
-            <div className="flex items-center gap-2 text-cyan-300 text-xs font-semibold">
+            <div className="flex items-center gap-2 text-[#39836a] text-xs font-semibold">
               <Mail className="w-4 h-4" />
               <span>Weekly AI Job Drop · Zero Account Required</span>
             </div>
-            <h2 className="mt-1.5 font-display text-xl font-bold text-slate-50">
+            <h2 className="mt-1.5 font-display text-xl font-bold text-[#1d3028]">
               Get curated global USD AI batches in your inbox
             </h2>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 text-sm text-[#819087]">
               One clean digest every Monday highlighting urgent openings across micro1, Alignerr, Outlier, Babel Audio, Mercor, Visora, and Spout.
             </p>
           </div>
 
           <div className="w-full lg:w-auto lg:min-w-[380px]">
             {subscribedEmail ? (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-emerald-500/40 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-200">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-[#b9d7c0] bg-[#f0f7f0] px-4 py-3 text-sm text-[#356a45]">
                 <div className="flex items-center gap-2 min-w-0">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#39836a] shrink-0" />
                   <span className="truncate">
                     Subscribed: <strong>{subscribedEmail}</strong>
                   </span>
@@ -434,7 +435,7 @@ export const NewsDevToolsView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSubscribedEmail(null)}
-                  className="text-xs font-semibold text-emerald-300 hover:underline shrink-0"
+                  className="text-xs font-semibold text-[#39836a] hover:underline shrink-0"
                 >
                   Change
                 </button>
@@ -454,25 +455,25 @@ export const NewsDevToolsView: React.FC = () => {
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="you@domain.com"
-                  className="flex-1 min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+                  className="flex-1 min-h-[44px] rounded-xl border border-[#dce5dc] bg-[#f7f9f6] px-3.5 py-2 text-sm text-[#40534a] placeholder:text-[#9aa49d] focus:border-[#39836a] focus:outline-none"
                 />
                 <button
                   type="submit"
-                  className="min-h-[44px] px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors whitespace-nowrap shrink-0"
+                  className="min-h-[44px] px-5 py-2 rounded-xl bg-[#183c32] text-white text-sm font-bold hover:bg-[#285c4b] transition-colors whitespace-nowrap shrink-0"
                 >
                   Subscribe Free
                 </button>
               </form>
             )}
             {emailError && (
-              <p className="mt-1.5 text-xs text-rose-400">{emailError}</p>
+              <p className="mt-1.5 text-xs text-[#b45353]">{emailError}</p>
             )}
           </div>
         </div>
       </div>
 
       {/* Bottom AdBanner */}
-      <AdBanner placement="bottom-suite" />
+      {showAds && <AdBanner placement="bottom-suite" />}
     </section>
   );
 };

@@ -5,12 +5,22 @@ import {defineConfig} from 'vite';
 import {VitePWA} from 'vite-plugin-pwa';
 
 export default defineConfig(() => {
+  const isNetlifyDeployPreview = process.env.CONTEXT === 'deploy-preview';
+
   return {
+    // Expose the Netlify build context so the browser client can fail closed
+    // when sandbox Deploy Preview credentials are absent.
+    define: {
+      'import.meta.env.VITE_NETLIFY_CONTEXT': JSON.stringify(process.env.CONTEXT || ''),
+    },
     plugins: [
       react(),
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
+        // Deploy previews must retire any previously installed worker instead
+        // of caching preview builds across commits. Production keeps its PWA.
+        selfDestroying: isNetlifyDeployPreview,
         manifestFilename: 'manifest.json',
         includeAssets: [
           'ads.txt',
@@ -29,8 +39,8 @@ export default defineConfig(() => {
           name: 'PlanetAI — AI & Remote Job Aggregator',
           short_name: 'PlanetAI',
           description: 'AI & remote job aggregator featuring live opportunities across AI training, coding, audio/voice, and data annotation.',
-          theme_color: '#090D16',
-          background_color: '#090D16',
+          theme_color: '#183c32',
+          background_color: '#f7f8f6',
           display: 'standalone',
           orientation: 'portrait-primary',
           start_url: '/',
@@ -74,6 +84,9 @@ export default defineConfig(() => {
           ],
         },
         workbox: {
+          skipWaiting: true,
+          clientsClaim: true,
+          cleanupOutdatedCaches: true,
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
           runtimeCaching: [
             {

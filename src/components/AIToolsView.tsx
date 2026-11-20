@@ -18,7 +18,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import {sanitizeText} from '../utils/sanitize';
-import {AdBanner} from './AdBanner';
+import {ResumeStudio} from './ResumeStudio';
 import {TOP_AI_ASSISTANTS} from './NewsDevToolsView';
 
 type AIToolKey = 'resume' | 'email' | 'learning' | 'voice' | 'simulator';
@@ -39,11 +39,42 @@ export interface TailoredResumeDraft {
 export interface RequestedAITool {
   tool: AIToolKey;
   nonce: number;
+  role?: string;
+  company?: string;
+  skills?: string;
+  description?: string;
+  resumeMode?: 'resume' | 'cover';
 }
 
 interface AIToolsViewProps {
   tailoredDraft?: TailoredResumeDraft | null;
   requestedTool?: RequestedAITool | null;
+}
+
+const CAREER_TARGET_STORAGE_KEY = 'planetai_career_target_v1';
+
+interface SavedCareerTarget {
+  role: string;
+  company: string;
+  skills: string;
+  description: string;
+}
+
+function readSavedCareerTarget(): Partial<SavedCareerTarget> | null {
+  try {
+    const raw = window.localStorage.getItem(CAREER_TARGET_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      role: typeof parsed.role === 'string' ? parsed.role : undefined,
+      company: typeof parsed.company === 'string' ? parsed.company : undefined,
+      skills: typeof parsed.skills === 'string' ? parsed.skills : undefined,
+      description:
+        typeof parsed.description === 'string' ? parsed.description : undefined,
+    };
+  } catch {
+    return null;
+  }
 }
 
 interface LearningGuide {
@@ -221,24 +252,51 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
 }) => {
   const [activeTool, setActiveTool] = useState<AIToolKey>('resume');
 
-  useEffect(() => {
-    if (!requestedTool) return;
-    setActiveTool(requestedTool.tool);
-  }, [requestedTool]);
-
   // 1. Resume & Cover Letter Builder state
+  const [savedCareerTarget] = useState(readSavedCareerTarget);
   const [targetRole, setTargetRole] = useState(
-    'Senior Python & TypeScript AI Code Reviewer'
+    savedCareerTarget?.role ?? 'Senior Python & TypeScript AI Code Reviewer'
   );
-  const [targetCompany, setTargetCompany] = useState('micro1');
+  const [targetCompany, setTargetCompany] = useState(
+    savedCareerTarget?.company ?? 'micro1'
+  );
   const [skillsInput, setSkillsInput] = useState(
-    'Python, TypeScript, Unit Testing, Rubric Grading, Technical Writing'
+    savedCareerTarget?.skills ??
+      'Python, TypeScript, Unit Testing, Rubric Grading, Technical Writing'
   );
   const [jobDescInput, setJobDescInput] = useState(
-    'Evaluate and refactor production Python and TypeScript solutions, write clear step-by-step reasoning, and verify edge-case test coverage.'
+    savedCareerTarget?.description ??
+      'Evaluate and refactor production Python and TypeScript solutions, write clear step-by-step reasoning, and verify edge-case test coverage.'
   );
   const [tailoredNotice, setTailoredNotice] = useState<string | null>(null);
   const [copiedResume, setCopiedResume] = useState(false);
+
+  useEffect(() => {
+    if (!requestedTool) return;
+    setActiveTool(requestedTool.tool);
+    if (requestedTool.role) setTargetRole(sanitizeText(requestedTool.role, 120));
+    if (requestedTool.tool === 'learning') setSelectedGuideId('role-specific');
+    if (requestedTool.company) setTargetCompany(sanitizeText(requestedTool.company, 80));
+    if (requestedTool.skills !== undefined) setSkillsInput(sanitizeText(requestedTool.skills, 200));
+    if (requestedTool.description !== undefined) setJobDescInput(sanitizeText(requestedTool.description, 600));
+  }, [requestedTool]);
+
+  // Keep the selected job context available when users move between workspaces.
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        CAREER_TARGET_STORAGE_KEY,
+        JSON.stringify({
+          role: targetRole,
+          company: targetCompany,
+          skills: skillsInput,
+          description: jobDescInput,
+        })
+      );
+    } catch {
+      // Keep the workspace usable when browser storage is unavailable.
+    }
+  }, [targetRole, targetCompany, skillsInput, jobDescInput]);
 
   // Sync incoming "Tailor Resume for This Role" shortcut from Job Details Modal
   useEffect(() => {
@@ -393,21 +451,52 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
     return `Subject: ${subject}\n\n${greeting}\n\n${body}\n\nBest regards,\n[Your Name]`;
   }, [emailTemplate, emailTone, recruiterName, emailRole, emailNotes]);
 
+  const roleSpecificGuide = useMemo<LearningGuide>(() => {
+    const role = sanitizeText(targetRole, 120) || 'Selected opportunity';
+    const company = sanitizeText(targetCompany, 80);
+    const skills = skillsInput
+      .split(',')
+      .map((skill) => sanitizeText(skill, 48))
+      .filter(Boolean)
+      .slice(0, 6);
+    const roleContext = sanitizeText(jobDescInput, 500);
+    const skillChecklist = skills.length
+      ? skills.map((skill) => `Prepare a concise, real example showing how you have used ${skill} to solve a practical problem.`)
+      : ['Identify the core tools and responsibilities named in the role description, then prepare one relevant example for each.'];
+
+    return {
+      id: 'role-specific',
+      prompt: `${role} — Interview Preparation`,
+      category: company ? `Tailored for ${company}` : 'Tailored to selected opportunity',
+      summary: roleContext
+        ? `Use this preparation plan for ${role}${company ? ` at ${company}` : ''}. It is based on the published role description: ${roleContext}`
+        : `Use this preparation plan to organize examples and questions for the ${role} opportunity.`,
+      checklist: [
+        'Prepare a 60–90 second introduction connecting your experience to this role.',
+        ...skillChecklist,
+        'Walk through one relevant project from problem to approach, trade-offs, testing and outcome.',
+        'Prepare a thoughtful question about the team, success measures and the next stage of the hiring process.',
+      ],
+      avoid: 'Do not assume a particular interview format, assessment rubric or employer process unless the listing or recruiter explicitly confirms it. Use examples from your own experience and be ready to explain your decisions.',
+    };
+  }, [targetRole, targetCompany, skillsInput, jobDescInput]);
+
   const filteredGuides = useMemo(() => {
+    const guides = [roleSpecificGuide, ...LEARNING_GUIDES];
     const q = sanitizeText(learningQuery, 80).toLowerCase();
-    if (!q) return LEARNING_GUIDES;
-    return LEARNING_GUIDES.filter(
+    if (!q) return guides;
+    return guides.filter(
       (g) =>
         g.prompt.toLowerCase().includes(q) ||
         g.category.toLowerCase().includes(q) ||
         g.summary.toLowerCase().includes(q)
     );
-  }, [learningQuery]);
+  }, [learningQuery, roleSpecificGuide]);
 
   const activeGuide =
     filteredGuides.find((g) => g.id === selectedGuideId) ||
     filteredGuides[0] ||
-    LEARNING_GUIDES[0];
+    roleSpecificGuide;
 
   const handleCopyResume = async () => {
     const ok = await copyToClipboard(generatedResumeDoc);
@@ -549,24 +638,24 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
           <div className="flex flex-wrap items-center gap-2.5">
             <h1
               id="ai-suite-heading"
-              className="font-display text-2xl sm:text-3xl font-bold text-slate-50 tracking-tight"
+              className="font-display text-2xl sm:text-3xl font-bold text-[#1d3028] tracking-tight"
             >
               AI Career Suite
             </h1>
-            <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1 text-xs font-semibold text-emerald-300">
+            <span className="inline-flex items-center gap-1.5 rounded-md border border-[#c1d2c4] bg-[#eef4ee] px-2.5 py-1 text-xs font-semibold text-[#47745c]">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
               No Signup Required
             </span>
           </div>
-          <p className="mt-1.5 text-sm text-slate-400 max-w-2xl">
+          <p className="mt-1.5 text-sm text-[#77847b] max-w-2xl">
             Five 100% free, client-side tools to tailor resumes, draft recruiter replies, practice LLM rubric grading, and test microphone clarity locally.
           </p>
         </div>
       </div>
 
       {/* Top AI Assistants Quick-Launch Bar */}
-      <div className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-4">
-        <div className="flex items-center gap-2 text-xs font-semibold text-cyan-300 mb-3">
+      <div className="rounded-2xl border border-[#e2e8e1]/90 bg-[#0D1320] p-4">
+        <div className="flex items-center gap-2 text-xs font-semibold text-[#47745c] mb-3">
           <Bot className="w-4 h-4 shrink-0" />
           <span>Top AI Assistants — Quick Launch</span>
         </div>
@@ -577,13 +666,13 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               href={assistant.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-start justify-between gap-2 rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2.5 hover:border-cyan-500/45 transition-colors"
+              className="flex items-start justify-between gap-2 rounded-xl border border-[#e2e8e1] bg-white px-3.5 py-2.5 hover:border-cyan-500/45 transition-colors"
             >
               <div className="min-w-0">
-                <span className="block text-xs font-bold text-slate-100 truncate">
+                <span className="block text-xs font-bold text-[#25372e] truncate">
                   {assistant.name}
                 </span>
-                <span className="block text-[11px] text-slate-400 truncate mt-0.5">
+                <span className="block text-[11px] text-[#77847b] truncate mt-0.5">
                   {assistant.useCase}
                 </span>
               </div>
@@ -615,8 +704,8 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 isOddLastOnMobile ? 'col-span-2 sm:col-span-1' : ''
               } ${
                 isActive
-                  ? 'border-cyan-400 bg-cyan-500 text-slate-950'
-                  : 'border-slate-800 bg-[#111827] text-slate-300 hover:border-slate-700 hover:text-slate-100'
+                  ? 'border-[#54806b] bg-[#183c32] text-white'
+                  : 'border-[#e2e8e1] bg-white text-[#65736b] hover:border-[#d7e0d7] hover:text-[#25372e]'
               }`}
             >
               <Icon className="w-4 h-4 shrink-0" />
@@ -626,137 +715,32 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
         })}
       </div>
 
-      {/* TOOL 1: Resume & Cover Letter Builder */}
+      {/* TOOL 1: Resume & Cover Letter Studio */}
       {activeTool === 'resume' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-50">
-                Target Role Details
-              </h2>
-              {tailoredNotice && (
-                <span className="text-xs font-medium text-emerald-300">
-                  {tailoredNotice}
-                </span>
-              )}
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-role"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Target Role
-              </label>
-              <input
-                id="resume-role"
-                type="text"
-                value={targetRole}
-                onChange={(e) => setTargetRole(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-company"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Platform / Company
-              </label>
-              <input
-                id="resume-company"
-                type="text"
-                value={targetCompany}
-                onChange={(e) => setTargetCompany(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-skills"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Core Skills (comma separated)
-              </label>
-              <input
-                id="resume-skills"
-                type="text"
-                value={skillsInput}
-                onChange={(e) => setSkillsInput(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label
-                htmlFor="resume-jd"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
-              >
-                Job Description / Key Requirements
-              </label>
-              <textarea
-                id="resume-jd"
-                rows={4}
-                value={jobDescInput}
-                onChange={(e) => setJobDescInput(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-50">
-                Generated ATS Summary & Cover Letter
-              </h2>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={handleCopyResume}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-100 hover:bg-slate-800 transition-colors"
-                >
-                  {copiedResume ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-emerald-300">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5 text-cyan-400" />
-                      <span>Copy</span>
-                    </>
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDownloadResume}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3.5 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 transition-colors"
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Download .TXT</span>
-                </button>
-              </div>
-            </div>
-
-            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-slate-200 leading-relaxed rounded-xl border border-slate-800 bg-[#0B111E] p-4 max-h-[420px] overflow-y-auto">
-              {generatedResumeDoc}
-            </pre>
-          </div>
-        </div>
+        <ResumeStudio
+          targetRole={targetRole}
+          setTargetRole={setTargetRole}
+          targetCompany={targetCompany}
+          setTargetCompany={setTargetCompany}
+          skillsInput={skillsInput}
+          setSkillsInput={setSkillsInput}
+          jobDescInput={jobDescInput}
+          setJobDescInput={setJobDescInput}
+          tailoredNotice={tailoredNotice}
+          initialTab={requestedTool?.resumeMode}
+        />
       )}
 
       {/* TOOL 2: Quick Reply Email Drafter */}
       {activeTool === 'email' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
-            <h2 className="font-display text-lg font-bold text-slate-50">
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-4">
+            <h2 className="font-display text-lg font-bold text-[#1d3028]">
               Email Template & Tone
             </h2>
 
             <div>
-              <p className="text-xs font-medium text-slate-300 mb-2">
+              <p className="text-xs font-medium text-[#65736b] mb-2">
                 Scenario
               </p>
               <div className="flex flex-wrap gap-2">
@@ -773,8 +757,8 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                     }
                     className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
                       emailTemplate === tpl.id
-                        ? 'border-cyan-400 bg-cyan-950/60 text-cyan-200'
-                        : 'border-slate-800 bg-slate-900 text-slate-400 hover:text-slate-100'
+                        ? 'border-[#54806b] bg-cyan-950/60 text-[#54806b]'
+                        : 'border-[#e2e8e1] bg-[#f4f6f2] text-[#77847b] hover:text-[#25372e]'
                     }`}
                   >
                     {tpl.label}
@@ -784,7 +768,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             </div>
 
             <div>
-              <p className="text-xs font-medium text-slate-300 mb-2">Tone</p>
+              <p className="text-xs font-medium text-[#65736b] mb-2">Tone</p>
               <div className="flex flex-wrap gap-2">
                 {(
                   [
@@ -799,8 +783,8 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                     onClick={() => setEmailTone(tone)}
                     className={`min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs font-semibold border transition-colors ${
                       emailTone === tone
-                        ? 'border-cyan-400 bg-cyan-500 text-slate-950'
-                        : 'border-slate-800 bg-slate-900 text-slate-300 hover:border-slate-700'
+                        ? 'border-[#54806b] bg-[#183c32] text-white'
+                        : 'border-[#e2e8e1] bg-[#f4f6f2] text-[#65736b] hover:border-[#d7e0d7]'
                     }`}
                   >
                     {tone}
@@ -813,7 +797,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               <div>
                 <label
                   htmlFor="email-recruiter"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
+                  className="block text-xs font-medium text-[#65736b] mb-1.5"
                 >
                   Recruiter / Contact Name
                 </label>
@@ -822,13 +806,13 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                   type="text"
                   value={recruiterName}
                   onChange={(e) => setRecruiterName(e.target.value)}
-                  className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                  className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                 />
               </div>
               <div>
                 <label
                   htmlFor="email-role"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
+                  className="block text-xs font-medium text-[#65736b] mb-1.5"
                 >
                   Role Title
                 </label>
@@ -837,7 +821,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                   type="text"
                   value={emailRole}
                   onChange={(e) => setEmailRole(e.target.value)}
-                  className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                  className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
                 />
               </div>
             </div>
@@ -845,7 +829,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             <div>
               <label
                 htmlFor="email-notes"
-                className="block text-xs font-medium text-slate-300 mb-1.5"
+                className="block text-xs font-medium text-[#65736b] mb-1.5"
               >
                 Availability or Custom Notes
               </label>
@@ -854,20 +838,20 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 rows={3}
                 value={emailNotes}
                 onChange={(e) => setEmailNotes(e.target.value)}
-                className="w-full rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2.5 text-sm text-slate-100 focus:border-cyan-400 focus:outline-none"
+                className="w-full rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2.5 text-sm text-[#25372e] focus:border-[#54806b] focus:outline-none"
               />
             </div>
           </div>
 
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <h2 className="font-display text-lg font-bold text-slate-50">
+              <h2 className="font-display text-lg font-bold text-[#1d3028]">
                 Ready-to-Send Email
               </h2>
               <button
                 type="button"
                 onClick={handleCopyEmail}
-                className="inline-flex items-center gap-1.5 min-h-[40px] px-4 py-1.5 rounded-xl bg-cyan-500 text-slate-950 text-xs font-bold hover:bg-cyan-400 transition-colors"
+                className="inline-flex items-center gap-1.5 min-h-[40px] px-4 py-1.5 rounded-xl bg-[#183c32] text-white text-xs font-bold hover:bg-[#285c4b] transition-colors"
               >
                 {copiedEmail ? (
                   <>
@@ -883,7 +867,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               </button>
             </div>
 
-            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-slate-200 leading-relaxed rounded-xl border border-slate-800 bg-[#0B111E] p-4">
+            <pre className="whitespace-pre-wrap font-sans text-xs sm:text-sm text-[#40534a] leading-relaxed rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4">
               {generatedEmail}
             </pre>
           </div>
@@ -892,11 +876,24 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
 
       {/* TOOL 3: AI Learning Assistant */}
       {activeTool === 'learning' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-          <div className="lg:col-span-5 rounded-2xl border border-slate-800 bg-[#111827] p-5 space-y-4">
+        <div className="space-y-5">
+          {(targetRole || targetCompany) && (
+            <div className="rounded-2xl border border-[#c1d2c4] bg-[#eef4ee] p-4 sm:p-5">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-[#47745c]">
+                <BookOpen className="w-4 h-4" />
+                <span>YOUR INTERVIEW PREP TARGET</span>
+              </div>
+              <h2 className="mt-2 text-base font-bold text-[#1d3028]">{targetRole || 'Selected role'}</h2>
+              {targetCompany && <p className="mt-0.5 text-sm text-[#65736b]">{targetCompany}</p>}
+              {jobDescInput && <p className="mt-2 text-xs leading-relaxed text-[#77847b]">{jobDescInput}</p>}
+              {skillsInput && <p className="mt-2 text-xs text-[#54806b]/80">Focus skills: {skillsInput}</p>}
+            </div>
+          )}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          <div className="lg:col-span-5 rounded-2xl border border-[#e2e8e1] bg-white p-5 space-y-4">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
-              <h2 className="font-display text-lg font-bold text-slate-50">
+              <h2 className="font-display text-lg font-bold text-[#1d3028]">
                 Quick-Prompt Topics
               </h2>
             </div>
@@ -907,7 +904,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               onChange={(e) => setLearningQuery(e.target.value)}
               placeholder="Filter prep guides (e.g., RLHF, video, audio)..."
               aria-label="Filter interview prep guides"
-              className="w-full min-h-[44px] rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none"
+              className="w-full min-h-[44px] rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] px-3.5 py-2 text-sm text-[#25372e] placeholder:text-[#9aa49d] focus:border-[#54806b] focus:outline-none"
             />
 
             <div className="space-y-2">
@@ -920,14 +917,14 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                     onClick={() => setSelectedGuideId(guide.id)}
                     className={`w-full min-h-[48px] text-left rounded-xl border p-3.5 transition-colors ${
                       selected
-                        ? 'border-cyan-400/70 bg-cyan-950/40 text-slate-50'
-                        : 'border-slate-800 bg-[#0B111E] text-slate-300 hover:border-slate-700'
+                        ? 'border-[#54806b]/70 bg-[#eef4ee] text-[#1d3028]'
+                        : 'border-[#e2e8e1] bg-[#f4f6f2] text-[#65736b] hover:border-[#d7e0d7]'
                     }`}
                   >
                     <span className="block text-sm font-semibold">
                       {guide.prompt}
                     </span>
-                    <span className="block text-xs text-slate-400 mt-0.5">
+                    <span className="block text-xs text-[#77847b] mt-0.5">
                       {guide.category}
                     </span>
                   </button>
@@ -936,28 +933,28 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
             </div>
           </div>
 
-          <div className="lg:col-span-7 rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-5">
+          <div className="lg:col-span-7 rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-5">
             <div>
               <span className="text-xs font-semibold text-cyan-400">
                 {activeGuide.category}
               </span>
-              <h2 className="mt-1 font-display text-xl font-bold text-slate-50">
+              <h2 className="mt-1 font-display text-xl font-bold text-[#1d3028]">
                 {activeGuide.prompt}
               </h2>
-              <p className="mt-2 text-sm text-slate-300 leading-relaxed">
+              <p className="mt-2 text-sm text-[#65736b] leading-relaxed">
                 {activeGuide.summary}
               </p>
             </div>
 
             <div>
-              <h3 className="text-xs font-semibold text-slate-400 mb-2.5">
+              <h3 className="text-xs font-semibold text-[#77847b] mb-2.5">
                 Assessment & Qualification Checklist
               </h3>
               <ul className="space-y-2.5">
                 {activeGuide.checklist.map((item) => (
                   <li
                     key={item}
-                    className="flex items-start gap-2.5 text-sm text-slate-200"
+                    className="flex items-start gap-2.5 text-sm text-[#40534a]"
                   >
                     <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
                     <span>{item}</span>
@@ -975,6 +972,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               </p>
             </div>
           </div>
+          </div>
         </div>
       )}
 
@@ -982,31 +980,31 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
       {activeTool === 'voice' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
           {/* Mic Tester & Local Recorder */}
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-5">
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h2 className="font-display text-lg font-bold text-slate-50">
+                <h2 className="font-display text-lg font-bold text-[#1d3028]">
                   Browser Mic & Audio Recorder
                 </h2>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="mt-1 text-xs text-[#77847b]">
                   Test clarity and volume levels for Babel Audio, Spout, and LXT voice auditions. Audio stays 100% local in your browser and is never uploaded.
                 </p>
               </div>
-              <span className="font-mono tabular-nums text-sm font-semibold text-cyan-300 shrink-0">
+              <span className="font-mono tabular-nums text-sm font-semibold text-[#47745c] shrink-0">
                 {String(Math.floor(recordingSeconds / 60)).padStart(2, '0')}:
                 {String(recordingSeconds % 60).padStart(2, '0')}
               </span>
             </div>
 
             {/* Live Volume Meter */}
-            <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4 space-y-2.5">
+            <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2.5">
               <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-400">Live Input Volume</span>
-                <span className="font-mono tabular-nums text-cyan-300">
+                <span className="text-[#77847b]">Live Input Volume</span>
+                <span className="font-mono tabular-nums text-[#47745c]">
                   {micLevel}%
                 </span>
               </div>
-              <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800">
+              <div className="h-3 w-full overflow-hidden rounded-full bg-[#e9eee8]">
                 <div
                   className={`h-full transition-all duration-75 ${
                     micLevel > 85
@@ -1018,7 +1016,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                   style={{width: `${micLevel}%`}}
                 />
               </div>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-[11px] text-[#77847b]">
                 Ideal speaking peaks sit between 35% and 75% without clipping into amber.
               </p>
             </div>
@@ -1035,7 +1033,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 <button
                   type="button"
                   onClick={handleStartRecording}
-                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#183c32] text-white text-sm font-bold hover:bg-[#285c4b] transition-colors"
                 >
                   <Mic className="w-4 h-4" />
                   <span>Start Mic Test & Record</span>
@@ -1059,17 +1057,17 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                     setAudioUrl(null);
                     setRecordingSeconds(0);
                   }}
-                  className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-xl border border-slate-700 bg-slate-900 text-xs font-semibold text-slate-200 hover:bg-slate-800 transition-colors"
+                  className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-4 py-2 rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] text-xs font-semibold text-[#40534a] hover:bg-[#e9eee8] transition-colors"
                 >
-                  <Trash2 className="w-4 h-4 text-slate-400" />
+                  <Trash2 className="w-4 h-4 text-[#77847b]" />
                   <span>Clear Clip</span>
                 </button>
               )}
             </div>
 
             {audioUrl && (
-              <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-4 space-y-2">
-                <p className="text-xs font-semibold text-emerald-300">
+              <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2">
+                <p className="text-xs font-semibold text-[#47745c]">
                   Local Playback Ready (Never Uploaded)
                 </p>
                 <audio controls src={audioUrl} className="w-full h-10" />
@@ -1078,12 +1076,12 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
           </div>
 
           {/* Sample Practice Scripts */}
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4">
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-display text-lg font-bold text-slate-50">
+              <h2 className="font-display text-lg font-bold text-[#1d3028]">
                 Sample Practice Scripts
               </h2>
-              <span className="text-xs font-medium text-cyan-300">
+              <span className="text-xs font-medium text-[#47745c]">
                 Global English · Audition Ready
               </span>
             </div>
@@ -1092,17 +1090,17 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               {VOICE_SCRIPTS.map((script) => (
                 <div
                   key={script.title}
-                  className="rounded-xl border border-slate-800 bg-[#0B111E] p-4 space-y-2"
+                  className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2"
                 >
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-slate-100">
+                    <h3 className="text-sm font-semibold text-[#25372e]">
                       {script.title}
                     </h3>
                     <span className="text-[11px] text-cyan-400">
                       {script.context}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-300 leading-relaxed">
+                  <p className="text-sm text-[#65736b] leading-relaxed">
                     {script.text}
                   </p>
                 </div>
@@ -1115,21 +1113,21 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
       {/* TOOL 5: Interactive AI Evaluation Rubric Simulator */}
       {activeTool === 'simulator' && (
         <div className="space-y-5">
-          <div className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h2 className="font-display text-lg font-bold text-slate-50">
+              <h2 className="font-display text-lg font-bold text-[#1d3028]">
                 LLM Evaluation Mini-Simulator
               </h2>
-              <p className="mt-1 text-xs sm:text-sm text-slate-400">
+              <p className="mt-1 text-xs sm:text-sm text-[#77847b]">
                 Practice side-by-side Response A vs. Response B grading used on Outlier, Alignerr, DataAnnotation, and micro1 screening quizzes.
               </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-950/35 px-3.5 py-2 text-center">
-                <span className="block text-[10px] font-medium text-cyan-300">
+              <div className="rounded-xl border border-[#c1d2c4] bg-[#eef4ee] px-3.5 py-2 text-center">
+                <span className="block text-[10px] font-medium text-[#47745c]">
                   Rubric Score
                 </span>
-                <span className="font-mono text-sm font-bold text-slate-50 tabular-nums">
+                <span className="font-mono text-sm font-bold text-[#1d3028] tabular-nums">
                   {
                     RUBRIC_SCENARIOS.filter(
                       (s) => simulatorAnswers[s.id] === s.winner
@@ -1142,7 +1140,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                 <button
                   type="button"
                   onClick={() => setSimulatorAnswers({})}
-                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl border border-slate-700 bg-slate-900 text-xs font-medium text-slate-200 hover:bg-slate-800 transition-colors"
+                  className="inline-flex items-center gap-1.5 min-h-[40px] px-3 py-1.5 rounded-xl border border-[#d7e0d7] bg-[#f4f6f2] text-xs font-medium text-[#40534a] hover:bg-[#e9eee8] transition-colors"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>Reset</span>
@@ -1158,16 +1156,16 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
               return (
                 <div
                   key={scenario.id}
-                  className="rounded-2xl border border-slate-800 bg-[#111827] p-5 sm:p-6 space-y-4"
+                  className="rounded-2xl border border-[#e2e8e1] bg-white p-5 sm:p-6 space-y-4"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-cyan-300">
+                    <span className="text-xs font-semibold text-[#47745c]">
                       Scenario {idx + 1} · {scenario.dimension}
                     </span>
                     {chosen && (
                       <span
                         className={`text-xs font-bold ${
-                          isCorrect ? 'text-emerald-300' : 'text-amber-300'
+                          isCorrect ? 'text-[#47745c]' : 'text-amber-300'
                         }`}
                       >
                         {isCorrect
@@ -1177,11 +1175,11 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                     )}
                   </div>
 
-                  <div className="rounded-xl border border-slate-800 bg-[#0B111E] p-3.5">
-                    <span className="block text-[11px] font-semibold text-slate-400 mb-1">
+                  <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-3.5">
+                    <span className="block text-[11px] font-semibold text-[#77847b] mb-1">
                       User Prompt
                     </span>
-                    <p className="text-sm text-slate-100">{scenario.prompt}</p>
+                    <p className="text-sm text-[#25372e]">{scenario.prompt}</p>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -1193,7 +1191,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                       const selected = chosen === choice;
                       const winnerChoice = scenario.winner === choice;
                       let cardStyle =
-                        'border-slate-800 bg-[#0B111E] hover:border-cyan-500/50';
+                        'border-[#e2e8e1] bg-[#f4f6f2] hover:border-[#a9bcae]';
                       if (chosen) {
                         if (winnerChoice) {
                           cardStyle = 'border-emerald-500/55 bg-emerald-950/25';
@@ -1216,20 +1214,20 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                         >
                           <div>
                             <div className="flex items-center justify-between gap-2 mb-2">
-                              <span className="text-xs font-bold text-slate-200">
+                              <span className="text-xs font-bold text-[#40534a]">
                                 Response {choice}
                               </span>
                               {selected && (
-                                <span className="text-[11px] font-semibold text-cyan-300">
+                                <span className="text-[11px] font-semibold text-[#47745c]">
                                   Your Pick
                                 </span>
                               )}
                             </div>
-                            <p className="font-mono text-xs text-slate-300 leading-relaxed whitespace-pre-wrap">
+                            <p className="font-mono text-xs text-[#65736b] leading-relaxed whitespace-pre-wrap">
                               {text}
                             </p>
                           </div>
-                          <span className="text-[11px] font-semibold text-cyan-300">
+                          <span className="text-[11px] font-semibold text-[#47745c]">
                             {selected
                               ? 'Selected'
                               : `Select Response ${choice} as Better`}
@@ -1240,8 +1238,8 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
                   </div>
 
                   {chosen && (
-                    <div className="rounded-xl border border-cyan-500/25 bg-cyan-950/20 p-3.5 text-xs sm:text-sm text-slate-200 leading-relaxed">
-                      <strong className="text-cyan-300">
+                    <div className="rounded-xl border border-[#c1d2c4] bg-[#eef4ee] p-3.5 text-xs sm:text-sm text-[#40534a] leading-relaxed">
+                      <strong className="text-[#47745c]">
                         Senior Evaluator Note:{' '}
                       </strong>
                       {scenario.explanation}
@@ -1254,10 +1252,6 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
         </div>
       )}
 
-      {/* Non-Intrusive Bottom Ad Placement */}
-      <div className="pt-2">
-        <AdBanner placement="bottom-suite" />
-      </div>
     </section>
   );
 };

@@ -1,0 +1,29 @@
+name: Premium refresh build check
+
+on:
+  push:
+    branches:
+      - planetai-premium-refresh
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - name: Install dependencies and refresh lockfile in CI
+        run: bun install
+      - name: TypeScript check
+        run: bun run lint
+      - name: Production build
+        run: bun run build

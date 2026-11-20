@@ -10,7 +10,7 @@
 
   html {
     font-family: var(--font-sans);
-    background-color: #090D16;
+    background-color: #070B14;
     color: #F1F5F9;
     color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
@@ -50,8 +50,7 @@
 @media (prefers-reduced-motion: reduce) {
   .marquee-track {
     animation: none;
-    flex-wrap: wrap;
-    width: 100%;
+    transform: none;
   }
 }
 
@@ -87,4 +86,134 @@
     black calc(100% - 24px),
     transparent 100%
   );
+}
+
+
+/* PLANETAI premium dark theme — NEXORA visual family */
+.planetai-nexora {
+  --pn-bg: #070b14;
+  --pn-surface: #0d1425;
+  --pn-card: #111b30;
+  --pn-purple: #8265ff;
+  --pn-cyan: #38c8ff;
+  --pn-text: #ffffff;
+  --pn-muted: #9ba9c1;
+  --pn-border: rgba(255,255,255,.09);
+  color: var(--pn-text);
+  background-color: var(--pn-bg);
+  background-image:
+    radial-gradient(ellipse at 12% 8%, rgba(6, 182, 212, .075), transparent 34rem),
+    radial-gradient(ellipse at 88% 18%, rgba(99, 102, 241, .085), transparent 38rem);
+  background-attachment: fixed;
+  color-scheme: dark;
+}
+.planetai-nexora [class*="bg-[#f7f8f6]"],
+.planetai-nexora [class*="bg-[#fbfcfa]"],
+.planetai-nexora [class*="bg-[#f0f3ee]"] { background-color: var(--pn-bg) !important; }
+.planetai-nexora [class*="bg-[#e9eee8]"],
+.planetai-nexora [class*="bg-[#f1f5f0]"],
+.planetai-nexora [class*="bg-[#f4f6f2]"],
+.planetai-nexora [class*="bg-[#edf2eb]"] { background-color: var(--pn-surface) !important; }
+.planetai-nexora [class*="bg-white"],
+.planetai-nexora [class*="bg-white/"] { background-color: var(--pn-card) !important; }
+.planetai-nexora [class*="border-[#e5e9e5]"],
+.planetai-nexora [class*="border-[#e2e8e1]"],
+.planetai-nexora [class*="border-[#dce5dc]"],
+.planetai-nexora [class*="border-[#d4ddd4]"],
+.planetai-nexora [class*="border-[#d0dbd0]"],
+.planetai-nexora [class*="border-[#e0e6e0]"],
+.planetai-nexora [class*="border-[#e1e7df]"] { border-color: var(--pn-border) !important; }
+.planetai-nexora [class*="text-[#17231f]"],
+.planetai-nexora [class*="text-[#172b24]"],
+.planetai-nexora [class*="text-[#1b3027]"],
+.planetai-nexora [class*="text-[#1d3028]"],
+.planetai-nexora [class*="text-[#20372a]"],
+.planetai-nexora [class*="text-[#25372e]"],
+.planetai-nexora [class*="text-[#40534a]"],
+.planetai-nexora [class*="text-[#40564a]"],
+.planetai-nexora [class*="text-[#52615a]"],
+.planetai-nexora [class*="text-[#52685a]"],
+.planetai-nexora [class*="text-[#31463a]"] { color: #f4f7ff !important; }
+.planetai-nexora [class*="text-[#65736b]"],
+.planetai-nexora [class*="text-[#69786f]"],
+.planetai-nexora [class*="text-[#75837a]"],
+.planetai-nexora [class*="text-[#77847b]"],
+.planetai-nexora [class*="text-[#7b8980]"],
+.planetai-nexora [class*="text-[#819087]"],
+.planetai-nexora [class*="text-[#829089]"],
+.planetai-nexora [class*="text-[#89958c]"] { color: var(--pn-muted) !important; }
+.planetai-nexora [class*="text-[#183c32]"],
+.planetai-nexora [class*="text-[#315b47]"],
+.planetai-nexora [class*="text-[#39836a]"],
+.planetai-nexora [class*="text-[#54806b]"],
+.planetai-nexora [class*="text-[#59816b]"] { color: var(--pn-cyan) !important; }
+.planetai-nexora [class*="bg-[#183c32]"],
+.planetai-nexora [class*="bg-[#142c26]"] {
+  background: linear-gradient(120deg, #7655f5, #438dff) !important;
+  color: #fff !important;
+}
+.planetai-nexora [class*="bg-[#eef4ee]"],
+.planetai-nexora [class*="bg-[#eaf2eb]"],
+.planetai-nexora [class*="bg-[#edf1ed]"] { background-color: #19243a !important; }
+.planetai-nexora [class*="shadow-"] { --tw-shadow-color: rgba(0,0,0,.28); }
+.planetai-nexora a,
+.planetai-nexora button { -webkit-tap-highlight-color: transparent; }
+.planetai-nexora :focus-visible { outline: 2px solid var(--pn-cyan); outline-offset: 3px; }
+.planetai-nexora-modal { color-scheme: dark; }
+.planetai-nexora-modal [class*="bg-[#f7f8f6]"],
+.planetai-nexora-modal [class*="bg-white"],
+.planetai-nexora-modal [class*="bg-[#f1f5f0]"] { background-color: var(--pn-card, #111b30) !important; }
+.planetai-nexora-modal [class*="bg-[#183c32]"] { background: linear-gradient(120deg,#7655f5,#438dff) !important; }
+.planetai-nexora-modal [class*="text-[#20372a]"],
+.planetai-nexora-modal [class*="text-[#31463a]"],
+.planetai-nexora-modal [class*="text-[#40534a]"] { color: #f4f7ff !important; }
+.planetai-nexora-modal [class*="text-[#7d8b81]"],
+.planetai-nexora-modal [class*="text-[#89958c]"] { color: #9ba9c1 !important; }
+.planetai-nexora-modal [class*="border-[#dce5dc]"],
+.planetai-nexora-modal [class*="border-[#cbd8cc]"],
+.planetai-nexora-modal [class*="border-[#e0e7df]"] { border-color: rgba(255,255,255,.1) !important; }
+@media (prefers-reduced-motion: reduce) {
+  .planetai-nexora *, .planetai-nexora *::before, .planetai-nexora *::after {
+    scroll-behavior: auto !important;
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+
+/* Shared workspace surfaces: employer, applicant and moderation areas */
+.planetai-nexora [class*="bg-[#f4f7fb]"],
+.planetai-nexora [class*="bg-slate-50"],
+.planetai-nexora [class*="bg-gray-50"] { background-color: var(--pn-bg) !important; }
+.planetai-nexora [class*="bg-slate-100"],
+.planetai-nexora [class*="bg-gray-100"],
+.planetai-nexora [class*="bg-slate-200"] { background-color: var(--pn-surface) !important; }
+.planetai-nexora [class*="border-slate-100"],
+.planetai-nexora [class*="border-slate-200"],
+.planetai-nexora [class*="border-gray-100"],
+.planetai-nexora [class*="border-gray-200"] { border-color: var(--pn-border) !important; }
+.planetai-nexora [class*="text-slate-900"],
+.planetai-nexora [class*="text-slate-800"],
+.planetai-nexora [class*="text-gray-900"],
+.planetai-nexora [class*="text-gray-800"] { color: #f4f7ff !important; }
+.planetai-nexora [class*="text-slate-700"],
+.planetai-nexora [class*="text-slate-600"],
+.planetai-nexora [class*="text-gray-700"],
+.planetai-nexora [class*="text-gray-600"] { color: #c1cce0 !important; }
+.planetai-nexora [class*="text-slate-500"],
+.planetai-nexora [class*="text-gray-500"] { color: var(--pn-muted) !important; }
+
+
+/* Keep the resume page itself white while the surrounding workspace follows the dark theme. */
+.planetai-nexora .planetai-resume-paper {
+  background-color: #ffffff !important;
+  color: #26332c !important;
+  color-scheme: light;
+}
+
+/* Logo tiles remain crisp white against the employer marquee. */
+.planetai-nexora .planetai-company-logo-tile {
+  background-color: #ffffff !important;
+  border-color: rgba(220,229,220,.9) !important;
 }

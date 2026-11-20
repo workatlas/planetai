@@ -1,4 +1,7 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import PremiumMarketplacePreview from './preview/PremiumMarketplacePreview';
+import AdminDashboardPreview from './preview/AdminDashboardPreview';
+import ToolkitPreview from './preview/ToolkitPreview';
 import {
   ArrowUpRight,
   Bookmark,
@@ -18,16 +21,22 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import {AdBanner} from './components/AdBanner';
 import {AddJobModal} from './components/AddJobModal';
+import {EmployerEntryModal} from './components/EmployerEntryModal';
+import EmployerAuth from './preview/EmployerAuth';
+import EmployerProfile from './preview/EmployerProfile';
+import EmployerPayments from './preview/EmployerPayments';
+import AdminModeration from './preview/AdminModeration';
+import JobSeekerAuth from './preview/JobSeekerAuth';
+import JobSeekerDashboard from './preview/JobSeekerDashboard';
 import {
   AIToolsView,
   RequestedAITool,
   TailoredResumeDraft,
 } from './components/AIToolsView';
+import {CareerWorkspaceHub} from './components/CareerWorkspaceHub';
 import {AppReadinessView} from './components/AppReadinessView';
 import {AppTab, Header} from './components/Header';
-import {AlertPreferences, JobAlertModal} from './components/JobAlertModal';
 import {
   ApplicationStatus,
   AppliedRecord,
@@ -35,7 +44,6 @@ import {
   JobCard,
 } from './components/JobCard';
 import {JobDetailModal} from './components/JobDetailModal';
-import {MarqueeTicker} from './components/MarqueeTicker';
 import {MobileBottomNav} from './components/MobileBottomNav';
 import {NewsDevToolsView} from './components/NewsDevToolsView';
 import {OfflineIndicator} from './components/OfflineIndicator';
@@ -57,6 +65,78 @@ import {
 } from './utils/careerIntel';
 import {sanitizeText, validateHttpsUrl} from './utils/sanitize';
 import {syncSeoMetadata} from './utils/seo';
+import {supabase} from './lib/supabase';
+import {PWAInstallProvider} from './hooks/usePWAInstall';
+
+function mapPublishedDatabaseJob(row: {
+  id: string; job_title: string; company_name: string; company_website: string | null;
+  company_logo_url: string | null; category: string; employment_type: string;
+  location: string; salary_min: number | string | null; salary_max: number | string | null;
+  pay_period: string | null; description: string; requirements: string[] | null;
+  tags: string[] | null; apply_url: string; featured: boolean; verified_employer: boolean;
+  published_at: string;
+  spotlight_active?: boolean;
+}): JobListing {
+  const category = JOB_CATEGORIES.includes(row.category as JobCategory) && row.category !== 'All'
+    ? row.category as Exclude<JobCategory, 'All'> : 'Remote';
+  const workType: JobListing['workType'] = row.employment_type === 'Full-Time Remote' ||
+    row.employment_type === 'Part-Time Flexible' ? row.employment_type : 'Async Contract';
+  const payUnit: JobListing['payUnit'] = row.pay_period === 'yr' || row.pay_period === 'project'
+    ? row.pay_period : 'hr';
+  const initials = row.company_name.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  const publishedDate = new Date(row.published_at);
+  const ageDays = Number.isNaN(publishedDate.getTime()) ? 0 : Math.max(0, Math.floor((Date.now() - publishedDate.getTime()) / 86400000));
+  return {
+    id: `database-${row.id}`,
+    title: row.job_title,
+    company: row.company_name,
+    companyShort: initials || 'PA',
+    companyTier: 'Custom Partner',
+    companyWebsite: row.company_website || undefined,
+    companyLogoUrl: row.company_logo_url || undefined,
+    isCustomEmployerPost: true,
+    featured: Boolean(row.featured),
+    verified: Boolean(row.verified_employer),
+    marqueeSpotlight: Boolean(row.spotlight_active),
+    category,
+    payMinUsd: Number(row.salary_min || 0),
+    payMaxUsd: Number(row.salary_max || 0),
+    payUnit,
+    location: row.location,
+    workType,
+    postedAgo: ageDays === 0 ? 'Today' : ageDays === 1 ? '1 day ago' : `${ageDays} days ago`,
+    tags: Array.isArray(row.tags) ? row.tags : [],
+    applyUrl: row.apply_url,
+    description: row.description,
+    requirements: Array.isArray(row.requirements) ? row.requirements : [],
+    prepTips: [],
+  };
+}
+
+async function fetchPublishedDatabaseJobs(): Promise<JobListing[]> {
+  const baseQuery = supabase.from('jobs');
+  const spotlightResult = await baseQuery
+    .select('id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, salary_min, salary_max, pay_period, description, requirements, tags, apply_url, featured, verified_employer, published_at, spotlight_active')
+    .eq('status', 'published')
+    .gt('expires_at', new Date().toISOString())
+    .order('spotlight_active', { ascending: false })
+    .order('published_at', { ascending: false })
+    .limit(100);
+  if (!spotlightResult.error) {
+    return (spotlightResult.data || []).map(row => mapPublishedDatabaseJob(row));
+  }
+
+  // Keep the existing preview usable before the Spotlight migration is
+  // applied. Once the column exists, active paid placements sort first.
+  const fallback = await supabase.from('jobs')
+    .select('id, job_title, company_name, company_website, company_logo_url, category, employment_type, location, salary_min, salary_max, pay_period, description, requirements, tags, apply_url, featured, verified_employer, published_at')
+    .eq('status', 'published')
+    .gt('expires_at', new Date().toISOString())
+    .order('published_at', { ascending: false })
+    .limit(100);
+  if (fallback.error) throw fallback.error;
+  return (fallback.data || []).map(row => mapPublishedDatabaseJob(row));
+}
 
 type SortOption = 'newest' | 'highest-pay' | 'urgent' | 'alphabetical';
 type TierFilter = 'All' | CompanyTier;
@@ -64,19 +144,10 @@ type PayTierFilter = 'all' | '25plus' | '50plus' | 'annual';
 type SavedSubTab = 'saved' | 'applied';
 
 const STORAGE_KEYS = {
-  SAVED: 'planetai_saved_jobs_v1',
+  SAVED: 'planetai_saved_jobs',
   APPLIED: 'planetai_applied_jobs_v1',
   CUSTOM_JOBS: 'planetai_custom_jobs_v1',
-  ALERTS: 'planetai_alerts_v1',
   SKILLS: 'planetai_user_skills_v1',
-};
-
-const DEFAULT_ALERTS: AlertPreferences = {
-  email: '',
-  emailEnabled: true,
-  pushEnabled: false,
-  categories: ['AI Training', 'Coding', 'Audio/Voice', 'Data Annotation', 'Remote'],
-  updatedAt: '',
 };
 
 const PARTNER_SPOTLIGHT_COMPANIES = [
@@ -88,7 +159,6 @@ const PARTNER_SPOTLIGHT_COMPANIES = [
 ];
 
 const JOBS_PER_PAGE = 24;
-const MAX_INLINE_ADS_PER_VIEW = 4;
 
 function readStorage<T>(key: string, fallback: T): T {
   try {
@@ -142,19 +212,23 @@ function hydrateCustomJobs(): JobListing[] {
     });
 }
 
-export default function App() {
-  const [activeTab, setActiveTab] = useState<AppTab>('jobs');
+function AppContent() {
+  const [activeTab, setActiveTab] = useState<AppTab>(() => {
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    return requestedTab === 'ai-tools' || requestedTab === 'news' || requestedTab === 'saved' || requestedTab === 'platforms' || requestedTab === 'app'
+      ? requestedTab
+      : 'jobs';
+  });
+  const [isCareerToolsOpen, setIsCareerToolsOpen] = useState(() => new URLSearchParams(window.location.search).get('experience') === 'career-tools');
   const [savedSubTab, setSavedSubTab] = useState<SavedSubTab>('saved');
   const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
+  const [databaseJobs, setDatabaseJobs] = useState<JobListing[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>(() =>
-    readStorage<string[]>(STORAGE_KEYS.SAVED, [])
+    readStorage<string[]>(STORAGE_KEYS.SAVED, readStorage<string[]>('planetai_saved_jobs_v1', []))
   );
   const [appliedRecords, setAppliedRecords] = useState<
     Record<string, AppliedRecord>
   >(() => readStorage<Record<string, AppliedRecord>>(STORAGE_KEYS.APPLIED, {}));
-  const [alertPrefs, setAlertPrefs] = useState<AlertPreferences>(() =>
-    readStorage<AlertPreferences>(STORAGE_KEYS.ALERTS, DEFAULT_ALERTS)
-  );
   const [userSkills, setUserSkills] = useState<string>(() =>
     readStorage<string>(STORAGE_KEYS.SKILLS, '')
   );
@@ -169,18 +243,59 @@ export default function App() {
   const [visibleCount, setVisibleCount] = useState<number>(JOBS_PER_PAGE);
   const [isFiltersBarOpen, setIsFiltersBarOpen] = useState(false);
 
-  const [isAlertsOpen, setIsAlertsOpen] = useState(false);
   const [isAddJobOpen, setIsAddJobOpen] = useState(false);
+  const [isEmployerEntryOpen, setIsEmployerEntryOpen] = useState(false);
   const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
   const [inspectedJob, setInspectedJob] = useState<JobListing | null>(null);
   const [tailoredDraft, setTailoredDraft] =
     useState<TailoredResumeDraft | null>(null);
+  const [targetedResumeJobId, setTargetedResumeJobId] = useState<string | null>(null);
   const [requestedAITool, setRequestedAITool] =
     useState<RequestedAITool | null>(null);
 
   const [copied, setCopied] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastJobsSyncAt, setLastJobsSyncAt] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const refreshInFlightRef = useRef(false);
+
+  const refreshPublishedJobs = useCallback(async (): Promise<JobListing[] | null> => {
+    if (refreshInFlightRef.current) return null;
+    refreshInFlightRef.current = true;
+    setIsRefreshing(true);
+    try {
+      const publishedJobs = await fetchPublishedDatabaseJobs();
+      setDatabaseJobs(publishedJobs);
+      setLastJobsSyncAt(new Date().toISOString());
+      return publishedJobs;
+    } finally {
+      refreshInFlightRef.current = false;
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    const syncPublishedJobs = async () => {
+      if (!active || document.visibilityState !== 'visible') return;
+      try {
+        await refreshPublishedJobs();
+      } catch (error) {
+        console.warn('Published PLANETAI listings could not be refreshed.', error);
+      }
+    };
+    void syncPublishedJobs();
+    const interval = window.setInterval(syncPublishedJobs, 5 * 60 * 1000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void syncPublishedJobs();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [refreshPublishedJobs]);
 
   useEffect(() => {
     try {
@@ -196,6 +311,7 @@ export default function App() {
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEYS.SAVED, JSON.stringify(savedIds));
+      window.localStorage.setItem('planetai_saved_jobs_v1', JSON.stringify(savedIds));
     } catch {
       // Ignore storage quota errors
     }
@@ -211,17 +327,6 @@ export default function App() {
       // Ignore storage quota errors
     }
   }, [appliedRecords]);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(
-        STORAGE_KEYS.ALERTS,
-        JSON.stringify(alertPrefs)
-      );
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, [alertPrefs]);
 
   useEffect(() => {
     try {
@@ -242,8 +347,8 @@ export default function App() {
   };
 
   const allJobs = useMemo(
-    () => [...customJobs, ...INITIAL_JOBS],
-    [customJobs]
+    () => [...databaseJobs, ...customJobs, ...INITIAL_JOBS],
+    [databaseJobs, customJobs]
   );
 
   // Open deep-linked role on initial load if ?job=<id> is present
@@ -269,7 +374,7 @@ export default function App() {
       } else {
         url.searchParams.delete('job');
       }
-      window.history.replaceState({}, '', url.pathname + url.search);
+      window.history.replaceState({}, '', url.pathname + url.search + url.hash);
     } catch {
       // Ignore history API restrictions
     }
@@ -359,8 +464,10 @@ export default function App() {
     if (sortBy === 'urgent') {
       return [...list].sort(
         (a, b) =>
-          Number(Boolean(b.featured)) - Number(Boolean(a.featured)) ||
-          Number(Boolean(b.urgent)) - Number(Boolean(a.urgent))
+          Number(Boolean(b.isCustomEmployerPost && b.featured)) -
+            Number(Boolean(a.isCustomEmployerPost && a.featured)) ||
+          Number(Boolean(b.isCustomEmployerPost && b.urgent)) -
+            Number(Boolean(a.isCustomEmployerPost && a.urgent))
       );
     }
     if (sortBy === 'alphabetical') {
@@ -460,7 +567,7 @@ export default function App() {
         id: j.id,
         title: j.title,
         company: j.company,
-        pay: formatPayRate(j.payMinUsd, j.payMaxUsd, j.payUnit),
+        pay: j.isCustomEmployerPost ? formatPayRate(j.payMinUsd, j.payMaxUsd, j.payUnit) : 'Not listed — confirm with employer',
         applyUrl: resolveApplyUrl(j.company, j.applyUrl),
       })),
       appliedTracker: appliedJobsList.map(({job, record}) => ({
@@ -487,6 +594,7 @@ export default function App() {
   };
 
   const handleTailorResumeForJob = (job: JobListing) => {
+    setTargetedResumeJobId(job.id);
     setTailoredDraft({
       role: job.title,
       company: job.company,
@@ -500,23 +608,48 @@ export default function App() {
     showToast(`Loaded "${job.title}" into Resume Builder.`);
   };
 
-  const handleLaunchPrepTool = (tool: 'voice' | 'learning') => {
-    setRequestedAITool({tool, nonce: Date.now()});
+  const handleLaunchPrepTool = (tool: 'voice' | 'learning', job: JobListing) => {
+    setRequestedAITool({
+      tool,
+      nonce: Date.now(),
+      role: job.title,
+      company: job.company,
+      skills: job.tags.join(', '),
+      description: job.description,
+    });
     setInspectedJob(null);
     setActiveTab('ai-tools');
     window.scrollTo({top: 0, behavior: 'smooth'});
   };
 
-  const handleRefreshFeed = () => {
-    setIsRefreshing(true);
-    window.setTimeout(() => {
-      setIsRefreshing(false);
-      showToast(`Feed synced — ${allJobs.length} live roles ready.`);
-    }, 450);
+  const handleRefreshFeed = async () => {
+    try {
+      const publishedJobs = await refreshPublishedJobs();
+      if (!publishedJobs) {
+        showToast('A job-feed refresh is already in progress.');
+        return;
+      }
+      showToast(`Employer listings refreshed — ${publishedJobs.length} published roles checked.`);
+    } catch {
+      showToast('Feed refresh failed. Showing the latest available listings.');
+    }
   };
 
   const handleShareApp = async () => {
     const url = window.location.href;
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'PLANETAI | Global Careers',
+          text: 'Discover global career opportunities with PLANETAI.',
+          url,
+        });
+        return;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+      }
+    }
+
     let didCopy = false;
 
     if (navigator.clipboard && window.isSecureContext) {
@@ -558,6 +691,17 @@ export default function App() {
     setSearchQuery('');
   };
 
+  const handleOpenPostJob = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    if (!error && data.session) {
+      // The server verifies actual employer membership; user-editable metadata
+      // must never be used as the authorization source.
+      setIsAddJobOpen(true);
+      return;
+    }
+    setIsEmployerEntryOpen(true);
+  };
+
   const handleResetFilters = () => {
     setSearchQuery('');
     setSelectedCategory('All');
@@ -587,20 +731,6 @@ export default function App() {
     showToast('Removed temporary local preview.');
   };
 
-  const handleSaveAlerts = (prefs: AlertPreferences) => {
-    setAlertPrefs(prefs);
-    showToast('Instant job alerts updated.');
-  };
-
-  const activeAlertsCount =
-    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
-      ? alertPrefs.categories.length
-      : 1;
-
-  const hasActiveAlerts = Boolean(
-    alertPrefs.updatedAt && (alertPrefs.emailEnabled || alertPrefs.pushEnabled)
-  );
-
   const isDefaultUnfiltered =
     !searchQuery.trim() &&
     selectedCategory === 'All' &&
@@ -615,6 +745,95 @@ export default function App() {
     (selectedTier !== 'All' ? 1 : 0) +
     (sortBy !== 'newest' ? 1 : 0);
 
+  const experience = new URLSearchParams(window.location.search).get('experience');
+
+  if (experience === 'employer-auth') return <EmployerAuth />;
+  if (experience === 'employer-profile') return <EmployerProfile />;
+  if (experience === 'employer-payments') return <EmployerPayments />;
+  if (experience === 'admin-moderation') return <AdminModeration />;
+  if (experience === 'job-seeker-auth' || experience === 'job-seeker-reset') return <JobSeekerAuth />;
+  if (experience === 'job-seeker-dashboard') return <JobSeekerDashboard />;
+  if (experience === 'dashboard') return <AdminDashboardPreview />;
+  if (experience === 'toolkit') return <ToolkitPreview />;
+
+  const openCareerWorkspace = (tab: AppTab = 'ai-tools', resumeMode?: 'resume' | 'cover') => {
+    setRequestedAITool(resumeMode ? {tool: 'resume', resumeMode, nonce: Date.now()} : null);
+    const url = new URL(window.location.href);
+    url.searchParams.set('experience', 'career-tools');
+    window.history.replaceState({}, '', url.pathname + url.search);
+    setIsCareerToolsOpen(true);
+    setActiveTab(tab);
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  };
+
+  const marketplaceJobs = [...databaseJobs, ...INITIAL_JOBS];
+
+  if (experience === 'premium' || experience === null || experience === 'career-tools') {
+    return (
+      <PremiumMarketplacePreview
+        jobs={marketplaceJobs}
+        targetedResumeJobId={targetedResumeJobId}
+        onRefreshJobs={handleRefreshFeed}
+        isRefreshing={isRefreshing}
+        lastSyncedAt={lastJobsSyncAt}
+        savedIds={savedIds}
+        onToggleSave={toggleSaveJob}
+        onOpenJob={setInspectedJob}
+        onPostJob={handleOpenPostJob}
+        onShareApp={handleShareApp}
+        copied={copied}
+        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+        privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
+        onOpenWorkspace={(tab) => openCareerWorkspace(tab === 'saved' ? 'saved' : tab === 'platforms' ? 'platforms' : tab === 'app' ? 'app' : 'ai-tools')}
+        onReturnToMarketplace={() => {
+          setIsCareerToolsOpen(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('experience');
+          window.history.replaceState({}, '', url.pathname + url.search);
+          window.scrollTo({top: 0, behavior: 'smooth'});
+        }}
+        showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
+        careerToolsContent={<CareerWorkspaceHub tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />}
+        jobDetailModal={
+          <JobDetailModal
+            job={inspectedJob}
+            isSaved={inspectedJob ? savedIds.includes(inspectedJob.id) : false}
+            appliedRecord={inspectedJob ? appliedRecords[inspectedJob.id] : undefined}
+            userSkills={userSkills}
+            onToggleSave={toggleSaveJob}
+            onUpsertApplied={handleUpsertApplied}
+            onRemoveApplied={handleRemoveApplied}
+            onTailorResume={job => {
+              openCareerWorkspace('ai-tools');
+              handleTailorResumeForJob(job);
+            }}
+            onLaunchPrepTool={(tool, job) => {
+              openCareerWorkspace('ai-tools');
+              handleLaunchPrepTool(tool, job);
+            }}
+            onClose={() => setInspectedJob(null)}
+          />
+        }
+        postJobModal={
+          <>
+            <EmployerEntryModal
+              isOpen={isEmployerEntryOpen}
+              onClose={() => setIsEmployerEntryOpen(false)}
+            />
+            <AddJobModal
+              isOpen={isAddJobOpen}
+              onClose={() => setIsAddJobOpen(false)}
+              onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+              onPreviewLocalJob={handlePreviewLocalJob}
+              localPreviewJobs={customJobs}
+              onDeleteLocalPreview={handleDeleteCustomJob}
+            />
+          </>
+        }
+      />
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col pb-20 lg:pb-0">
       {/* Top Header */}
@@ -626,16 +845,8 @@ export default function App() {
         }
         totalJobCount={allJobs.length}
         savedCount={savedJobs.length}
-        alertCount={activeAlertsCount}
-        onOpenAlerts={() => setIsAlertsOpen(true)}
         onShareApp={handleShareApp}
         copied={copied}
-      />
-
-      {/* Live Marquee Ticker (Global USD) */}
-      <MarqueeTicker
-        onSelectPlatform={handleSelectPlatformFromTicker}
-        spotlightJobs={allJobs}
       />
 
       {/* Main Content */}
@@ -660,14 +871,14 @@ export default function App() {
                     </span>
                   </div>
                   <p className="mt-1.5 text-sm sm:text-base text-slate-400 max-w-2xl">
-                    Live curated roles across established AI leaders and emerging startups—covering model training, coding benchmarks, voice synthesis, and annotation.
+                    Curated opportunity guides across AI and tech platforms. These are not confirmed vacancies—check the employer's official site for current openings, eligibility, and pay.
                   </p>
                 </div>
 
                 <div className="flex items-center gap-2.5 shrink-0">
                   <div className="inline-flex items-center gap-2 min-h-[44px] rounded-xl border border-slate-800 bg-[#111827] px-3.5 py-2 text-xs font-medium text-slate-200">
                     <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
-                    <span>Global Remote Rates (USD) • 100% Free</span>
+                    <span>Global Opportunities • Free Discovery</span>
                   </div>
                   <button
                     type="button"
@@ -695,7 +906,7 @@ export default function App() {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search 200+ roles, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
+                  placeholder="Search opportunity guides, companies (micro1, Mercor, Babel Audio, Anthropic...), or skills..."
                   aria-label="Search AI and remote jobs"
                   className="w-full min-h-[42px] sm:min-h-[46px] rounded-xl border border-slate-800 bg-[#111827] pl-9 sm:pl-10 pr-9 sm:pr-10 py-2 sm:py-2.5 text-xs sm:text-sm text-slate-100 placeholder:text-slate-500 focus:border-cyan-500 focus:outline-none"
                 />
@@ -781,7 +992,7 @@ export default function App() {
                       >
                         <option value="newest">Sort: Newest</option>
                         <option value="highest-pay">Sort: Highest Pay</option>
-                        <option value="urgent">Sort: Urgent First</option>
+                        <option value="urgent">Sort: Featured Employer First</option>
                         <option value="alphabetical">
                           Sort: Alphabetical (A–Z)
                         </option>
@@ -928,19 +1139,19 @@ export default function App() {
                   ))}
                 </div>
 
-                {/* Urgent Partner Spotlight Strip (Moved after the first 3 job cards) */}
+                {/* Curated platform guide spotlight */}
                 {isDefaultUnfiltered && spotlightJobs.length > 0 && (
                   <section
-                    aria-label="Urgent hiring partner spotlight"
+                    aria-label="Curated platform opportunity guides"
                     className="rounded-2xl border border-slate-800/90 bg-[#0D1320] p-3 sm:p-4"
                   >
                     <div className="flex items-center justify-between gap-3 mb-2.5 sm:mb-3">
-                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-amber-300">
-                        <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                        <span>Urgent Partner Hiring Spotlight</span>
+                      <div className="flex items-center gap-1.5 sm:gap-2 text-xs font-semibold text-cyan-300">
+                        <Globe2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                        <span>Platform Opportunity Guides</span>
                       </div>
                       <span className="text-[11px] text-slate-400">
-                        Direct Partner Roles
+                        Curated guides · verify current openings
                       </span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -966,12 +1177,8 @@ export default function App() {
                                   {job.company}
                                 </span>
                               </div>
-                              <span className="font-mono tabular-nums text-cyan-300 font-semibold shrink-0">
-                                {formatPayRate(
-                                  job.payMinUsd,
-                                  job.payMaxUsd,
-                                  job.payUnit
-                                )}
+                              <span className="text-[11px] text-slate-400 shrink-0">
+                                Check employer for pay
                               </span>
                             </div>
                             <p className="mt-2 text-xs text-slate-300 line-clamp-2 leading-snug">
@@ -989,7 +1196,7 @@ export default function App() {
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 text-[11px] font-semibold text-cyan-300 hover:text-cyan-200"
                             >
-                              <span>Apply</span>
+                              <span>Explore guide</span>
                               <ArrowUpRight className="w-3 h-3" />
                             </a>
                           </div>
@@ -1106,28 +1313,16 @@ export default function App() {
                 {remainingJobs.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {remainingJobs.map((job, index) => {
-                      const overallIndex = index + 3;
-                      const adSlotNumber = Math.floor((overallIndex + 1) / 8);
-                      const shouldShowInlineAd =
-                        (overallIndex + 1) % 8 === 0 &&
-                        adSlotNumber <= MAX_INLINE_ADS_PER_VIEW;
-
                       return (
-                        <React.Fragment key={job.id}>
-                          <JobCard
-                            job={job}
-                            isSaved={savedIds.includes(job.id)}
-                            appliedStatus={appliedRecords[job.id]?.status}
-                            skillMatch={computeSkillMatch(job, userSkills)}
-                            onToggleSave={toggleSaveJob}
-                            onOpenDetails={setInspectedJob}
-                          />
-                          {shouldShowInlineAd && (
-                            <div className="col-span-full py-1">
-                              <AdBanner placement="inline-feed" fullBleed />
-                            </div>
-                          )}
-                        </React.Fragment>
+                        <JobCard
+                          key={job.id}
+                          job={job}
+                          isSaved={savedIds.includes(job.id)}
+                          appliedStatus={appliedRecords[job.id]?.status}
+                          skillMatch={computeSkillMatch(job, userSkills)}
+                          onToggleSave={toggleSaveJob}
+                          onOpenDetails={setInspectedJob}
+                        />
                       );
                     })}
                   </div>
@@ -1144,7 +1339,7 @@ export default function App() {
                       <strong className="font-mono tabular-nums text-cyan-300">
                         {filteredJobs.length}
                       </strong>{' '}
-                      matching roles in standard USD ($)
+                      curated opportunity guides and employer listings in standard USD ($)
                     </p>
                     <div className="flex flex-wrap items-center gap-2.5">
                       <button
@@ -1177,7 +1372,7 @@ export default function App() {
             ) : (
               <div className="rounded-2xl border border-slate-800 bg-[#111827] px-6 py-14 text-center">
                 <p className="font-display text-lg font-bold text-slate-100">
-                  No matching jobs found
+                  No matching opportunities found
                 </p>
                 <p className="mt-1.5 text-sm text-slate-400 max-w-md mx-auto">
                   Try clearing your search term or switching back to all categories.
@@ -1296,7 +1491,7 @@ export default function App() {
                     onClick={() => setActiveTab('jobs')}
                     className="mt-5 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
                   >
-                    Browse Live Jobs
+                    Browse Opportunities
                   </button>
                 </div>
               ))}
@@ -1319,11 +1514,9 @@ export default function App() {
                             ·
                           </span>
                           <span className="font-mono text-slate-300">
-                            {formatPayRate(
-                              job.payMinUsd,
-                              job.payMaxUsd,
-                              job.payUnit
-                            )}
+                            {job.isCustomEmployerPost
+                              ? formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit)
+                              : 'Pay not listed'}
                           </span>
                           <span className="text-slate-600" aria-hidden="true">
                             ·
@@ -1395,7 +1588,7 @@ export default function App() {
                     onClick={() => setActiveTab('jobs')}
                     className="mt-5 inline-flex items-center justify-center min-h-[44px] px-5 py-2.5 rounded-xl bg-cyan-500 text-slate-950 text-sm font-bold hover:bg-cyan-400 transition-colors"
                   >
-                    Browse Live Jobs
+                    Browse Opportunities
                   </button>
                 </div>
               ))}
@@ -1411,11 +1604,7 @@ export default function App() {
         )}
 
         {activeTab === 'app' && (
-          <AppReadinessView
-            onOpenAlerts={() => setIsAlertsOpen(true)}
-            onShareApp={handleShareApp}
-            alertsActive={hasActiveAlerts}
-          />
+          <AppReadinessView onShareApp={handleShareApp}/>
         )}
       </main>
 
@@ -1440,13 +1629,12 @@ export default function App() {
             >
               AI Tools
             </button>
-            <button
-              type="button"
-              onClick={() => setIsAlertsOpen(true)}
+            <a
+              href="?experience=toolkit"
               className="hover:text-slate-300 transition-colors"
             >
-              Job Alerts
-            </button>
+              Focus Toolkit
+            </a>
             <button
               type="button"
               onClick={() => setActiveTab('app')}
@@ -1488,13 +1676,6 @@ export default function App() {
       )}
 
       {/* Modals */}
-      <JobAlertModal
-        isOpen={isAlertsOpen}
-        onClose={() => setIsAlertsOpen(false)}
-        preferences={alertPrefs}
-        onSavePreferences={handleSaveAlerts}
-      />
-
       <JobDetailModal
         job={inspectedJob}
         isSaved={inspectedJob ? savedIds.includes(inspectedJob.id) : false}
@@ -1510,18 +1691,33 @@ export default function App() {
         onClose={() => setInspectedJob(null)}
       />
 
-      <AddJobModal
-        isOpen={isAddJobOpen}
-        onClose={() => setIsAddJobOpen(false)}
-        onPreviewLocalJob={handlePreviewLocalJob}
-        localPreviewJobs={customJobs}
-        onDeleteLocalPreview={handleDeleteCustomJob}
-      />
+      <>
+        <EmployerEntryModal
+          isOpen={isEmployerEntryOpen}
+          onClose={() => setIsEmployerEntryOpen(false)}
+        />
+        <AddJobModal
+          isOpen={isAddJobOpen}
+          onClose={() => setIsAddJobOpen(false)}
+          onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
+          onPreviewLocalJob={handlePreviewLocalJob}
+          localPreviewJobs={customJobs}
+          onDeleteLocalPreview={handleDeleteCustomJob}
+        />
+      </>
 
       <PrivacyTermsModal
         isOpen={isPrivacyOpen}
         onClose={() => setIsPrivacyOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <PWAInstallProvider>
+      <AppContent />
+    </PWAInstallProvider>
   );
 }
