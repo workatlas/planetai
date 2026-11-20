@@ -1,5 +1,6 @@
 import {JobListing} from '../data/jobs';
 
+const PUBLIC_SITE_URL = 'https://planetai-global.netlify.app';
 const DEFAULT_TITLE = 'PLANETAI — AI Career & Opportunity Platform';
 const DEFAULT_DESC =
   'Explore curated AI and remote-work opportunity guides, compare career platforms, and use free AI career tools. Confirm current vacancies and terms directly with each employer.';
@@ -40,7 +41,7 @@ export function syncSeoMetadata(
 ) {
   if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
-  const baseUrl = `${window.location.origin}${window.location.pathname}`;
+  const baseUrl = `${PUBLIC_SITE_URL}${window.location.pathname}`;
   const canonicalUrl = inspectedJob
     ? `${baseUrl}?job=${encodeURIComponent(inspectedJob.id)}`
     : baseUrl;
