@@ -753,7 +753,8 @@ function AppContent() {
   if (experience === 'dashboard') return <AdminDashboardPreview />;
   if (experience === 'toolkit') return <ToolkitPreview />;
 
-  const openCareerWorkspace = (tab: AppTab = 'ai-tools') => {
+  const openCareerWorkspace = (tab: AppTab = 'ai-tools', resumeMode?: 'resume' | 'cover') => {
+    setRequestedAITool(resumeMode ? {tool: 'resume', resumeMode, nonce: Date.now()} : null);
     const url = new URL(window.location.href);
     url.searchParams.set('experience', 'career-tools');
     window.history.replaceState({}, '', url.pathname + url.search);
