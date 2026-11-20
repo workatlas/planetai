@@ -94,13 +94,16 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     job.payUnit
   );
 
-  const safeWebsiteUrl = job.companyWebsite
-    ? validateHttpsUrl(job.companyWebsite)
-    : null;
-
   const isCustomPost = Boolean(
     job.isCustomEmployerPost || job.id.startsWith('custom-')
   );
+  const isListingIncomplete = isCustomPost && (
+    job.description.trim().length < 80 ||
+    job.requirements.filter((item) => item.trim().length >= 8).length < 2
+  );
+  const safeWebsiteUrl = job.companyWebsite && !isListingIncomplete
+    ? validateHttpsUrl(job.companyWebsite)
+    : null;
   const isCuratedGuide = !isCustomPost;
   const isFeatured = isCustomPost && Boolean(job.featured);
   const isVerified = isCustomPost && Boolean(job.verified);
@@ -109,6 +112,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
   const externalApplyUrl = isCustomPost
     ? job.applyUrl
     : resolveApplyUrl(job.company, job.applyUrl);
+  const safeApplyUrl = !isListingIncomplete ? validateHttpsUrl(externalApplyUrl) : null;
   const displayPay = isCuratedGuide
     ? 'Not listed — confirm with employer'
     : formattedPay;
@@ -202,7 +206,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               company={job.company}
               short={job.companyShort}
               explicitLogoUrl={job.companyLogoUrl}
-              websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
+              websiteOrApplyUrl={isCustomPost ? undefined : job.companyWebsite || job.applyUrl}
               size="lg"
               lazy={false}
             />
@@ -321,8 +325,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
           </div>
         )}
 
-        {/* Employer-specific screening and payout details are not inferred for curated guides. */}
-        {!isCuratedGuide && (
+        {/* Screening and payout terms are shown only on curated guides, never inferred for employer posts. */}
+        {isCuratedGuide && (
           <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-3.5">
             <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#77847b]">
@@ -401,6 +405,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
           </div>
         )}
 
+        {isListingIncomplete && (
+          <div role="status" className="mt-4 rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+            <strong>Employer details need completion.</strong> This listing is missing a complete role overview or qualifications. Its external application and career-portal links are temporarily hidden until the information is corrected.
+          </div>
+        )}
+
         {/* Description, Requirements & Quick Prep Tips */}
         <div className="mt-5 space-y-4">
           <div>
@@ -408,7 +418,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               Role Overview
             </h3>
             <p className="text-sm text-[#40534a] leading-relaxed">
-              {job.description}
+              {job.description.trim().length >= 80
+                ? job.description
+                : 'A complete role overview has not yet been provided by this employer.'}
             </p>
           </div>
 
@@ -416,8 +428,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             <h3 className="text-xs font-semibold text-[#77847b] mb-2">
               Qualifications &amp; Setup
             </h3>
-            <ul className="space-y-2">
-              {job.requirements.map((req) => (
+            {job.requirements.filter((item) => item.trim().length >= 8).length >= 2 ? (
+              <ul className="space-y-2">
+              {job.requirements.filter((item) => item.trim().length >= 8).map((req) => (
                 <li
                   key={req}
                   className="flex items-start gap-2.5 text-sm text-[#65736b]"
@@ -426,7 +439,10 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                   <span>{req}</span>
                 </li>
               ))}
-            </ul>
+              </ul>
+            ) : (
+              <p className="text-sm text-[#77847b]">The employer has not supplied complete qualifications yet.</p>
+            )}
           </div>
 
           <div className="rounded-xl border border-[#c1d2c4] bg-[#eef4ee] p-4">
@@ -593,15 +609,21 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
               <span>Tailor Resume</span>
             </button>
 
-            <a
-              href={externalApplyUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#183c32] text-white text-xs sm:text-sm font-bold hover:bg-[#285c4b] active:scale-[0.98] transition-all whitespace-nowrap"
-            >
-              <span>{isCustomPost ? 'View Listing' : 'Visit Employer Site'}</span>
-              <ArrowUpRight className="w-4 h-4 shrink-0" />
-            </a>
+            {safeApplyUrl ? (
+              <a
+                href={safeApplyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 min-h-[44px] px-5 py-2.5 rounded-xl bg-[#183c32] text-white text-xs sm:text-sm font-bold hover:bg-[#285c4b] active:scale-[0.98] transition-all whitespace-nowrap"
+              >
+                <span>{isCustomPost ? 'View Listing' : 'Visit Employer Site'}</span>
+                <ArrowUpRight className="w-4 h-4 shrink-0" />
+              </a>
+            ) : (
+              <span className="inline-flex min-h-[44px] items-center rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-semibold text-amber-900">
+                Application link unavailable until details are verified
+              </span>
+            )}
           </div>
         </div>
       </div>
