@@ -43,14 +43,9 @@ const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
   const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
   const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
-    <div className={`planetai-company-logo-tile flex h-[68px] w-[104px] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-[#dce5dc] px-2 py-1.5 shadow-sm sm:h-[72px] sm:w-[116px] ${job.marqueeSpotlight ? 'border-[#c79b50] ring-1 ring-[#c79b50]/50' : ''}`}>
-      {logoUrl && !failed ? (
-        <img src={logoUrl} alt={job.company + ' logo'} loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-7 w-7 object-contain sm:h-8 sm:w-8" />
-      ) : (
-        <span aria-hidden="true" className="grid h-7 w-7 place-items-center rounded-lg bg-[#edf4ee] text-xs font-extrabold text-[#285c4b] sm:h-8 sm:w-8">{initials || 'CO'}</span>
-      )}
-      {job.marqueeSpotlight && <span className="text-[7px] font-extrabold uppercase tracking-[.16em] text-[#a87928]">Spotlight</span>}
-      <span className="max-w-full truncate text-[9px] font-extrabold tracking-[.01em] text-[#40584a] sm:text-[10px]">{job.company}</span>
+    <div className="flex h-7 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-2.5">
+      {logoUrl && !failed ? <img src={logoUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 object-contain grayscale opacity-75"/> : <span aria-hidden="true" className="grid h-4 w-4 place-items-center rounded-full bg-white/10 text-[7px] font-bold text-slate-300">{initials || 'CO'}</span>}
+      <span className="max-w-[92px] truncate text-[9px] font-semibold text-slate-300">{job.company}</span>
     </div>
   );
 };
@@ -230,7 +225,7 @@ export default function PremiumMarketplacePreview({
         <div
           role="region"
           aria-label="Companies with opportunities on PLANETAI"
-          className="overflow-hidden rounded-2xl border border-[#9b8cff]/35 bg-gradient-to-r from-[#5636b8] via-[#5c45c9] to-[#2563c7] text-white shadow-[0_12px_32px_rgba(54,45,130,.16)]"
+          className="h-[42px] overflow-hidden rounded-xl border border-white/10 bg-[#10182a]/90 text-white shadow-[0_8px_24px_rgba(0,0,0,.16)]"
         >
           <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
           <div className="flex h-[42px] items-center gap-3 px-3 sm:gap-5 sm:px-5">
@@ -254,8 +249,8 @@ export default function PremiumMarketplacePreview({
               <h1 className="max-w-[700px] text-[clamp(2.05rem,8vw,5.9rem)] font-semibold leading-[1.02] tracking-[-.075em] text-white">Find work that moves <span className="font-serif font-normal italic text-cyan-300">you forward.</span></h1>
               <p className="mt-3 max-w-[520px] text-[12px] leading-5 text-slate-400 sm:mt-7 sm:text-[17px] sm:leading-7">Discover opportunities from companies around the world. Clear details, transparent expectations and a direct path to apply.</p>
               <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-9 sm:gap-4">
-                <a href="#opportunities" className="inline-flex items-center gap-3 rounded-full bg-[#183c32] px-6 py-4 text-[13px] font-bold text-white shadow-lg shadow-[#183c32]/10 transition hover:-translate-y-0.5 hover:bg-[#285c4b]">Explore opportunities <ArrowRight size={16}/></a>
-                <span className="text-[11px] font-semibold text-[#75837a]"><ShieldCheck className="mr-1 inline text-[#54806b]" size={15}/> No candidate account required</span>
+                <a href="#opportunity-filters" onClick={(event) => { event.preventDefault(); document.getElementById("opportunity-filters")?.scrollIntoView({behavior:"smooth", block:"start"}); }} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#6366f1] px-5 py-3 text-[11px] font-extrabold text-white shadow-lg shadow-cyan-950/30 transition hover:-translate-y-0.5 sm:min-h-12 sm:px-6 sm:text-[13px]">Explore Live Roles ↓</a>
+                <span className="text-[10px] font-semibold text-slate-400 sm:text-[11px]"><ShieldCheck className="mr-1 inline text-cyan-300" size={15}/> Browse without signup</span>
               </div>
               <div className="mt-4 hidden flex-wrap gap-x-8 gap-y-3 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-400 sm:mt-12 sm:flex sm:pt-6"><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Direct employer applications</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Clear job information</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Browse freely</span></div>
             </div>
@@ -297,11 +292,11 @@ export default function PremiumMarketplacePreview({
               <button className="min-h-11 shrink-0 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#285c4b] sm:px-5" onClick={() => document.getElementById('role-list')?.scrollIntoView({behavior:'smooth'})}>Search</button>
             </div>
           </div>
-          <div className="no-scrollbar sticky top-[68px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/10 bg-[#070b14]/90 px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:mt-6 sm:border-0 sm:bg-transparent sm:px-0 sm:py-0">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/25 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
+          <div className="no-scrollbar sticky top-[68px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/10 bg-[#070b14]/90 px-4 py-3 backdrop-blur-xl sm:top-[76px] sm:mx-0 sm:mt-6 sm:border-0 sm:bg-[#070b14]/90 sm:px-0 sm:py-2">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/25 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4">{JOB_CATEGORIES.filter(item => item !== 'All').map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
           <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
-             {filtered.map(job => <CompanyRevealCard key={job.id} job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>)}
+             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && index < filtered.length - 1 && <div className="md:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
            </div>
            {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-white px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
         </section>
