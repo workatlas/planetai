@@ -17,14 +17,15 @@ const validEmail = (value: string) =>
   value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const PLACEHOLDER_HOSTS = new Set(["test.com", "example.com", "example.org", "example.net", "localhost"]);
+const SHORTENER_HOSTS = new Set(["bit.ly", "tinyurl.com", "t.co", "goo.gl", "ow.ly", "is.gd", "cutt.ly"]);
 const safeHttpsUrl = (value: string) => {
   if (!value) return null;
   try {
     const url = new URL(value);
-    const host = url.hostname.toLowerCase().replace(/^www\\./, "");
+    const rawHost = url.hostname.toLowerCase();
+    const host = rawHost.startsWith("www.") ? rawHost.slice(4) : rawHost;
     if (url.protocol !== "https:") return null;
-    if (PLACEHOLDER_HOSTS.has(host) || host.endsWith(".invalid") || host.endsWith(".example")) return null;
-    if (/^(bit\\.ly|tinyurl\\.com|t\\.co|goo\\.gl|ow\\.ly|is\\.gd|cutt\\.ly)$/i.test(host)) return null;
+    if (PLACEHOLDER_HOSTS.has(host) || host.endsWith(".invalid") || host.endsWith(".example") || SHORTENER_HOSTS.has(host)) return null;
     return url.toString();
   } catch {
     return null;
