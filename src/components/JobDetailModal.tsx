@@ -449,7 +449,7 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             <div className="flex items-center justify-between gap-2 mb-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#47745c]">
                 <Lightbulb className="w-4 h-4 shrink-0" />
-                <span>Quick Prep Tips</span>
+                <span>PLANETAI Quick Prep Tips</span>
               </div>
               <button
                 type="button"
