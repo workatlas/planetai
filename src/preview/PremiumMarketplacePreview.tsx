@@ -15,6 +15,7 @@ import {AdBanner} from '../components/AdBanner';
 
 interface PremiumMarketplacePreviewProps {
   jobs: JobListing[];
+  targetedResumeJobId: string | null;
   onRefreshJobs: () => void;
   isRefreshing: boolean;
   lastSyncedAt: string | null;
@@ -122,6 +123,7 @@ const MarqueeCompanyLogo: React.FC<{company: string; job?: JobListing}> = ({comp
 
 export default function PremiumMarketplacePreview({
   jobs,
+  targetedResumeJobId,
   onRefreshJobs,
   isRefreshing,
   lastSyncedAt,
@@ -342,7 +344,7 @@ export default function PremiumMarketplacePreview({
            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 min-[769px]:mt-4">{JOB_CATEGORIES.filter(item => !['All', 'Coding', 'AI Training', 'Remote'].includes(item)).map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
           <div id="role-list" className="mt-4 grid grid-cols-1 items-stretch auto-rows-fr gap-[14px] min-[769px]:grid-cols-2 xl:grid-cols-3">
-             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="col-span-full w-full min-w-0"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
+             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} isResumeTarget={job.id === targetedResumeJobId} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="col-span-full w-full min-w-0"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
            </div>
            {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-[#ffffff] px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
         </section>
