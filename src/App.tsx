@@ -143,7 +143,7 @@ type PayTierFilter = 'all' | '25plus' | '50plus' | 'annual';
 type SavedSubTab = 'saved' | 'applied';
 
 const STORAGE_KEYS = {
-  SAVED: 'planetai_saved_jobs_v1',
+  SAVED: 'planetai_saved_jobs',
   APPLIED: 'planetai_applied_jobs_v1',
   CUSTOM_JOBS: 'planetai_custom_jobs_v1',
   SKILLS: 'planetai_user_skills_v1',
@@ -223,7 +223,7 @@ function AppContent() {
   const [customJobs, setCustomJobs] = useState<JobListing[]>(hydrateCustomJobs);
   const [databaseJobs, setDatabaseJobs] = useState<JobListing[]>([]);
   const [savedIds, setSavedIds] = useState<string[]>(() =>
-    readStorage<string[]>(STORAGE_KEYS.SAVED, [])
+    readStorage<string[]>(STORAGE_KEYS.SAVED, readStorage<string[]>('planetai_saved_jobs_v1', []))
   );
   const [appliedRecords, setAppliedRecords] = useState<
     Record<string, AppliedRecord>
@@ -309,6 +309,7 @@ function AppContent() {
   useEffect(() => {
     try {
       window.localStorage.setItem(STORAGE_KEYS.SAVED, JSON.stringify(savedIds));
+      window.localStorage.setItem('planetai_saved_jobs_v1', JSON.stringify(savedIds));
     } catch {
       // Ignore storage quota errors
     }
