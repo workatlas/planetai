@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, FileText, Mail, RefreshCw, Share2, Sparkles,
+  ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, RefreshCw, Share2, Sparkles,
   Search, ShieldCheck,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -37,35 +37,71 @@ interface PremiumMarketplacePreviewProps {
 const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
 
-type CareerDestination = 'jobs' | 'resume' | 'cover-letter' | 'ai-tools';
-const careerDestinations = [
-  {id: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
-  {id: 'resume' as const, label: 'Resume', desktopLabel: 'Resume Builder', icon: FileText},
-  {id: 'cover-letter' as const, label: 'Cover Letter', desktopLabel: 'Cover Letter AI', icon: Mail},
-  {id: 'ai-tools' as const, label: 'AI Tools', icon: Sparkles},
-];
-function CareerNavigation({active, onNavigate}: {active: CareerDestination; onNavigate: (destination: CareerDestination) => void}) {
+type CareerDestination = 'jobs' | 'workspace';
+function CareerNavigation({
+  active,
+  onNavigate,
+  onPostJob,
+}: {
+  active: CareerDestination;
+  onNavigate: (destination: CareerDestination) => void;
+  onPostJob: () => void;
+}) {
+  const destinations = [
+    {id: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+    {id: 'workspace' as const, label: 'Career Workspace', icon: Sparkles},
+  ];
+
   return (
     <>
-      <nav aria-label="Career navigation" className="hidden min-[769px]:flex min-w-0 items-center justify-center gap-1.5 xl:gap-2">
-        {careerDestinations.map((item) => {
+      <nav aria-label="Main navigation" className="hidden min-[769px]:flex min-w-0 items-center justify-center gap-2">
+        {destinations.map((item) => {
           const Icon = item.icon;
           const selected = active === item.id;
-          return <button key={item.id} type="button" onClick={() => onNavigate(item.id)} aria-current={selected ? 'page' : undefined}
-            className={'inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-semibold transition ' + (selected ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,.08)]' : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-white')}>
-            <Icon size={14} />{item.desktopLabel || item.label}
-          </button>;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => onNavigate(item.id)}
+              aria-current={selected ? 'page' : undefined}
+              className={'inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border px-4 py-2 text-[11px] font-semibold transition ' + (selected ? 'border-[#22D3EE]/40 bg-[#22D3EE]/10 text-[#22D3EE] shadow-[0_0_18px_rgba(34,211,238,.08)]' : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-white')}
+            >
+              <Icon size={14} />
+              {item.label}
+            </button>
+          );
         })}
       </nav>
-      <nav aria-label="Mobile career navigation" className="fixed bottom-[12px] left-4 right-4 z-[50] grid h-[54px] grid-cols-4 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.88)] p-1 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden">
-        {careerDestinations.map((item) => {
-          const Icon = item.icon;
-          const selected = active === item.id;
-          return <button key={item.id} type="button" onClick={() => onNavigate(item.id)} aria-current={selected ? 'page' : undefined}
-            className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (selected ? 'bg-[rgba(6,182,212,.16)] text-[#22D3EE] shadow-[0_0_18px_rgba(34,211,238,.12)]' : 'text-slate-400 hover:text-white')}>
-            <Icon size={16} /><span className="truncate">{item.label}</span>
-          </button>;
-        })}
+      <nav
+        aria-label="Mobile navigation"
+        className="fixed bottom-[12px] left-4 right-4 z-[50] grid h-[54px] grid-cols-3 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.92)] p-1 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden"
+      >
+        <button
+          type="button"
+          onClick={() => onNavigate('jobs')}
+          aria-current={active === 'jobs' ? 'page' : undefined}
+          className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (active === 'jobs' ? 'bg-[#22D3EE] text-[#070B14] shadow-[0_0_18px_rgba(34,211,238,.18)]' : 'text-slate-400 hover:text-white')}
+        >
+          <BriefcaseBusiness size={16} />
+          <span>Jobs</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => onNavigate('workspace')}
+          aria-current={active === 'workspace' ? 'page' : undefined}
+          className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (active === 'workspace' ? 'bg-[#22D3EE] text-[#070B14] shadow-[0_0_18px_rgba(34,211,238,.18)]' : 'text-slate-400 hover:text-white')}
+        >
+          <Sparkles size={16} />
+          <span className="truncate">Career Workspace</span>
+        </button>
+        <button
+          type="button"
+          onClick={onPostJob}
+          className="flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none text-slate-400 transition hover:text-white"
+        >
+          <ArrowUpRight size={16} />
+          <span>Post Job</span>
+        </button>
       </nav>
     </>
   );
@@ -108,7 +144,7 @@ export default function PremiumMarketplacePreview({
   const [category, setCategory] = useState<JobCategory>('All');
   const [sort, setSort] = useState('recommended');
   const [quickFilter, setQuickFilter] = useState<'All' | 'Paid Only' | 'Saved' | 'Coding' | 'AI Training' | 'Remote'>('All');
-  const [activeDestination, setActiveDestination] = useState<CareerDestination>(showCareerTools ? 'ai-tools' : 'jobs');
+  const [activeDestination, setActiveDestination] = useState<CareerDestination>(showCareerTools ? 'workspace' : 'jobs');
   const navigateCareer = (destination: CareerDestination) => {
     setActiveDestination(destination);
     if (destination === 'jobs') {
@@ -116,9 +152,7 @@ export default function PremiumMarketplacePreview({
       else window.scrollTo({top: 0, behavior: 'smooth'});
       return;
     }
-    if (destination === 'resume') onOpenWorkspace('ai-tools', 'resume');
-    else if (destination === 'cover-letter') onOpenWorkspace('ai-tools', 'cover');
-    else onOpenWorkspace('ai-tools');
+    onOpenWorkspace('ai-tools');
   };
   const visibleJobs = useMemo(() => jobs.filter(job => !(job.isCustomEmployerPost && job.title.trim().toLowerCase() === 'planetai test')), [jobs]);
 
@@ -167,13 +201,13 @@ export default function PremiumMarketplacePreview({
     return (
       <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24] pb-24 min-[769px]:pb-0">
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
-          <div className="mx-auto flex h-[68px] max-w-[1320px] items-center justify-between gap-2 px-3 sm:h-[76px] sm:px-8">
+          <div className="mx-auto grid h-[68px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:h-[76px] sm:px-8">
             <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex min-w-0 shrink items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
               <span className="min-w-0 leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Career workspace</span></span>
             </a>
-            <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
-            <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+            <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+            <div className="flex shrink-0 items-center justify-self-end gap-1.5 sm:gap-2">
               <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11">{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
               <button onClick={onReturnToMarketplace} className="inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-full border border-[#dce5dc] bg-white px-3 py-1.5 text-xs font-bold text-[#40534a] transition hover:border-[#a9bcae] sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-[11px]">Back to marketplace <ArrowRight className="inline" size={13}/></button>
             </div>
@@ -194,7 +228,7 @@ export default function PremiumMarketplacePreview({
         </main>
         <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-24 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
         {privacyPolicyModal}
-        <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
+        <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
       </div>
     );
   }
@@ -202,13 +236,16 @@ export default function PremiumMarketplacePreview({
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f] pb-24 min-[769px]:pb-0">
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070b14]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-[60px] max-w-[1320px] items-center justify-between gap-3 px-4">
+        <div className="mx-auto grid h-[60px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4">
           <a href="#top" className="flex min-w-0 items-center gap-2.5" aria-label="PLANETAI marketplace home">
             <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-400/[0.08] shadow-[0_0_24px_rgba(34,211,238,.18)]"><span className="absolute inset-0 rounded-xl bg-cyan-300/10 blur-md"/><PlanetAILogo className="relative h-8 w-8"/></span>
             <span className="whitespace-nowrap text-[16px] font-extrabold tracking-[-.055em] text-white">PLANET<span className="text-cyan-300">AI</span></span>
           </a>
-          <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
-          <button type="button" onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 py-2 text-[11px] font-bold text-white shadow-[0_8px_24px_rgba(79,70,229,.25)] transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">Post a job <ArrowUpRight size={13}/></button>
+          <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
+          <div className="flex items-center justify-self-end gap-2">
+            <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-slate-300 transition hover:border-cyan-300/30 hover:bg-white/[0.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">{copied ? <Check size={14} className="text-emerald-400"/> : <Share2 size={14}/>}</button>
+            <button type="button" onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 py-2 text-[11px] font-bold text-white shadow-[0_8px_24px_rgba(79,70,229,.25)] transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">Post a job <ArrowUpRight size={13}/></button>
+          </div>
         </div>
       </header>
 
@@ -334,7 +371,7 @@ export default function PremiumMarketplacePreview({
       {jobDetailModal}
       {postJobModal}
       {privacyPolicyModal}
-      <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
+      <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
     </div>
   );
 }
