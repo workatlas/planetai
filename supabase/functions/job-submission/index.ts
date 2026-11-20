@@ -16,12 +16,15 @@ const clean = (value: unknown, max: number) =>
 const validEmail = (value: string) =>
   value.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
+const PLACEHOLDER_HOSTS = new Set(["test.com", "example.com", "example.org", "example.net", "localhost"]);
 const safeHttpsUrl = (value: string) => {
   if (!value) return null;
   try {
     const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\\./, "");
     if (url.protocol !== "https:") return null;
-    if (/^(bit\.ly|tinyurl\.com|t\.co|goo\.gl|ow\.ly|is\.gd|cutt\.ly)$/i.test(url.hostname)) return null;
+    if (PLACEHOLDER_HOSTS.has(host) || host.endsWith(".invalid") || host.endsWith(".example")) return null;
+    if (/^(bit\\.ly|tinyurl\\.com|t\\.co|goo\\.gl|ow\\.ly|is\\.gd|cutt\\.ly)$/i.test(host)) return null;
     return url.toString();
   } catch {
     return null;
@@ -81,8 +84,11 @@ const handler = async (req: Request) => {
   if (company.length < 2 || title.length < 3 || !validEmail(email)) {
     return json({ error: "Enter a valid company name, job title, and contact email." }, 400);
   }
-  if (!category || !employmentType || !location || description.length < 30) {
-    return json({ error: "Complete the role category, work type, location, and a description of at least 30 characters." }, 400);
+  if (!category || !employmentType || !location || description.length < 80) {
+    return json({ error: "Complete the role category, work type, location, and a role overview of at least 80 characters." }, 400);
+  }
+  if (requirements.length < 2 || requirements.some((item) => item.length < 8)) {
+    return json({ error: "Provide at least two specific qualifications or setup requirements." }, 400);
   }
   if (min !== null && (!Number.isFinite(min) || min < 0 || min > 10000000)) {
     return json({ error: "Enter a valid minimum salary." }, 400);
