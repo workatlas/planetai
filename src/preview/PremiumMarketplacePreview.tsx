@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Check, RefreshCw, Share2,
+  ArrowRight, ArrowUpRight, BriefcaseBusiness, Check, FileText, Mail, RefreshCw, Share2, Sparkles,
   Search, ShieldCheck,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -26,7 +26,7 @@ interface PremiumMarketplacePreviewProps {
   copied: boolean;
   onOpenPrivacyPolicy: () => void;
   privacyPolicyModal: ReactNode;
-  onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app') => void;
+  onOpenWorkspace: (tab?: 'ai-tools' | 'saved' | 'platforms' | 'app', resumeMode?: 'resume' | 'cover') => void;
   jobDetailModal: ReactNode;
   postJobModal: ReactNode;
   showCareerTools: boolean;
@@ -36,6 +36,40 @@ interface PremiumMarketplacePreviewProps {
 
 const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
+
+type CareerDestination = 'jobs' | 'resume' | 'cover-letter' | 'ai-tools';
+const careerDestinations = [
+  {id: 'jobs' as const, label: 'Jobs', icon: BriefcaseBusiness},
+  {id: 'resume' as const, label: 'Resume', desktopLabel: 'Resume Builder', icon: FileText},
+  {id: 'cover-letter' as const, label: 'Cover Letter', desktopLabel: 'Cover Letter AI', icon: Mail},
+  {id: 'ai-tools' as const, label: 'AI Tools', icon: Sparkles},
+];
+function CareerNavigation({active, onNavigate}: {active: CareerDestination; onNavigate: (destination: CareerDestination) => void}) {
+  return (
+    <>
+      <nav aria-label="Career navigation" className="hidden min-[769px]:flex min-w-0 items-center justify-center gap-1.5 xl:gap-2">
+        {careerDestinations.map((item) => {
+          const Icon = item.icon;
+          const selected = active === item.id;
+          return <button key={item.id} type="button" onClick={() => onNavigate(item.id)} aria-current={selected ? 'page' : undefined}
+            className={'inline-flex min-h-9 items-center gap-2 whitespace-nowrap rounded-full border px-3 py-2 text-[11px] font-semibold transition ' + (selected ? 'border-cyan-300/30 bg-cyan-300/10 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,.08)]' : 'border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.04] hover:text-white')}>
+            <Icon size={14} />{item.desktopLabel || item.label}
+          </button>;
+        })}
+      </nav>
+      <nav aria-label="Mobile career navigation" className="fixed bottom-[12px] left-4 right-4 z-[50] grid h-[54px] grid-cols-4 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.88)] p-1 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden">
+        {careerDestinations.map((item) => {
+          const Icon = item.icon;
+          const selected = active === item.id;
+          return <button key={item.id} type="button" onClick={() => onNavigate(item.id)} aria-current={selected ? 'page' : undefined}
+            className={'flex h-11 min-w-0 flex-col items-center justify-center gap-0.5 rounded-full px-1 text-[9px] font-semibold leading-none transition ' + (selected ? 'bg-[rgba(6,182,212,.16)] text-[#22D3EE] shadow-[0_0_18px_rgba(34,211,238,.12)]' : 'text-slate-400 hover:text-white')}>
+            <Icon size={16} /><span className="truncate">{item.label}</span>
+          </button>;
+        })}
+      </nav>
+    </>
+  );
+}
 
 
 const MarqueeCompanyLogo: React.FC<{company: string; job?: JobListing}> = ({company, job}) => {
@@ -74,6 +108,18 @@ export default function PremiumMarketplacePreview({
   const [category, setCategory] = useState<JobCategory>('All');
   const [sort, setSort] = useState('recommended');
   const [quickFilter, setQuickFilter] = useState<'All' | 'Paid Only' | 'Saved' | 'Coding' | 'AI Training' | 'Remote'>('All');
+  const [activeDestination, setActiveDestination] = useState<CareerDestination>(showCareerTools ? 'ai-tools' : 'jobs');
+  const navigateCareer = (destination: CareerDestination) => {
+    setActiveDestination(destination);
+    if (destination === 'jobs') {
+      if (showCareerTools) onReturnToMarketplace();
+      else window.scrollTo({top: 0, behavior: 'smooth'});
+      return;
+    }
+    if (destination === 'resume') onOpenWorkspace('ai-tools', 'resume');
+    else if (destination === 'cover-letter') onOpenWorkspace('ai-tools', 'cover');
+    else onOpenWorkspace('ai-tools');
+  };
   const visibleJobs = useMemo(() => jobs.filter(job => !(job.isCustomEmployerPost && job.title.trim().toLowerCase() === 'planetai test')), [jobs]);
 
   const baseFiltered = useMemo(() => {
@@ -119,20 +165,21 @@ export default function PremiumMarketplacePreview({
 
   if (showCareerTools) {
     return (
-      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24]">
+      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24] pb-24 min-[769px]:pb-0">
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
           <div className="mx-auto flex h-[68px] max-w-[1320px] items-center justify-between gap-2 px-3 sm:h-[76px] sm:px-8">
             <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex min-w-0 shrink items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
               <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
               <span className="min-w-0 leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Career workspace</span></span>
             </a>
+            <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
               <button type="button" onClick={onShareApp} aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"} className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11">{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
               <button onClick={onReturnToMarketplace} className="inline-flex min-h-9 items-center gap-1 whitespace-nowrap rounded-full border border-[#dce5dc] bg-white px-3 py-1.5 text-xs font-bold text-[#40534a] transition hover:border-[#a9bcae] sm:min-h-11 sm:px-4 sm:py-2.5 sm:text-[11px]">Back to marketplace <ArrowRight className="inline" size={13}/></button>
             </div>
           </div>
         </header>
-        <main className="mx-auto max-w-[1320px] px-5 py-9 sm:px-8 sm:py-12">
+        <main className="mx-auto max-w-[1320px] px-5 py-9 pb-24 sm:px-8 sm:py-12 min-[769px]:pb-12">
           <div className="mb-8 max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">PLANETAI · Free career tools</p>
             <h1 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Your career workspace.</h1>
@@ -145,20 +192,22 @@ export default function PremiumMarketplacePreview({
           </div>
           {careerToolsContent}
         </main>
-        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
+        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-24 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
         {privacyPolicyModal}
+        <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
       </div>
     );
   }
 
   return (
-    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f] pb-24 min-[769px]:pb-0">
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070b14]/95 backdrop-blur-xl">
         <div className="mx-auto flex h-[60px] max-w-[1320px] items-center justify-between gap-3 px-4">
           <a href="#top" className="flex min-w-0 items-center gap-2.5" aria-label="PLANETAI marketplace home">
             <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-400/[0.08] shadow-[0_0_24px_rgba(34,211,238,.18)]"><span className="absolute inset-0 rounded-xl bg-cyan-300/10 blur-md"/><PlanetAILogo className="relative h-8 w-8"/></span>
             <span className="whitespace-nowrap text-[16px] font-extrabold tracking-[-.055em] text-white">PLANET<span className="text-cyan-300">AI</span></span>
           </a>
+          <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
           <button type="button" onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 py-2 text-[11px] font-bold text-white shadow-[0_8px_24px_rgba(79,70,229,.25)] transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">Post a job <ArrowUpRight size={13}/></button>
         </div>
       </header>
@@ -172,7 +221,7 @@ export default function PremiumMarketplacePreview({
           </div>
         </div>
       </section>
-      <main id="top">
+      <main id="top" className="pb-24 min-[769px]:pb-0">
         <section className="relative overflow-hidden bg-[#070b14]">
           <div className="pointer-events-none absolute -left-28 -top-28 h-72 w-72 rounded-full bg-cyan-500/[0.08] blur-3xl"/>
           <div className="pointer-events-none absolute -right-28 top-16 h-80 w-80 rounded-full bg-indigo-500/[0.09] blur-3xl"/>
@@ -267,10 +316,11 @@ export default function PremiumMarketplacePreview({
 
         <section id="employers" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24"><div className="overflow-hidden rounded-[28px] bg-[#183c32] p-7 text-white sm:p-12 lg:p-16"><div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a7c7b2]">For employers</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-.055em] sm:text-5xl">Meet the people who can move your business forward.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-[#c4d6ca]">Create an employer workspace, submit a role for review, and publish after approval. Free listings are welcome.</p><div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold text-[#d6e6db]"><span><Check className="mr-1 inline" size={14}/> Employer workspace</span><span><Check className="mr-1 inline" size={14}/> Human review</span><span><Check className="mr-1 inline" size={14}/> Clear listing packages</span></div></div><div className="flex flex-col items-start gap-3"><button onClick={onPostJob} className="inline-flex items-center gap-3 rounded-full bg-[#f1f5ec] px-6 py-4 text-[12px] font-extrabold text-[#183c32] transition hover:bg-white">Post a role <ArrowUpRight size={16}/></button><a href="/?experience=employer-auth&mode=signin" className="text-[11px] font-semibold text-[#d6e6db] underline underline-offset-4 hover:text-white">Already have an employer workspace? Sign in</a></div></div></div></section>
       </main>
-      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee]"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
+      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-24 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
       {jobDetailModal}
       {postJobModal}
       {privacyPolicyModal}
+      <CareerNavigation active={activeDestination} onNavigate={navigateCareer} />
     </div>
   );
 }
