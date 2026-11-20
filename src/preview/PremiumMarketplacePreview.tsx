@@ -1,7 +1,7 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Bookmark, Check, Menu, RefreshCw, Share2,
+  ArrowUpRight, Check, Menu, RefreshCw, Share2,
   Search, ShieldCheck, X,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
@@ -41,7 +41,7 @@ const categoryLabel = (category: JobCategory) =>
 const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
   const [failed, setFailed] = useState(false);
   const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
-  const initials = job.company.trim().split(/\\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  const initials = job.company.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
     <div className="flex h-7 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-2.5">
       {logoUrl && !failed ? <img src={logoUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 object-contain grayscale opacity-75"/> : <span aria-hidden="true" className="grid h-4 w-4 place-items-center rounded-full bg-white/10 text-[7px] font-bold text-slate-300">{initials || 'CO'}</span>}
@@ -296,7 +296,7 @@ export default function PremiumMarketplacePreview({
            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4">{JOB_CATEGORIES.filter(item => item !== 'All').map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
           <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
-             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && index < filtered.length - 1 && <div className="md:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
+             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="md:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
            </div>
            {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-white px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
         </section>
