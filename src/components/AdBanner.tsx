@@ -67,10 +67,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({
             Partner advertising helps support free access to PLANETAI.
           </span>
         </div>
-        <div className="flex h-[90px] min-h-[90px] max-h-[140px] w-full min-w-0 items-center justify-center overflow-hidden bg-[#0d1425] px-2 py-2 sm:h-[140px] sm:min-h-[100px]">
+        <div className="flex w-full min-w-0 min-h-[90px] max-h-[140px] items-center justify-center overflow-hidden bg-[#0d1425] px-2 py-2 sm:min-h-[100px]">
           <ins
-            className="adsbygoogle block w-full max-w-full"
-            style={{display: 'block', width: '100%', maxWidth: '100%'}}
+            className="adsbygoogle block w-full min-w-0 max-w-full"
+            style={{display: 'block', width: '100%', maxWidth: '100%', minWidth: 0}}
             data-ad-client={ADSENSE_CLIENT}
             data-ad-slot={slotId}
             data-ad-format="auto"
