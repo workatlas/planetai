@@ -113,8 +113,8 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
     ? job.applyUrl
     : resolveApplyUrl(job.company, job.applyUrl);
   const safeApplyUrl = !isListingIncomplete ? validateHttpsUrl(externalApplyUrl) : null;
-  const displayPay = isCuratedGuide
-    ? 'Not listed — confirm with employer'
+  const displayPay = isCuratedGuide || !hasValidPayRange(job.payMinUsd, job.payMaxUsd)
+    ? 'Not disclosed — confirm with employer'
     : formattedPay;
 
   const prepTips =
@@ -296,11 +296,16 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4">
           <div>
             <span className="block text-xs text-[#77847b]">
-              Global Compensation (USD)
+              {isCustomPost ? 'Employer-stated compensation (USD)' : 'Compensation (USD)'}
             </span>
             <span className="font-mono tabular-nums text-xl font-bold text-[#47745c]">
               {displayPay}
             </span>
+            {!isCuratedGuide && hasValidPayRange(job.payMinUsd, job.payMaxUsd) && (
+              <p className="mt-1 max-w-xs text-[10px] leading-relaxed text-[#77847b]">
+                Supplied by the employer; not independently verified by PLANETAI.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-1.5 text-xs text-[#65736b]">
             <Globe2 className="w-4 h-4 text-cyan-400 shrink-0" />
@@ -357,12 +362,12 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
         )}
 
         {/* Income estimates are shown only for employer-submitted listings with stated pay. */}
-        {!isCuratedGuide && hasDisclosedPay && job.payUnit === 'hr' && (
+        {!isCuratedGuide && !isListingIncomplete && hasDisclosedPay && job.payUnit === 'hr' && (
           <div className="mt-3 rounded-xl border border-[#e2e8e1] bg-[#f4f6f2] p-4 space-y-2.5">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#40534a]">
                 <Calculator className="w-4 h-4 text-cyan-400 shrink-0" />
-                <span>Weekly &amp; Monthly Income Estimator</span>
+                <span>Estimated Earnings Calculator</span>
               </div>
               <span className="font-mono text-xs font-semibold text-[#47745c] tabular-nums">
                 {weeklyHours} hrs/week
@@ -396,6 +401,9 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
                 </strong>
               </span>
             </div>
+            <p className="text-[10px] leading-relaxed text-[#77847b]">
+              Illustrative gross estimates using the employer-stated hourly range and your selected hours. Actual earnings may vary with available work, eligibility, fees, and taxes.
+            </p>
           </div>
         )}
 
@@ -541,23 +549,30 @@ export const JobDetailModal: React.FC<JobDetailModalProps> = ({
             </div>
           </div>
 
-          <div>
-            <h3 className="text-xs font-semibold text-[#77847b] mb-1.5">
-              Focus Areas
-            </h3>
-            <div className="flex flex-wrap items-center gap-2 text-xs text-[#65736b]">
-              {job.tags.map((tag, idx) => (
-                <React.Fragment key={tag}>
-                  {idx > 0 && (
-                    <span className="text-slate-600" aria-hidden="true">
-                      ·
-                    </span>
-                  )}
-                  <span>{tag}</span>
-                </React.Fragment>
-              ))}
+          {!isListingIncomplete && job.tags.some((tag) => tag.trim().length > 0) && (
+            <div>
+              <h3 className="text-xs font-semibold text-[#77847b] mb-1.5">
+                Role Focus Areas
+              </h3>
+              <div className="flex flex-wrap items-center gap-2 text-xs text-[#65736b]">
+                {job.tags.filter((tag) => tag.trim().length > 0).map((tag, idx) => (
+                  <React.Fragment key={tag}>
+                    {idx > 0 && (
+                      <span className="text-slate-600" aria-hidden="true">
+                        ·
+                      </span>
+                    )}
+                    <span>{tag.replace(/([a-z0-9])([A-Z])/g, '$1 $2')}</span>
+                  </React.Fragment>
+                ))}
+              </div>
+              {isCustomPost && (
+                <p className="mt-1 text-[10px] leading-relaxed text-[#77847b]">
+                  Focus areas are supplied with the employer listing; confirm specific responsibilities in the full role details.
+                </p>
+              )}
             </div>
-          </div>
+          )}
         </div>
 
         {/* Footer Actions: Save, Share Role, Tailor Resume, Apply Now ↗ */}
