@@ -74,7 +74,7 @@ function CareerNavigation({
       </nav>
       <nav
         aria-label="Mobile navigation"
-        className="fixed bottom-[12px] left-4 right-4 z-[50] grid h-[54px] grid-cols-3 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.92)] p-1 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden"
+        className="fixed bottom-4 left-4 right-4 z-40 grid h-[68px] grid-cols-3 items-center rounded-full border border-[rgba(129,140,248,.28)] bg-[rgba(13,18,34,.92)] p-3 shadow-[0_12px_32px_rgba(0,0,0,.45)] backdrop-blur-2xl min-[769px]:hidden"
       >
         <button
           type="button"
@@ -199,7 +199,7 @@ export default function PremiumMarketplacePreview({
 
   if (showCareerTools) {
     return (
-      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24] pb-24 min-[769px]:pb-0">
+      <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#172b24] pb-28 min-[769px]:pb-0">
         <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
           <div className="mx-auto grid h-[68px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-3 sm:h-[76px] sm:px-8">
             <a href="/" onClick={(event) => { event.preventDefault(); onReturnToMarketplace(); }} className="flex min-w-0 shrink items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
@@ -226,7 +226,7 @@ export default function PremiumMarketplacePreview({
           </div>
           {careerToolsContent}
         </main>
-        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-24 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
+        <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-28 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-3 px-5 py-6 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI · Global careers</span><div className="flex flex-wrap items-center gap-4"><button onClick={onOpenPrivacyPolicy} className="font-semibold text-[#52685a] underline-offset-4 hover:underline">Privacy Policy</button></div><span>Free tools · Browse freely</span></div></footer>
         {privacyPolicyModal}
         <CareerNavigation active={activeDestination} onNavigate={navigateCareer} onPostJob={onPostJob} />
       </div>
@@ -234,7 +234,7 @@ export default function PremiumMarketplacePreview({
   }
 
   return (
-    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f] pb-24 min-[769px]:pb-0">
+    <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f] pb-28 min-[769px]:pb-0">
       <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070b14]/95 backdrop-blur-xl">
         <div className="mx-auto grid h-[60px] max-w-[1320px] grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2 px-4">
           <a href="#top" className="flex min-w-0 items-center gap-2.5" aria-label="PLANETAI marketplace home">
@@ -272,7 +272,7 @@ export default function PremiumMarketplacePreview({
           </div>
         </div>
       </section>
-      <main id="top" className="pb-24 min-[769px]:pb-0">
+      <main id="top" className="pb-28 min-[769px]:pb-0">
         <section className="relative overflow-hidden bg-[#070b14]">
           <div className="pointer-events-none absolute -left-28 -top-28 h-72 w-72 rounded-full bg-cyan-500/[0.08] blur-3xl"/>
           <div className="pointer-events-none absolute -right-28 top-16 h-80 w-80 rounded-full bg-indigo-500/[0.09] blur-3xl"/>
@@ -367,7 +367,7 @@ export default function PremiumMarketplacePreview({
 
         <section id="employers" className="mx-auto max-w-[1320px] px-5 py-16 sm:px-8 sm:py-24"><div className="overflow-hidden rounded-[28px] bg-[#183c32] p-7 text-white sm:p-12 lg:p-16"><div className="grid items-center gap-10 lg:grid-cols-[1fr_auto]"><div className="max-w-2xl"><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#a7c7b2]">For employers</p><h2 className="mt-4 text-3xl font-semibold leading-tight tracking-[-.055em] sm:text-5xl">Meet the people who can move your business forward.</h2><p className="mt-5 max-w-xl text-sm leading-7 text-[#c4d6ca]">Create an employer workspace, submit a role for review, and publish after approval. Free listings are welcome.</p><div className="mt-7 flex flex-wrap gap-3 text-[11px] font-semibold text-[#d6e6db]"><span><Check className="mr-1 inline" size={14}/> Employer workspace</span><span><Check className="mr-1 inline" size={14}/> Human review</span><span><Check className="mr-1 inline" size={14}/> Clear listing packages</span></div></div><div className="flex flex-col items-start gap-3"><button onClick={onPostJob} className="inline-flex items-center gap-3 rounded-full bg-[#f1f5ec] px-6 py-4 text-[12px] font-extrabold text-[#183c32] transition hover:bg-white">Post a role <ArrowUpRight size={16}/></button><a href="/?experience=employer-auth&mode=signin" className="text-[11px] font-semibold text-[#d6e6db] underline underline-offset-4 hover:text-white">Already have an employer workspace? Sign in</a></div></div></div></section>
       </main>
-      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-24 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
+      <footer className="border-t border-[#e2e8e1] bg-[#f0f3ee] pb-28 min-[769px]:pb-0"><div className="mx-auto flex max-w-[1320px] flex-col gap-4 px-5 py-8 text-[10px] font-medium text-[#819087] sm:flex-row sm:items-center sm:justify-between sm:px-8"><span className="font-bold tracking-wide text-[#40564a]">PLANETAI <span className="font-normal text-[#8b978e]">· Global careers</span></span><div className="flex flex-wrap gap-4"><button onClick={() => onOpenWorkspace('saved')} className="font-semibold hover:text-[#183c32]">Saved roles</button><button onClick={() => onOpenWorkspace('ai-tools')} className="font-semibold hover:text-[#183c32]">AI career tools</button><button onClick={() => onOpenWorkspace('platforms')} className="font-semibold hover:text-[#183c32]">Platforms</button><button onClick={onOpenPrivacyPolicy} className="font-semibold hover:text-[#183c32]">Privacy Policy</button></div><span>Browse freely · Apply directly</span></div></footer>
       {jobDetailModal}
       {postJobModal}
       {privacyPolicyModal}
