@@ -38,14 +38,14 @@ const categoryLabel = (category: JobCategory) =>
   category === 'All' ? 'All opportunities' : category;
 
 
-const MarqueeCompanyLogo: React.FC<{job: JobListing}> = ({job}) => {
+const MarqueeCompanyLogo: React.FC<{company: string; job?: JobListing}> = ({company, job}) => {
   const [failed, setFailed] = useState(false);
-  const logoUrl = getCompanyLogoUrl(job.company, job.companyLogoUrl, job.companyWebsite || job.applyUrl);
-  const initials = job.company.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
+  const logoUrl = getCompanyLogoUrl(company, job?.companyLogoUrl, job?.companyWebsite || job?.applyUrl);
+  const initials = company.trim().split(/\s+/).map(part => part[0] || '').join('').slice(0, 2).toUpperCase();
   return (
-    <div className="flex h-7 shrink-0 items-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-2.5">
-      {logoUrl && !failed ? <img src={logoUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 object-contain grayscale opacity-75"/> : <span aria-hidden="true" className="grid h-4 w-4 place-items-center rounded-full bg-white/10 text-[7px] font-bold text-slate-300">{initials || 'CO'}</span>}
-      <span className="max-w-[92px] truncate text-[9px] font-semibold text-slate-300">{job.company}</span>
+    <div className="flex h-6 shrink-0 items-center gap-2">
+      {logoUrl && !failed ? <img src={logoUrl} alt="" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={() => setFailed(true)} className="h-4 w-4 object-contain grayscale opacity-65"/> : <span aria-hidden="true" className="grid h-4 w-4 place-items-center rounded bg-white/10 text-[7px] font-bold text-slate-400">{initials || 'CO'}</span>}
+      <span className="whitespace-nowrap text-[10px] font-semibold tracking-wide text-slate-400">{company}</span>
     </div>
   );
 };
@@ -110,19 +110,12 @@ export default function PremiumMarketplacePreview({
 
   const spotlight = visibleJobs.find(job => job.featured && !job.isCustomEmployerPost) || visibleJobs.find(job => job.featured && job.verified) || visibleJobs.find(job => !job.isCustomEmployerPost && job.company.trim().toLowerCase() === 'mercor') || visibleJobs.find(job => !job.isCustomEmployerPost) || visibleJobs[0] || null;
   const marqueeCompanies = useMemo(() => {
-    const seen = new Set<string>();
-    const priorityOrderedJobs = [...visibleJobs].sort(
-      (a, b) => Number(Boolean(b.marqueeSpotlight)) - Number(Boolean(a.marqueeSpotlight))
-    );
-    const preferred = ['Mercor', 'micro1', 'Outlier', 'Scale AI', 'Alignerr', 'Appen']
-      .map(name => priorityOrderedJobs.find(job => job.company.trim().toLowerCase() === name.toLowerCase()))
-      .filter((job): job is JobListing => Boolean(job));
-    return [...preferred, ...priorityOrderedJobs].filter(job => {
-      const key = job.company.trim().toLowerCase();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    }).slice(0, 12);
+    const names = ['Mercor', 'micro1', 'Outlier', 'Scale AI', 'Alignerr', 'Appen'];
+    return names.map(company => ({
+      company,
+      job: visibleJobs.find(item => item.company.trim().toLowerCase() === company.toLowerCase() ||
+        (company === 'Appen' && /appen|crowdgen/i.test(item.company))),
+    }));
   }, [visibleJobs]);
 
   if (showCareerTools) {
@@ -161,82 +154,22 @@ export default function PremiumMarketplacePreview({
 
   return (
     <div className="planetai-nexora min-h-screen bg-[#f7f8f6] text-[#17231f]">
-      <header className="sticky top-0 z-40 border-b border-[#e5e9e5] bg-[#fbfcfa]/95 backdrop-blur-xl">
-        <div className="relative mx-auto max-w-[1320px] px-2 sm:px-8">
-          <div className="flex h-[68px] items-center justify-between gap-2 sm:h-[76px] sm:gap-4">
-            <a href="#top" className="flex shrink-0 items-center gap-1.5 sm:gap-3" aria-label="PLANETAI marketplace home">
-              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#183c32] text-white sm:h-10 sm:w-10"><PlanetAILogo className="h-8 w-8 sm:h-9 sm:w-9"/></span>
-              <span className="leading-tight"><span className="block whitespace-nowrap text-[14px] font-extrabold tracking-[-0.06em] sm:text-[17px]">PLANET<span className="text-[#39836a]">AI</span></span><span className="hidden truncate text-[9px] font-semibold uppercase tracking-[.2em] text-[#829089] sm:block">Global careers, with clarity</span></span>
-            </a>
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-              <button type="button" onClick={onShareApp} className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] shadow-sm transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11" aria-label={copied ? "PLANETAI link copied" : "Share PLANETAI"} title={copied ? "Copied!" : "Share PLANETAI"}>{copied ? <Check size={14} className="text-emerald-500"/> : <Share2 size={14}/>}</button>
-              <button onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1 whitespace-nowrap rounded-full bg-[#183c32] px-2.5 py-2 text-[10px] font-bold text-white shadow-sm transition hover:bg-[#285c4b] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:min-h-11 sm:gap-1.5 sm:px-5 sm:py-3 sm:text-xs">Post a job <ArrowUpRight className="inline" size={13}/></button>
-              <button
-                type="button"
-                onClick={() => setMenuOpen(value => !value)}
-                aria-label={menuOpen ? "Close main menu" : "Open main menu"}
-                aria-expanded={menuOpen}
-                aria-controls="planetai-main-menu"
-                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#dce5dc] bg-white text-[#40534a] transition hover:border-[#a9bcae] hover:bg-[#f4f6f2] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#71917b] sm:h-11 sm:w-11"
-              >
-                {menuOpen ? <X size={19}/> : <Menu size={19}/>}
-              </button>
-            </div>
-          </div>
-          {menuOpen && (
-            <nav
-              id="planetai-main-menu"
-              aria-label="Main navigation"
-              onKeyDown={event => { if (event.key === 'Escape') setMenuOpen(false); }}
-              className="absolute right-5 top-[calc(100%-0.25rem)] z-50 max-h-[calc(100vh-110px)] w-[min(92vw,420px)] overflow-y-auto rounded-2xl border border-[#e2e8e1] bg-white p-4 shadow-[0_24px_70px_rgba(20,44,38,.18)] sm:right-8 sm:p-5"
-            >
-              <div className="grid gap-5 sm:grid-cols-2 sm:gap-x-6">
-                <section>
-                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">Explore</p>
-                  <div className="flex flex-col gap-1">
-                    <a href="#opportunities" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Find opportunities</a>
-                    <a href="#how-it-works" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">How it works</a>
-                    <button onClick={() => { setMenuOpen(false); onOpenWorkspace('ai-tools'); }} className="rounded-xl px-3 py-2.5 text-left text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Career tools</button>
-                  </div>
-                </section>
-                <section>
-                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For candidates</p>
-                  <p className="px-3 py-2.5 text-[11px] leading-5 text-slate-400">Browse opportunities and save roles locally. No candidate account or signup required.</p>
-                </section>
-                <section>
-                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For employers</p>
-                  <div className="flex flex-col gap-1">
-                    <a href="#employers" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Employer information</a>
-                    <a href="/?experience=employer-auth&mode=signin" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Employer sign in</a>
-                  </div>
-                </section>
-                <section>
-                  <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">App installation</p>
-                  <div className="px-2">
-                    <PWAInstallButton />
-                  </div>
-                </section>
-              </div>
-            </nav>
-          )}
+      <header className="sticky top-0 z-40 border-b border-white/[0.08] bg-[#070b14]/95 backdrop-blur-xl">
+        <div className="mx-auto flex h-[60px] max-w-[1320px] items-center justify-between gap-3 px-4">
+          <a href="#top" className="flex min-w-0 items-center gap-2.5" aria-label="PLANETAI marketplace home">
+            <span className="relative grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-300/20 bg-cyan-400/[0.08] shadow-[0_0_24px_rgba(34,211,238,.18)]"><span className="absolute inset-0 rounded-xl bg-cyan-300/10 blur-md"/><PlanetAILogo className="relative h-8 w-8"/></span>
+            <span className="whitespace-nowrap text-[16px] font-extrabold tracking-[-.055em] text-white">PLANET<span className="text-cyan-300">AI</span></span>
+          </a>
+          <button type="button" onClick={onPostJob} className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 py-2 text-[11px] font-bold text-white shadow-[0_8px_24px_rgba(79,70,229,.25)] transition hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">Post a job <ArrowUpRight size={13}/></button>
         </div>
       </header>
 
-      <section className="mx-auto my-2 w-full max-w-[1320px] px-5 sm:px-8">
-        <div
-          role="region"
-          aria-label="Companies with opportunities on PLANETAI"
-          className="h-[42px] overflow-hidden rounded-xl border border-white/10 bg-[#10182a]/90 text-white shadow-[0_8px_24px_rgba(0,0,0,.16)]"
-        >
-          <p className="sr-only">Explore companies represented in current PLANETAI job listings.</p>
-          <div className="flex h-[42px] items-center gap-3 px-3 sm:gap-5 sm:px-5">
-            <span className="shrink-0 text-[8px] font-bold uppercase tracking-[.16em] text-slate-400 sm:text-[9px]">Companies</span>
-            <div className="marquee-container marquee-fade-mask min-w-0 flex-1 overflow-hidden">
-              <div className="marquee-track items-center gap-3 sm:gap-4">
-                <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'a-' + job.company} job={job}/>)}</div>
-                <div className="flex shrink-0 items-center gap-3 pr-3 sm:gap-4 sm:pr-4" aria-hidden="true">{marqueeCompanies.map(job => <MarqueeCompanyLogo key={'b-' + job.company} job={job}/>)}</div>
-              </div>
-            </div>
+      <section role="region" aria-label="Featured companies" className="h-10 overflow-hidden border-y border-white/[0.08] bg-[#070b14]">
+        <p className="sr-only">Companies represented on PLANETAI: Mercor, micro1, Outlier, Scale AI, Alignerr and Appen.</p>
+        <div className="marquee-container h-10 overflow-hidden">
+          <div className="marquee-track flex h-10 items-center gap-6">
+            <div className="flex shrink-0 items-center gap-6 pr-6">{marqueeCompanies.map(item => <MarqueeCompanyLogo key={'a-' + item.company} company={item.company} job={item.job}/>)}</div>
+            <div className="flex shrink-0 items-center gap-6 pr-6" aria-hidden="true">{marqueeCompanies.map(item => <MarqueeCompanyLogo key={'b-' + item.company} company={item.company} job={item.job}/>)}</div>
           </div>
         </div>
       </section>
