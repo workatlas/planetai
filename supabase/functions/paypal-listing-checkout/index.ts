@@ -43,6 +43,24 @@ async function paypalRequest(path: string, token: string, method: string, body?:
   return data;
 }
 
+
+type PayPalOrderLink = { rel?: unknown; href?: unknown };
+function getPayPalApprovalUrl(order: { links?: PayPalOrderLink[] }): string | null {
+  const links = Array.isArray(order.links) ? order.links : [];
+  // Orders created with payment_source.paypal may return payer-action.
+  // Retain approve as a compatibility fallback for older PayPal flows.
+  const selected = links.find((link) => link.rel === "payer-action")
+    ?? links.find((link) => link.rel === "approve");
+  if (!selected || typeof selected.href !== "string") return null;
+  try {
+    const url = new URL(selected.href);
+    if (url.protocol !== "https:" || !/(^|\\.)paypal\\.com$/i.test(url.hostname)) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (!isAllowedOrigin(req)) return new Response("Origin not allowed.", { status: 403, headers: corsHeadersFor(req) });
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeadersFor(req) });
@@ -263,7 +281,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
           ? json({ paid: true, published: true, spotlight_scheduled: isSpotlight, already_completed: true, capture_id: verifiedCapture.id })
           : json({ paid: true, publication_pending: true, already_completed: true, capture_id: verifiedCapture.id, error: "Payment is verified. Publication still needs attention." }, 202);
       }
-      const approveUrl = savedOrder.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
+      const approveUrl = getPayPalApprovalUrl(savedOrder);
       if (!approveUrl) return json({ error: "The existing PayPal order is no longer available. Contact support before creating another payment." }, 409);
       return json({ order_id: existing.provider_order_id, amount, currency: "USD", approve_url: approveUrl });
     }
@@ -307,7 +325,7 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
         return json({ error: "The payment order was created but could not be recorded. Contact support before retrying." }, 500);
       }
     }
-    const approveUrl = order.links?.find((link: { rel: string }) => link.rel === "approve")?.href;
+    const approveUrl = getPayPalApprovalUrl(order);
     if (!approveUrl) return json({ error: "PayPal did not return an approval link. Contact support before retrying." }, 502);
     return json({ order_id: order.id, amount, currency: "USD", approve_url: approveUrl });
   }
