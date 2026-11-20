@@ -221,7 +221,7 @@ export default function PremiumMarketplacePreview({
         </div>
       </header>
 
-      <section className="mx-auto my-4 w-full max-w-[1320px] px-5 sm:px-8">
+      <section className="mx-auto my-2 w-full max-w-[1320px] px-5 sm:px-8">
         <div
           role="region"
           aria-label="Companies with opportunities on PLANETAI"
@@ -243,23 +243,23 @@ export default function PremiumMarketplacePreview({
         <section className="relative overflow-hidden bg-[#e9eee8]">
           <div className="pointer-events-none absolute -right-28 -top-40 h-[560px] w-[560px] rounded-full border border-[#d3ddd3] opacity-70"/>
           <div className="pointer-events-none absolute -right-8 top-10 h-[390px] w-[390px] rounded-full border border-[#d3ddd3] opacity-70"/>
-          <div className="mx-auto grid max-w-[1320px] items-center gap-5 px-4 pb-6 pt-[18px] sm:gap-12 sm:px-8 sm:pb-24 sm:pt-24 lg:grid-cols-[1.12fr_.88fr] lg:gap-16">
+          <div className="mx-auto grid max-w-[1320px] items-center gap-5 px-4 pb-[18px] pt-[18px] min-[769px]:gap-12 min-[769px]:px-8 min-[769px]:pb-24 min-[769px]:pt-24 lg:grid-cols-[1.12fr_.88fr] lg:gap-16">
             <div className="relative z-10 max-w-[720px]">
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[9px] font-bold uppercase tracking-[.17em] text-cyan-200 sm:mb-7 sm:py-2 sm:text-[10px]"><span className="h-1.5 w-1.5 rounded-full bg-[#4e9476]"/> PLANETAI · GLOBAL CAREERS</div>
-              <h1 className="max-w-[700px] text-[clamp(2.05rem,8vw,5.9rem)] font-semibold leading-[1.02] tracking-[-.075em] text-white">Find work that moves <span className="font-serif font-normal italic text-cyan-300">you forward.</span></h1>
+              <h1 className="max-w-[700px] text-[clamp(2.05rem,8vw,5.9rem)] max-[768px]:text-[clamp(2.05rem,6vw,3rem)] font-semibold leading-[1.02] tracking-[-.075em] text-white">Find work that moves <span className="font-serif font-normal italic text-cyan-300">you forward.</span></h1>
               <p className="mt-3 max-w-[520px] text-[12px] leading-5 text-slate-400 sm:mt-7 sm:text-[17px] sm:leading-7">Discover opportunities from companies around the world. Clear details, transparent expectations and a direct path to apply.</p>
               <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-9 sm:gap-4">
                 <a href="#opportunity-filters" onClick={(event) => { event.preventDefault(); document.getElementById("opportunity-filters")?.scrollIntoView({behavior:"smooth", block:"start"}); }} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-gradient-to-r from-[#06b6d4] to-[#6366f1] px-5 py-3 text-[11px] font-extrabold text-white shadow-lg shadow-cyan-950/30 transition hover:-translate-y-0.5 sm:min-h-12 sm:px-6 sm:text-[13px]">Explore Live Roles ↓</a>
                 <span className="text-[10px] font-semibold text-slate-400 sm:text-[11px]"><ShieldCheck className="mr-1 inline text-cyan-300" size={15}/> Browse without signup</span>
               </div>
-              <div className="mt-4 hidden flex-wrap gap-x-8 gap-y-3 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-400 sm:mt-12 sm:flex sm:pt-6"><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Direct employer applications</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Clear job information</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Browse freely</span></div>
+              <div className="mt-4 hidden flex-wrap gap-x-8 gap-y-3 border-t border-white/10 pt-5 text-[11px] font-semibold text-slate-400 min-[769px]:mt-12 min-[769px]:flex min-[769px]:pt-6"><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Direct employer applications</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Clear job information</span><span><Check className="mr-1.5 inline text-[#4e9476]" size={14}/> Browse freely</span></div>
             </div>
             <div className="relative mx-auto w-full max-w-[480px]">
               <div className="absolute -inset-5 rounded-[2.5rem] bg-emerald-500/10 blur-2xl"/>
-              <div className="relative rounded-2xl border border-emerald-400/35 bg-[linear-gradient(160deg,rgba(26,34,58,.88)_0%,rgba(13,18,34,.98)_100%)] p-[18px] shadow-[0_24px_70px_rgba(0,0,0,.3)] sm:p-6">
+              <div className="relative rounded-2xl border border-emerald-400/35 bg-[linear-gradient(160deg,rgba(26,34,58,.88)_0%,rgba(13,18,34,.98)_100%)] p-[18px] shadow-[0_24px_70px_rgba(0,0,0,.3)] min-[769px]:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-2"><p className="text-[9px] font-extrabold uppercase tracking-[.16em] text-emerald-300">Opportunity Spotlight</p><span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[9px] font-bold text-emerald-200">{spotlight?.verified ? "Verified • No Signup" : "Open access • No Signup"}</span></div>
                 {spotlight ? <button onClick={() => onOpenJob(spotlight)} className="mt-3 block w-full rounded-xl bg-white/[0.04] p-3 text-left transition hover:bg-white/[0.07]">
-                  <div className="flex items-center gap-3"><CompanyLogo company={spotlight.company} short={spotlight.companyShort} explicitLogoUrl={spotlight.companyLogoUrl} websiteOrApplyUrl={spotlight.companyWebsite || spotlight.applyUrl} size="lg" lazy={false}/><div className="min-w-0 flex-1"><p className="text-[15px] font-extrabold leading-tight text-white sm:text-xl">{spotlight.title}</p><p className="mt-1 text-[10px] text-slate-400 sm:text-xs">{spotlight.company} • {spotlight.location} • {spotlight.workType}</p></div></div>
+                  <div className="flex items-center gap-3"><CompanyLogo company={spotlight.company} short={spotlight.companyShort} explicitLogoUrl={spotlight.companyLogoUrl} websiteOrApplyUrl={spotlight.companyWebsite || spotlight.applyUrl} size="lg" lazy={false}/><div className="min-w-0 flex-1"><p className="text-[15px] font-extrabold leading-tight text-white min-[769px]:text-xl">{spotlight.title}</p><p className="mt-1 text-[10px] text-slate-400 sm:text-xs">{spotlight.company} • {spotlight.location} • {spotlight.workType}</p></div></div>
                   <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.category}</span><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.workType}</span></div>
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3"><span className={`rounded-full border px-3 py-1.5 text-[11px] font-extrabold ${formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) === "Salary not disclosed" ? "border-slate-700 bg-slate-800/60 text-slate-500" : "border-emerald-400/35 bg-emerald-400/15 text-emerald-300"}`}>{formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit)}</span><span className="text-[9px] font-bold text-cyan-300">VIEW ROLE ↗</span></div>
                 </button> : <div className="mt-6 rounded-2xl bg-[#f4f6f2] p-8 text-center text-sm text-[#77847b]">New opportunities are on the way.</div>}
@@ -270,7 +270,7 @@ export default function PremiumMarketplacePreview({
           </div>
         </section>
 
-        <section id="opportunities" className="mx-auto max-w-[1320px] px-4 py-8 sm:px-8 sm:py-24">
+        <section id="opportunities" className="mx-auto max-w-[1320px] px-4 py-8 sm:px-8 min-[769px]:py-24">
           <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
             <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">The opportunity board</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Work worth exploring.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77847b]">Search curated and employer-published roles by skill, company or location.</p></div>
             <div className="flex flex-wrap items-center gap-3">
@@ -284,7 +284,7 @@ export default function PremiumMarketplacePreview({
               </div>
             </div>
           </div>
-          <div id="opportunity-filters" className="mt-5 scroll-mt-24 rounded-2xl border border-white/10 bg-[#0b1220]/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,.24)] backdrop-blur-xl sm:sticky sm:top-[76px] sm:z-30 sm:mt-9 sm:flex sm:items-center sm:gap-3 sm:p-4">
+          <div id="opportunity-filters" className="mt-5 scroll-mt-24 rounded-2xl border border-white/10 bg-[#0b1220]/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,.24)] backdrop-blur-xl min-[769px]:sticky min-[769px]:top-[76px] min-[769px]:z-30 min-[769px]:mt-9 min-[769px]:flex min-[769px]:items-center min-[769px]:gap-3 min-[769px]:p-4">
             <div className="flex min-h-12 min-w-0 flex-1 items-center gap-3 px-2"><Search size={18} className="shrink-0 text-[#839087]"/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Job title, skill or company" aria-label="Search opportunities" className="w-full min-w-0 bg-transparent text-sm text-[#25372e] outline-none placeholder:text-[#a2aca5]"/></div>
             <div className="flex items-center gap-2 border-t border-[#edf0ec] pt-3 sm:border-0 sm:pt-0">
               <label htmlFor="opportunity-sort" className="shrink-0 text-[10px] font-bold text-[#718077] sm:hidden">Sort by</label>
@@ -292,10 +292,10 @@ export default function PremiumMarketplacePreview({
               <button className="min-h-11 shrink-0 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#285c4b] sm:px-5" onClick={() => document.getElementById('role-list')?.scrollIntoView({behavior:'smooth'})}>Search</button>
             </div>
           </div>
-          <div className="no-scrollbar sticky top-[68px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/10 bg-[#070b14]/90 px-4 py-3 backdrop-blur-xl sm:top-[76px] sm:mx-0 sm:mt-6 sm:border-0 sm:bg-[#070b14]/90 sm:px-0 sm:py-2">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/25 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
+          <div className="no-scrollbar sticky top-[68px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/10 bg-[#070b14]/90 px-4 py-3 backdrop-blur-xl min-[769px]:top-[136px] min-[769px]:mx-0 min-[769px]:mt-6 min-[769px]:border-0 min-[769px]:bg-[#070b14]/90 min-[769px]:px-0 min-[769px]:py-2">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/25 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4">{JOB_CATEGORIES.filter(item => item !== 'All').map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
-          <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] md:grid-cols-2 xl:grid-cols-3">
+          <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] min-[769px]:grid-cols-2 xl:grid-cols-3">
              {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="md:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
            </div>
            {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-white px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
