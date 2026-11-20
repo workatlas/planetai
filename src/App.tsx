@@ -33,7 +33,8 @@ import {
   AIToolsView,
   RequestedAITool,
   TailoredResumeDraft,
-} from './components/AIToolsView';\nimport {CareerWorkspaceHub} from './components/CareerWorkspaceHub';
+} from './components/AIToolsView';
+import {CareerWorkspaceHub} from './components/CareerWorkspaceHub';
 import {AppReadinessView} from './components/AppReadinessView';
 import {AppTab, Header} from './components/Header';
 import {
