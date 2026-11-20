@@ -54,7 +54,7 @@ function getPayPalApprovalUrl(order: { links?: PayPalOrderLink[] }): string | nu
   if (!selected || typeof selected.href !== "string") return null;
   try {
     const url = new URL(selected.href);
-    if (url.protocol !== "https:" || !/(^|\\.)paypal\\.com$/i.test(url.hostname)) return null;
+    if (url.protocol !== "https:" || !/(^|\.)paypal\.com$/i.test(url.hostname)) return null;
     return url.toString();
   } catch {
     return null;
