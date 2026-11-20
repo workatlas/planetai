@@ -88,7 +88,7 @@ export default function PremiumMarketplacePreview({
   const filtered = useMemo(() => {
     const matches = baseFiltered.filter(job => {
       if (quickFilter === 'Saved') return savedIds.includes(job.id);
-      if (quickFilter === 'Paid Only') return formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed';
+      if (quickFilter === 'Paid Only') return Boolean(job.isCustomEmployerPost) && formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed';
       if (quickFilter === 'Coding' || quickFilter === 'AI Training') return job.category === quickFilter;
       if (quickFilter === 'Remote') return job.category === 'Remote' || /remote|worldwide/i.test(`${job.location} ${job.workType}`);
       return true;
@@ -101,7 +101,7 @@ export default function PremiumMarketplacePreview({
 
   const quickFilterCounts = useMemo(() => ({
     All: baseFiltered.length,
-    'Paid Only': baseFiltered.filter(job => formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed').length,
+    'Paid Only': baseFiltered.filter(job => Boolean(job.isCustomEmployerPost) && formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) !== 'Salary not disclosed').length,
     Saved: baseFiltered.filter(job => savedIds.includes(job.id)).length,
     Coding: baseFiltered.filter(job => job.category === 'Coding').length,
     'AI Training': baseFiltered.filter(job => job.category === 'AI Training').length,
@@ -262,7 +262,7 @@ export default function PremiumMarketplacePreview({
                 {spotlight ? <button onClick={() => onOpenJob(spotlight)} className="mt-3 block w-full rounded-xl bg-white/[0.04] p-3 text-left transition hover:bg-white/[0.07]">
                   <div className="flex items-center gap-3"><CompanyLogo company={spotlight.company} short={spotlight.companyShort} explicitLogoUrl={spotlight.companyLogoUrl} websiteOrApplyUrl={spotlight.companyWebsite || spotlight.applyUrl} size="lg" lazy={false}/><div className="min-w-0 flex-1"><p className="text-[15px] font-extrabold leading-tight text-white min-[769px]:text-xl">{spotlight.title}</p><p className="mt-1 text-[10px] text-slate-400 sm:text-xs">{spotlight.company} • {spotlight.location} • {spotlight.workType}</p></div></div>
                   <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.category}</span><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.workType}</span></div>
-                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3"><span className={`rounded-full border px-3 py-1.5 text-[11px] font-extrabold ${formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) === "Salary not disclosed" ? "border-slate-700 bg-slate-800/60 text-slate-500" : "border-emerald-400/35 bg-emerald-400/15 text-emerald-300"}`}>{formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit)}</span><span className="text-[9px] font-bold text-cyan-300">VIEW ROLE ↗</span></div>
+                  <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3"><span className={`rounded-full border px-3 py-1.5 text-[11px] font-extrabold ${!spotlight.isCustomEmployerPost || formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) === "Salary not disclosed" ? "border-slate-700 bg-slate-800/60 text-slate-400" : "border-emerald-400/35 bg-emerald-400/15 text-emerald-300"}`}>{spotlight.isCustomEmployerPost ? formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) : "Pay not listed — check employer"}</span><span className="text-[9px] font-bold text-cyan-300">VIEW ROLE ↗</span></div>
                 </button> : <div className="mt-6 rounded-2xl bg-[#f4f6f2] p-8 text-center text-sm text-[#77847b]">New opportunities are on the way.</div>}
                 <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Opportunities</p><p className="mt-1 text-[10px] font-bold text-slate-200">{visibleJobs.length} to explore</p></div><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Access</p><p className="mt-1 text-[10px] font-bold text-slate-200">No candidate signup</p></div></div>
               </div>
