@@ -8,6 +8,16 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 });
 const slugify = (value: string) => value.toLowerCase().normalize("NFKD")
   .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 70) || "job";
+const validPublicUrl = (value: unknown) => {
+  if (typeof value !== "string" || !value.trim()) return false;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\\./, "");
+    return url.protocol === "https:" &&
+      !["test.com", "example.com", "example.org", "example.net", "localhost"].includes(host) &&
+      !host.endsWith(".invalid") && !host.endsWith(".example");
+  } catch { return false; }
+};
 
 const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   if (!isAllowedOrigin(req)) return new Response("Origin not allowed.", { status: 403, headers: corsHeadersFor(req) });
@@ -84,6 +94,16 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
       details: { notes },
     });
     return json({ submission: updated });
+  }
+
+  if (decision === "approve") {
+    const issues: string[] = [];
+    if (typeof submission.description !== "string" || submission.description.trim().length < 80) issues.push("a complete role overview (at least 80 characters)");
+    const requirements = Array.isArray(submission.requirements) ? submission.requirements.filter((item: unknown) => typeof item === "string" && item.trim().length >= 8) : [];
+    if (requirements.length < 2) issues.push("at least two specific qualifications or setup requirements");
+    if (!validPublicUrl(submission.apply_url)) issues.push("a valid official HTTPS application URL (not a placeholder)");
+    if (submission.company_website && !validPublicUrl(submission.company_website)) issues.push("a valid HTTPS company website");
+    if (issues.length) return json({ error: `This listing needs improvement before approval: ${issues.join(", ")}.` }, 422);
   }
 
   if (submission.package_tier !== "standard" && submission.package_tier !== "featured") {
