@@ -43,6 +43,7 @@ export interface RequestedAITool {
   company?: string;
   skills?: string;
   description?: string;
+  resumeMode?: 'resume' | 'cover';
 }
 
 interface AIToolsViewProps {
@@ -726,6 +727,7 @@ export const AIToolsView: React.FC<AIToolsViewProps> = ({
           jobDescInput={jobDescInput}
           setJobDescInput={setJobDescInput}
           tailoredNotice={tailoredNotice}
+          initialTab={requestedTool?.resumeMode}
         />
       )}
 
