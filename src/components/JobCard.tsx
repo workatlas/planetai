@@ -244,7 +244,7 @@ export const JobCard: React.FC<JobCardProps> = ({
               company={job.company}
               short={job.companyShort}
               explicitLogoUrl={job.companyLogoUrl}
-              websiteOrApplyUrl={job.companyWebsite || job.applyUrl}
+              websiteOrApplyUrl={isCustomPost ? undefined : job.companyWebsite || job.applyUrl}
               size="md"
               shouldLoad={isInViewport}
             />
