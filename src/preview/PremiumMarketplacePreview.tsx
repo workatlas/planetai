@@ -114,7 +114,10 @@ export default function PremiumMarketplacePreview({
     const priorityOrderedJobs = [...visibleJobs].sort(
       (a, b) => Number(Boolean(b.marqueeSpotlight)) - Number(Boolean(a.marqueeSpotlight))
     );
-    return priorityOrderedJobs.filter(job => {
+    const preferred = ['Mercor', 'micro1', 'Outlier', 'Scale AI', 'Alignerr', 'Appen']
+      .map(name => priorityOrderedJobs.find(job => job.company.trim().toLowerCase() === name.toLowerCase()))
+      .filter((job): job is JobListing => Boolean(job));
+    return [...preferred, ...priorityOrderedJobs].filter(job => {
       const key = job.company.trim().toLowerCase();
       if (!key || seen.has(key)) return false;
       seen.add(key);
@@ -198,10 +201,7 @@ export default function PremiumMarketplacePreview({
                 </section>
                 <section>
                   <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For candidates</p>
-                  <div className="flex flex-col gap-1">
-                    <a href="/?experience=job-seeker-auth&mode=signin" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Candidate sign in</a>
-                    <a href="/?experience=job-seeker-auth&mode=signup" onClick={() => setMenuOpen(false)} className="rounded-xl px-3 py-2.5 text-[12px] font-semibold text-[#40534a] transition hover:bg-[#f1f5ef] hover:text-[#183c32]">Create free account</a>
-                  </div>
+                  <p className="px-3 py-2.5 text-[11px] leading-5 text-slate-400">Browse opportunities and save roles locally. No candidate account or signup required.</p>
                 </section>
                 <section>
                   <p className="mb-2 px-2 text-[9px] font-bold uppercase tracking-[.18em] text-[#8a978e]">For employers</p>
