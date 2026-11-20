@@ -20,9 +20,9 @@ const categoryTone = (category: string) => {
 export const CompanyRevealCard: React.FC<CompanyRevealCardProps> = ({
   job, isSaved, onToggleSave, onOpenJob,
 }) => {
-  const pay = formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit);
-  const hasPay = pay !== 'Salary not disclosed';
   const isCustomPost = Boolean(job.isCustomEmployerPost || job.id.startsWith('custom-'));
+  const pay = isCustomPost ? formatPayRate(job.payMinUsd, job.payMaxUsd, job.payUnit) : 'Pay not listed — check employer';
+  const hasPay = isCustomPost && pay !== 'Salary not disclosed';
   const applyUrl = isCustomPost ? job.applyUrl : resolveApplyUrl(job.company, job.applyUrl);
 
   return (
