@@ -75,14 +75,15 @@ export default function PremiumMarketplacePreview({
   const [sort, setSort] = useState('recommended');
   const [menuOpen, setMenuOpen] = useState(false);
   const [quickFilter, setQuickFilter] = useState<'All' | 'Paid Only' | 'Saved' | 'Coding' | 'AI Training' | 'Remote'>('All');
+  const visibleJobs = useMemo(() => jobs.filter(job => !(job.isCustomEmployerPost && job.title.trim().toLowerCase() === 'planetai test')), [jobs]);
 
   const baseFiltered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return jobs.filter(job =>
+    return visibleJobs.filter(job =>
       (category === 'All' || job.category === category) &&
       (!q || [job.title, job.company, job.category, job.location, job.description, ...job.tags].join(' ').toLowerCase().includes(q))
     );
-  }, [jobs, query, category]);
+  }, [visibleJobs, query, category]);
 
   const filtered = useMemo(() => {
     const matches = baseFiltered.filter(job => {
@@ -107,10 +108,10 @@ export default function PremiumMarketplacePreview({
     Remote: baseFiltered.filter(job => job.category === 'Remote' || /remote|worldwide/i.test(`${job.location} ${job.workType}`)).length,
   }), [baseFiltered, savedIds]);
 
-  const spotlight = jobs.find(job => job.featured) || jobs[0] || null;
+  const spotlight = visibleJobs.find(job => job.featured && !job.isCustomEmployerPost) || visibleJobs.find(job => job.featured && job.verified) || visibleJobs.find(job => !job.isCustomEmployerPost && job.company.trim().toLowerCase() === 'mercor') || visibleJobs.find(job => !job.isCustomEmployerPost) || visibleJobs[0] || null;
   const marqueeCompanies = useMemo(() => {
     const seen = new Set<string>();
-    const priorityOrderedJobs = [...jobs].sort(
+    const priorityOrderedJobs = [...visibleJobs].sort(
       (a, b) => Number(Boolean(b.marqueeSpotlight)) - Number(Boolean(a.marqueeSpotlight))
     );
     return priorityOrderedJobs.filter(job => {
@@ -119,7 +120,7 @@ export default function PremiumMarketplacePreview({
       seen.add(key);
       return true;
     }).slice(0, 12);
-  }, [jobs]);
+  }, [visibleJobs]);
 
   if (showCareerTools) {
     return (
@@ -263,7 +264,7 @@ export default function PremiumMarketplacePreview({
                   <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.category}</span><span className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[9px] font-semibold text-slate-300">{spotlight.workType}</span></div>
                   <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/10 pt-3"><span className={`rounded-full border px-3 py-1.5 text-[11px] font-extrabold ${formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit) === "Salary not disclosed" ? "border-slate-700 bg-slate-800/60 text-slate-500" : "border-emerald-400/35 bg-emerald-400/15 text-emerald-300"}`}>{formatPayRate(spotlight.payMinUsd, spotlight.payMaxUsd, spotlight.payUnit)}</span><span className="text-[9px] font-bold text-cyan-300">VIEW ROLE ↗</span></div>
                 </button> : <div className="mt-6 rounded-2xl bg-[#f4f6f2] p-8 text-center text-sm text-[#77847b]">New opportunities are on the way.</div>}
-                <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Opportunities</p><p className="mt-1 text-[10px] font-bold text-slate-200">{jobs.length} to explore</p></div><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Access</p><p className="mt-1 text-[10px] font-bold text-slate-200">No candidate signup</p></div></div>
+                <div className="mt-3 grid grid-cols-2 gap-2"><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Opportunities</p><p className="mt-1 text-[10px] font-bold text-slate-200">{visibleJobs.length} to explore</p></div><div className="rounded-lg border border-white/10 bg-white/[0.025] p-2.5"><p className="text-[8px] font-bold uppercase tracking-wider text-slate-500">Access</p><p className="mt-1 text-[10px] font-bold text-slate-200">No candidate signup</p></div></div>
               </div>
               
             </div>
@@ -296,7 +297,7 @@ export default function PremiumMarketplacePreview({
            <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4">{JOB_CATEGORIES.filter(item => item !== 'All').map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
           <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] min-[769px]:grid-cols-2 xl:grid-cols-3">
-             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="md:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
+             {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="min-[769px]:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
            </div>
            {filtered.length === 0 && <div className="mt-5 rounded-2xl border border-white/10 bg-[#111b30]/80 p-10 text-center shadow-xl"><Search className="mx-auto text-slate-500"/><p className="mt-3 font-bold text-white">No matching opportunities</p><p className="mt-1 text-xs text-slate-400">Try a different search or category.</p><button type="button" onClick={() => { setQuickFilter('All'); setCategory('All'); setQuery(''); }} className="mt-5 rounded-full bg-white px-5 py-2.5 text-xs font-extrabold text-[#070b14] transition hover:bg-cyan-100">Reset Filters</button></div>}
         </section>
