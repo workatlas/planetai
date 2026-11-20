@@ -1,8 +1,8 @@
 import React, {useMemo, useState} from 'react';
 import type {ReactNode} from 'react';
 import {
-  ArrowRight, ArrowUpRight, Check, Menu, RefreshCw, Share2,
-  Search, ShieldCheck, X,
+  ArrowRight, ArrowUpRight, Check, RefreshCw, Share2,
+  Search, ShieldCheck,
 } from 'lucide-react';
 import {formatPayRate, JOB_CATEGORIES} from '../data/jobs';
 import type {JobCategory, JobListing} from '../data/jobs';
@@ -73,7 +73,6 @@ export default function PremiumMarketplacePreview({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<JobCategory>('All');
   const [sort, setSort] = useState('recommended');
-  const [menuOpen, setMenuOpen] = useState(false);
   const [quickFilter, setQuickFilter] = useState<'All' | 'Paid Only' | 'Saved' | 'Coding' | 'AI Training' | 'Remote'>('All');
   const visibleJobs = useMemo(() => jobs.filter(job => !(job.isCustomEmployerPost && job.title.trim().toLowerCase() === 'planetai test')), [jobs]);
 
@@ -217,8 +216,8 @@ export default function PremiumMarketplacePreview({
           </div>
         </section>
 
-        <section id="opportunities" className="mx-auto max-w-[1320px] px-4 py-8 sm:px-8 min-[769px]:py-24">
-          <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+        <section id="opportunities" className="mx-auto max-w-[1320px] px-4 pb-12 pt-5 sm:px-8 min-[769px]:py-20">
+          <div className="flex flex-col justify-between gap-3 min-[769px]:flex-row min-[769px]:items-end">
             <div><p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">The opportunity board</p><h2 className="mt-3 text-3xl font-semibold tracking-[-.055em] text-[#1b3027] sm:text-4xl">Work worth exploring.</h2><p className="mt-3 max-w-xl text-sm leading-6 text-[#77847b]">Search curated and employer-published roles by skill, company or location.</p></div>
             <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2 text-[11px] font-semibold text-[#718077]"><ShieldCheck size={16} className="text-[#58816b]"/> Employer listings are reviewed before publication</div>
@@ -231,16 +230,16 @@ export default function PremiumMarketplacePreview({
               </div>
             </div>
           </div>
-          <div id="opportunity-filters" className="mt-5 scroll-mt-24 rounded-2xl border border-white/10 bg-[#0b1220]/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,.24)] backdrop-blur-xl min-[769px]:sticky min-[769px]:top-[76px] min-[769px]:z-30 min-[769px]:mt-9 min-[769px]:flex min-[769px]:items-center min-[769px]:gap-3 min-[769px]:p-4">
-            <div className="flex min-h-12 min-w-0 flex-1 items-center gap-3 px-2"><Search size={18} className="shrink-0 text-[#839087]"/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Job title, skill or company" aria-label="Search opportunities" className="w-full min-w-0 bg-transparent text-sm text-[#25372e] outline-none placeholder:text-[#a2aca5]"/></div>
-            <div className="flex items-center gap-2 border-t border-[#edf0ec] pt-3 sm:border-0 sm:pt-0">
-              <label htmlFor="opportunity-sort" className="shrink-0 text-[10px] font-bold text-[#718077] sm:hidden">Sort by</label>
-              <select id="opportunity-sort" value={sort} onChange={e => setSort(e.target.value)} aria-label="Sort opportunities" className="min-h-11 min-w-0 flex-1 rounded-xl border border-[#dce5dc] bg-[#f7f9f6] px-3 text-xs font-bold text-[#344a3d] outline-none transition focus:border-[#71917b] focus:ring-2 focus:ring-[#71917b]/20 sm:flex-none sm:min-w-[156px]"><option value="recommended">Recommended</option><option value="newest">Featured first</option><option value="pay">Highest pay</option><option value="company">Company A–Z</option></select>
-              <button className="min-h-11 shrink-0 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white transition hover:bg-[#285c4b] sm:px-5" onClick={() => document.getElementById('role-list')?.scrollIntoView({behavior:'smooth'})}>Search</button>
+          <div id="opportunity-filters" className="mt-4 scroll-mt-[76px] rounded-2xl border border-white/10 bg-[#0b1220]/90 p-3 shadow-[0_12px_40px_rgba(0,0,0,.24)] backdrop-blur-xl min-[769px]:mt-7 min-[769px]:flex min-[769px]:items-center min-[769px]:gap-3 min-[769px]:p-4">
+            <div className="flex min-h-10 min-w-0 flex-1 items-center gap-3 px-2"><Search size={17} className="shrink-0 text-slate-500"/><input value={query} onChange={e => setQuery(e.target.value)} placeholder="Job title, skill or company" aria-label="Search opportunities" className="w-full min-w-0 bg-transparent text-sm text-slate-100 outline-none placeholder:text-slate-500"/></div>
+            <div className="flex items-center gap-2 border-t border-white/10 pt-3 min-[769px]:border-0 min-[769px]:pt-0">
+              <label htmlFor="opportunity-sort" className="shrink-0 text-[10px] font-bold text-slate-500 min-[769px]:hidden">Sort by</label>
+              <select id="opportunity-sort" value={sort} onChange={e => setSort(e.target.value)} aria-label="Sort opportunities" className="min-h-10 min-w-0 flex-1 rounded-xl border border-white/10 bg-slate-900 px-3 text-xs font-bold text-slate-200 outline-none transition focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/10 min-[769px]:flex-none min-[769px]:min-w-[156px]"><option value="recommended">Recommended</option><option value="newest">Featured first</option><option value="pay">Highest pay</option><option value="company">Company A–Z</option></select>
+              <button className="min-h-10 shrink-0 rounded-xl bg-indigo-600 px-4 py-2.5 text-xs font-bold text-white transition hover:bg-indigo-500 min-[769px]:px-5" onClick={() => document.getElementById('role-list')?.scrollIntoView({behavior:'smooth'})}>Search</button>
             </div>
           </div>
-          <div className="no-scrollbar sticky top-[68px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/10 bg-[#070b14]/90 px-4 py-3 backdrop-blur-xl min-[769px]:top-[136px] min-[769px]:mx-0 min-[769px]:mt-6 min-[769px]:border-0 min-[769px]:bg-[#070b14]/90 min-[769px]:px-0 min-[769px]:py-2">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-white/10 bg-white/[0.04] text-slate-400 hover:border-white/25 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
-           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 sm:mt-4">{JOB_CATEGORIES.filter(item => !['All', 'Coding', 'AI Training', 'Remote'].includes(item)).map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
+          <div className="no-scrollbar sticky top-[60px] z-30 -mx-4 mt-3 flex gap-2 overflow-x-auto border-y border-white/[0.08] bg-[rgba(7,11,20,.88)] px-4 py-3 backdrop-blur-xl min-[769px]:top-[60px] min-[769px]:mx-0 min-[769px]:mt-5 min-[769px]:border min-[769px]:border-white/[0.08] min-[769px]:rounded-2xl min-[769px]:px-4">{(['All','Paid Only','Saved','Coding','AI Training','Remote'] as const).map(item => <button key={item} onClick={() => setQuickFilter(item)} aria-pressed={quickFilter === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3.5 py-2 text-[10px] font-bold transition ${quickFilter === item ? 'border-white bg-white text-[#070b14]' : 'border-[rgba(148,163,184,.22)] bg-[rgba(30,41,59,.6)] text-[#cbd5e1] hover:border-slate-400/40 hover:text-white'}`}>{item} <span className="ml-1 tabular-nums opacity-70">({quickFilterCounts[item]})</span></button>)}</div>
+           <div className="no-scrollbar mt-3 flex gap-2 overflow-x-auto pb-1 min-[769px]:mt-4">{JOB_CATEGORIES.filter(item => !['All', 'Coding', 'AI Training', 'Remote'].includes(item)).map(item => <button key={item} onClick={() => setCategory(category === item ? 'All' : item)} aria-pressed={category === item} className={`shrink-0 whitespace-nowrap rounded-full border px-3 py-1.5 text-[9px] font-semibold transition ${category === item ? 'border-cyan-300/50 bg-cyan-300/10 text-cyan-200' : 'border-white/10 bg-white/[0.025] text-slate-500 hover:text-slate-300'}`}>{categoryLabel(item)}</button>)}</div>
           <div className="mt-4 flex items-center justify-between"><p className="text-xs font-bold text-slate-200">{filtered.length} opportunities</p><p className="text-[10px] text-slate-500">Browse freely · No signup</p></div>
           <div id="role-list" className="mt-4 grid grid-cols-1 gap-[14px] min-[769px]:grid-cols-2 xl:grid-cols-3">
              {filtered.map((job, index) => <React.Fragment key={job.id}><CompanyRevealCard job={job} isSaved={savedIds.includes(job.id)} onToggleSave={onToggleSave} onOpenJob={onOpenJob}/>{(index + 1) % 9 === 0 && <div className="min-[769px]:col-span-2 xl:col-span-3"><AdBanner placement="inline-feed"/></div>}</React.Fragment>)}
