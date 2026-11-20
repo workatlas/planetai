@@ -8,6 +8,7 @@ interface Props {
   skillsInput: string; setSkillsInput: (v: string) => void;
   jobDescInput: string; setJobDescInput: (v: string) => void;
   tailoredNotice?: string | null;
+  initialTab?: 'resume' | 'cover';
 }
 type Profile = {fullName:string;email:string;phone:string;location:string;headline:string;summary:string;experience:string;education:string;achievements:string};
 const KEY='planetai_resume_studio_profile_v1';
@@ -17,11 +18,12 @@ function loadProfile():Profile {
 }
 function esc(v:string){return v.replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));}
 function htmlLines(v:string){return esc(v.trim()).replace(/\n/g,'<br/>');}
-export const ResumeStudio:React.FC<Props>=({targetRole,setTargetRole,targetCompany,setTargetCompany,skillsInput,setSkillsInput,jobDescInput,setJobDescInput,tailoredNotice})=>{
+export const ResumeStudio:React.FC<Props>=({targetRole,setTargetRole,targetCompany,setTargetCompany,skillsInput,setSkillsInput,jobDescInput,setJobDescInput,tailoredNotice,initialTab})=>{
   const [profile,setProfile]=useState<Profile>(loadProfile);
   const [tab,setTab]=useState<'resume'|'cover'>('resume');
   const [copied,setCopied]=useState(false);
   const [saved,setSaved]=useState(false);
+  useEffect(()=>{if(initialTab) setTab(initialTab);},[initialTab]);
   useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(profile));setSaved(true);const t=window.setTimeout(()=>setSaved(false),1300);return()=>window.clearTimeout(t);}catch{setSaved(false);}},[profile]);
   const update=(key:keyof Profile,value:string)=>setProfile((p)=>({...p,[key]:value}));
   const skills=useMemo(()=>skillsInput.split(/[,\n]/).map((s)=>sanitizeText(s,48)).filter(Boolean).slice(0,24),[skillsInput]);
