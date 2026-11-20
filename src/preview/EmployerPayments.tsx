@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, CheckCircle2, Clock3, CreditCard, ExternalLink, Globe2, LoaderCircle, LogOut, RefreshCw, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Clock3, CreditCard, ExternalLink, Globe2, LoaderCircle, LogOut, RefreshCw, SearchCheck, ShieldCheck } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 type Payment = {
@@ -9,6 +9,17 @@ type Payment = {
   provider_order_id: string | null;
   confirmed_at: string | null;
   spotlight_reservation_id?: string | null;
+};
+type PayPalInspection = {
+  order_id: string;
+  order_status: string;
+  amount: string;
+  currency: string;
+  description: string | null;
+  recipient: { merchant_id: string | null; masked_email: string | null; brand_name: string | null };
+  listing_match: boolean;
+  payment_ledger_status: string;
+  capture_performed: boolean;
 };
 type Listing = {
   id: string;
@@ -50,6 +61,7 @@ export default function EmployerPayments() {
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [inspection, setInspection] = useState<{ listingId: string; result: PayPalInspection } | null>(null);
 
   const loadListings = useCallback(async () => {
     setLoading(true);
@@ -121,6 +133,29 @@ export default function EmployerPayments() {
       window.history.replaceState({}, '', clean.pathname + clean.search);
     }
   }, [loadListings]);
+
+  async function inspectPayPalOrder(listing: Listing) {
+    const orderId = listing.payment?.provider_order_id;
+    if (!orderId || listing.payment?.status !== 'pending') return;
+    setBusyId(listing.id);
+    setError('');
+    setNotice('');
+    setInspection(null);
+    try {
+      const { data, error: requestError } = await supabase.functions.invoke('paypal-listing-checkout', {
+        body: { action: 'inspect-order', submission_id: listing.id, order_id: orderId },
+      });
+      if (requestError || !data?.read_only || data?.capture_performed !== false || data?.listing_match !== true) {
+        throw new Error(data?.error || requestError?.message || 'Read-only PayPal verification could not be completed.');
+      }
+      setInspection({ listingId: listing.id, result: data as PayPalInspection });
+      setNotice('Read-only PayPal order verification completed. No payment was approved or captured.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to inspect the PayPal order.');
+    } finally {
+      setBusyId('');
+    }
+  }
 
   async function startCheckout(listing: Listing) {
     setBusyId(listing.id);
@@ -301,9 +336,16 @@ export default function EmployerPayments() {
                       </button>
                     )
                   ) : canPay ? (
-                    <button onClick={() => listing.package_tier === 'spotlight' ? startSpotlightCheckout(listing) : startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
-                      {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <CreditCard size={14}/>} {listing.package_tier === 'spotlight' ? 'Reserve date & pay $149' : 'Pay securely with PayPal'} <ExternalLink size={13}/>
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {listing.payment?.status === 'pending' && listing.payment.provider_order_id && (
+                        <button onClick={() => inspectPayPalOrder(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl border border-[#d7e0d7] bg-white px-4 py-3 text-xs font-bold text-[#47745c] disabled:opacity-60">
+                          {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <SearchCheck size={14}/>} Verify PayPal order
+                        </button>
+                      )}
+                      <button onClick={() => listing.package_tier === 'spotlight' ? startSpotlightCheckout(listing) : startCheckout(listing)} disabled={busyId === listing.id} className="inline-flex items-center gap-2 rounded-xl bg-[#183c32] px-4 py-3 text-xs font-bold text-white disabled:opacity-60">
+                        {busyId === listing.id ? <LoaderCircle className="animate-spin" size={14}/> : <CreditCard size={14}/>} {listing.package_tier === 'spotlight' ? 'Reserve date & pay $149' : 'Pay securely with PayPal'} <ExternalLink size={13}/>
+                      </button>
+                    </div>
                   ) : listing.status === 'rejected' ? (
                     <span className="text-xs text-rose-600">No payment is due.</span>
                   ) : (
@@ -312,6 +354,21 @@ export default function EmployerPayments() {
                     </span>
                   )}
                 </div>
+                {inspection?.listingId === listing.id && (
+                  <div className="mt-4 rounded-xl border border-[#d7e0d7] bg-[#f8fbf8] p-4">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[#47745c]"><ShieldCheck size={15}/> PayPal Sandbox · Read-only verification</div>
+                    <div className="mt-3 grid gap-3 text-xs sm:grid-cols-2">
+                      <div><p className="text-[#8997aa]">Recipient / brand</p><p className="mt-1 font-semibold">{inspection.result.recipient.brand_name || 'Not provided by PayPal'}</p></div>
+                      <div><p className="text-[#8997aa]">Merchant ID</p><p className="mt-1 break-all font-semibold">{inspection.result.recipient.merchant_id || 'Not provided'}</p></div>
+                      <div><p className="text-[#8997aa]">PayPal account</p><p className="mt-1 font-semibold">{inspection.result.recipient.masked_email || 'Not provided'}</p></div>
+                      <div><p className="text-[#8997aa]">Order status</p><p className="mt-1 font-semibold">{inspection.result.order_status}</p></div>
+                      <div><p className="text-[#8997aa]">Amount</p><p className="mt-1 font-semibold">{inspection.result.currency} {inspection.result.amount}</p></div>
+                      <div><p className="text-[#8997aa]">Payment ledger</p><p className="mt-1 font-semibold">{inspection.result.payment_ledger_status}</p></div>
+                    </div>
+                    <p className="mt-3 text-[11px] text-[#64748b]">{inspection.result.description || 'No order description returned.'} · Listing reference matched · Capture performed: No</p>
+                    <p className="mt-2 text-[11px] font-semibold text-[#47745c]">This confirms the order details returned by PayPal. Compare the merchant ID or account with your intended Sandbox business account before any payment.</p>
+                  </div>
+                )}
                 {listing.payment?.status === 'completed' && (
                   <p className="mt-3 text-[10px] text-[#8b978e]">
                     Payment recorded{listing.payment.confirmed_at ? ' on ' + new Date(listing.payment.confirmed_at).toLocaleString() : ''}. Your payment is linked to this listing.
