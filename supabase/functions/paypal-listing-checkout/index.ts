@@ -97,6 +97,57 @@ const handler = withSupabase({ auth: "user" }, async (req, ctx) => {
   const amount = isSpotlight ? "149.00" : priceFor(submission.package_tier);
   if (!amount) return json({ error: "This listing does not require a paid upgrade." }, 400);
 
+  if (body.action === "inspect-order") {
+    // Read-only verification: never approve, capture, or mutate payment state.
+    if (Deno.env.get("PAYPAL_ENVIRONMENT") !== "sandbox") {
+      return json({ error: "Read-only order inspection is restricted to the configured PayPal Sandbox environment." }, 409);
+    }
+    const orderId = typeof body.order_id === "string" ? body.order_id.trim() : "";
+    if (!orderId || orderId.length > 128) return json({ error: "A valid PayPal order is required." }, 400);
+    const { data: payment, error: paymentError } = await admin.from("job_payments")
+      .select("provider_order_id, amount, currency, status")
+      .eq("submission_id", submissionId)
+      .eq("provider", "paypal")
+      .eq("provider_order_id", orderId)
+      .maybeSingle();
+    if (paymentError || !payment) return json({ error: "This PayPal order is not recorded for the selected listing." }, 404);
+    if (payment.status !== "pending" || Number(payment.amount).toFixed(2) !== amount || payment.currency.trim() !== "USD") {
+      return json({ error: "The payment ledger does not match the expected pending Sandbox order." }, 409);
+    }
+    const token = await paypalToken();
+    const order = await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, token, "GET");
+    const units = Array.isArray(order.purchase_units) ? order.purchase_units : [];
+    if (units.length !== 1) return json({ error: "PayPal order has an unexpected purchase-unit count; manual review required." }, 409);
+    const unit = units[0];
+    const orderAmount = unit.amount;
+    const exactMatch = unit.custom_id === submission.id &&
+      unit.reference_id === submission.reference_code &&
+      unit.invoice_id === submission.reference_code &&
+      orderAmount?.currency_code === "USD" &&
+      orderAmount?.value === amount;
+    if (!exactMatch) return json({ error: "PayPal order details do not exactly match this listing and price; do not pay." }, 409);
+    const payee = unit.payee && typeof unit.payee === "object" ? unit.payee : {};
+    const email = typeof payee.email_address === "string" ? payee.email_address : "";
+    const maskedEmail = email.includes("@")
+      ? `${email.slice(0, 2)}•••@${email.split("@")[1]}`
+      : null;
+    const merchantId = typeof payee.merchant_id === "string" ? payee.merchant_id : null;
+    const brandName = typeof payee.display_data?.brand_name === "string" ? payee.display_data.brand_name : null;
+    return json({
+      read_only: true,
+      environment: "sandbox",
+      order_id: order.id,
+      order_status: order.status,
+      amount,
+      currency: "USD",
+      description: typeof unit.description === "string" ? unit.description : null,
+      recipient: { merchant_id: merchantId, masked_email: maskedEmail, brand_name: brandName },
+      listing_match: true,
+      payment_ledger_status: payment.status,
+      capture_performed: false,
+    });
+  }
+
   const confirmSpotlightPayment = async (reservationId: string, paymentId: string, captureId: string) => {
     const { data, error } = await admin.rpc("confirm_employer_spotlight_payment", {
       p_reservation_id: reservationId,
