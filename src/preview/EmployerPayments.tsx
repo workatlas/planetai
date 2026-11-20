@@ -61,6 +61,7 @@ export default function EmployerPayments() {
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [paymentPending, setPaymentPending] = useState(false);
   const [inspection, setInspection] = useState<{ listingId: string; result: PayPalInspection } | null>(null);
 
   const loadListings = useCallback(async () => {
@@ -73,6 +74,7 @@ export default function EmployerPayments() {
     else if (data?.listings) setListings(data.listings as Listing[]);
     else setError(data?.error || 'Your employer listings could not be loaded.');
     setLoading(false);
+    return !requestError && Array.isArray(data?.listings) ? data.listings as Listing[] : null;
   }, []);
 
   useEffect(() => {
@@ -106,22 +108,55 @@ export default function EmployerPayments() {
         if (!active) return;
         let nextError = '';
         let nextNotice = '';
+        let nextPaymentPending = false;
+        let refreshedListings: Listing[] | null = null;
+
         if (captureError || !data?.paid) {
-          nextError = data?.error || captureError?.message || 'We could not confirm this payment. Please contact support before trying again.';
+          // A verified PayPal webhook can complete the ledger before this browser
+          // return handler finishes. Re-read the authenticated employer view
+          // before showing an error or asking the employer to take any action.
+          refreshedListings = await loadListings();
+          const reconciled = refreshedListings?.find(item => item.id === submissionId);
+          if (reconciled?.payment?.status === 'completed' && reconciled.status === 'published') {
+            nextNotice = 'Payment confirmed! Your promoted listing is now published.';
+          } else if (reconciled?.payment?.status === 'completed') {
+            nextNotice = 'Your payment is confirmed. Publication is being finalized; please do not pay again.';
+            nextPaymentPending = true;
+          } else {
+            nextNotice = 'PayPal returned you to PLANETAI, but payment confirmation is still syncing. Please do not pay again. Use Refresh shortly while we verify the payment.';
+            nextPaymentPending = true;
+          }
         } else if (data.publication_pending) {
           nextNotice = 'Payment verified. Your listing is awaiting publication recovery.';
+          nextPaymentPending = true;
         } else if (data.spotlight_scheduled) {
           nextNotice = 'Payment confirmed! Your listing is published and your exclusive Spotlight + Marquee placement is scheduled. Its 30-day run begins on the reserved start date.';
         } else {
           nextNotice = 'Payment confirmed! Your promoted listing is now published.';
         }
+
         const clean = new URL(window.location.href);
         ['payment', 'submission_id', 'token', 'PayerID'].forEach(key => clean.searchParams.delete(key));
         window.history.replaceState({}, '', clean.pathname + clean.search);
-        await loadListings();
+        if (!refreshedListings) await loadListings();
         if (!active) return;
         setError(nextError);
+        setPaymentPending(nextPaymentPending);
         setNotice(nextNotice);
+        setBusyId('');
+      }).catch(async () => {
+        if (!active) return;
+        const refreshedListings = await loadListings();
+        if (!active) return;
+        const reconciled = refreshedListings?.find(item => item.id === submissionId);
+        const clean = new URL(window.location.href);
+        ['payment', 'submission_id', 'token', 'PayerID'].forEach(key => clean.searchParams.delete(key));
+        window.history.replaceState({}, '', clean.pathname + clean.search);
+        setError('');
+        setPaymentPending(true);
+        setNotice(reconciled?.payment?.status === 'completed'
+          ? 'Your payment is confirmed, but the listing status is still updating. Please do not pay again.'
+          : 'Payment confirmation is still syncing with PayPal. Please do not pay again; use Refresh shortly.');
         setBusyId('');
       });
       return () => { active = false; };
@@ -280,7 +315,7 @@ export default function EmployerPayments() {
         </div>
 
         {error && <p role="alert" className="mt-5 rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{error}</p>}
-        {notice && <p role="status" className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">{notice}</p>}
+        {notice && <p role="status" className={`mt-5 rounded-xl border p-4 text-sm ${paymentPending ? 'border-amber-200 bg-amber-50 text-amber-900' : 'border-emerald-200 bg-emerald-50 text-emerald-800'}`}>{notice}</p>}
 
         <section className="mt-7 space-y-4">
           {loading ? (
