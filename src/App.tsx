@@ -33,7 +33,7 @@ import {
   AIToolsView,
   RequestedAITool,
   TailoredResumeDraft,
-} from './components/AIToolsView';
+} from './components/AIToolsView';\nimport {CareerWorkspaceHub} from './components/CareerWorkspaceHub';
 import {AppReadinessView} from './components/AppReadinessView';
 import {AppTab, Header} from './components/Header';
 import {
@@ -773,46 +773,7 @@ function AppContent() {
         isRefreshing={isRefreshing}
         lastSyncedAt={lastJobsSyncAt}
         showCareerTools={isCareerToolsOpen || experience === 'career-tools'}
-        careerToolsContent={
-          <div className="space-y-16">
-            <section id="career-ai-tools" className="scroll-mt-24">
-              <AIToolsView tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />
-            </section>
-            <section id="career-discovery" className="scroll-mt-24 space-y-6">
-              <div className="max-w-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Discover what is next</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-.045em] text-[#1b3027] sm:text-3xl">AI, remote work & developer discovery.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#77847b]">Explore AI assistants, industry signals, free app builders and practical developer tools.</p>
-              </div>
-              <NewsDevToolsView showAds={false} />
-            </section>
-            <section id="career-productivity" className="scroll-mt-24 space-y-6">
-              <div className="max-w-2xl">
-                <p className="text-[10px] font-bold uppercase tracking-[.2em] text-[#59816b]">Work smarter</p>
-                <h2 className="mt-2 text-2xl font-semibold tracking-[-.045em] text-[#1b3027] sm:text-3xl">Your productivity toolkit.</h2>
-                <p className="mt-2 text-sm leading-6 text-[#77847b]">Focus sessions, freelancer income planning and a lightweight project tracker—all free to use.</p>
-              </div>
-              <ToolkitPreview embedded />
-            </section>
-          </div>
-        }
-        onReturnToMarketplace={() => {
-          const url = new URL(window.location.href);
-          url.searchParams.delete('experience');
-          window.history.replaceState({}, '', url.pathname + url.search);
-          setIsCareerToolsOpen(false);
-          setActiveTab('jobs');
-          window.scrollTo({top: 0, behavior: 'smooth'});
-        }}
-        savedIds={savedIds}
-        onToggleSave={toggleSaveJob}
-        onOpenJob={setInspectedJob}
-        onPostJob={handleOpenPostJob}
-        onShareApp={handleShareApp}
-        copied={copied}
-        onOpenPrivacyPolicy={() => setIsPrivacyOpen(true)}
-        privacyPolicyModal={<PrivacyTermsModal isOpen={isPrivacyOpen} onClose={() => setIsPrivacyOpen(false)} />}
-        onOpenWorkspace={openCareerWorkspace}
+        careerToolsContent={<CareerWorkspaceHub tailoredDraft={tailoredDraft} requestedTool={requestedAITool} />}
         jobDetailModal={
           <JobDetailModal
             job={inspectedJob}
