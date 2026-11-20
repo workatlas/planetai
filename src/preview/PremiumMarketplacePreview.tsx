@@ -212,12 +212,26 @@ export default function PremiumMarketplacePreview({
         </div>
       </header>
 
-      <section role="region" aria-label="Featured companies" className="h-10 overflow-hidden border-y border-white/[0.08] bg-[#070b14]">
+      <section role="region" aria-label="Featured companies" className="h-10 w-full overflow-hidden border-y border-white/[0.08] bg-[#070b14]">
         <p className="sr-only">Companies represented on PLANETAI: Mercor, micro1, Outlier, Scale AI, Alignerr and Appen.</p>
-        <div className="marquee-container h-10 overflow-hidden">
-          <div className="marquee-track flex h-10 items-center gap-6">
-            <div className="flex shrink-0 items-center gap-6 pr-6">{marqueeCompanies.map(item => <MarqueeCompanyLogo key={'a-' + item.company} company={item.company} job={item.job}/>)}</div>
-            <div className="flex shrink-0 items-center gap-6 pr-6" aria-hidden="true">{marqueeCompanies.map(item => <MarqueeCompanyLogo key={'b-' + item.company} company={item.company} job={item.job}/>)}</div>
+        <div
+          className="marquee-container h-10 w-full overflow-hidden"
+          style={{
+            maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+            WebkitMaskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)',
+          }}
+        >
+          <div className="marquee-track flex h-10 w-max shrink-0 items-center">
+            <div className="flex w-max shrink-0 items-center gap-6 pr-6">
+              {[0, 1, 2, 3].map(copy => marqueeCompanies.map(item => (
+                <MarqueeCompanyLogo key={`first-${copy}-${item.company}`} company={item.company} job={item.job}/>
+              )))}
+            </div>
+            <div className="flex w-max shrink-0 items-center gap-6 pr-6" aria-hidden="true">
+              {[0, 1, 2, 3].map(copy => marqueeCompanies.map(item => (
+                <MarqueeCompanyLogo key={`second-${copy}-${item.company}`} company={item.company} job={item.job}/>
+              )))}
+            </div>
           </div>
         </div>
       </section>
